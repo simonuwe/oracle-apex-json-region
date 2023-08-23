@@ -28,7 +28,7 @@
         "plugin" : {
           "internalName" : "JSON_REGION.UWESIMON.SELFHOST.EU",
           "type" : "region",
-          "demo" : "",
+          "demo" : "https://tlodfjxbrej9i6r-apex01.adb.eu-frankfurt-1.oraclecloudapps.com/ords/r/uwe/json-region-demo",
           "previewImage" : ""
         }
       }

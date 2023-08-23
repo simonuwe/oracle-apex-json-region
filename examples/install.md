@@ -7,7 +7,7 @@
 
 
 
-## installdatabase schema
+## install database schema
 
 ```
 sqlplus  username@db @install.sql
