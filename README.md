@@ -3,9 +3,7 @@
 An Oracle-APEX-plugin that dynamicaly provides for each property of a JSON-schema an input field to support an easy way to display and edit a JSON item. 
 
 ## Screenshots
-![Server](examples/server.png)
-![Printer](examples/printer.png)
-![Switch](examples/switch.png)
+![demo](demo.gif)
 
 
 ## Idea
