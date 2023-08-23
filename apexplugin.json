@@ -3,7 +3,7 @@
     "version" : "0.1",
     "description" : "A region containing dynamically generated input items defined by a JSON-schema. Field validation and a readonly view are supported",
     "keywords" : ["JSON", "JSON-schema", "dynamic input items"],
-    "homepage" : "",
+    "homepage" : "https://github.com/simonuwe/oracle-apex-json-region/",
     "bugs" : {
       "url" : "https://github.com/simonuwe/oracle-apex-json-region/issues",
       "email" : "uwe.simon@magenta.de"
@@ -12,10 +12,7 @@
     "commercial" : "No",
     "author" : {
       "name" : "Uwe Simon",
-      "email" : "uwe.simon@magenta.de",
-      "url" : "",
-      "twitter" : "",
-      "donationUrl" : ""
+      "email" : "uwe.simon@magenta.de"
     },
     "repository" : {
       "type" : "git",
