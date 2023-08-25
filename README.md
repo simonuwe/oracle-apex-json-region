@@ -75,7 +75,7 @@ The supported datatypes for JSON-attributes are
     "prop1": { "type": "boolean" },
     "prop2": { "type": "integer", "minimum": 0, "maximum": 100},
     "prop3": { "type": "number", "minimum": 0, "maximum": 100 },
-    "prop4": { "type": "string", "maxLength": 99, "pattern": "regexp"},
+    "prop4": { "type": "string", "maxLength": 99, "pattern": "[A-Z]+[0-9]*"},
     "prop5": { "type": "string", "enum": ["val1", "val2", ..] },
     "prop7": { "type": "string", "format": "date"},
     "prop8": { "type": "string", "format": "date-time"}
@@ -120,12 +120,20 @@ The following attributes defined in JSON-schema are not supported by the APEX-fi
 To use the json-region-plugin in the APEX-page-designer create a region on your page and set the **type** tom **JSON-Region**.
 
 The plugin provides in the configuration view input for configuring
-- the Name of the dataitem containming the JSON
+- the name of the dataitem containing the JSON
 - static JSON-schema used in the form 
 - dynamic JSON-schema retrieved by a SQL-query. Make sure that the query returns a single row, disable the item when no row could be returned.
 - the width used in the form to display the JSON-data
 
 The **readonly** Attribute is supported for the JSON-item.
+
+In the configuration of the json column the **Type** must be **hidden**, and in **Settings** the **Value Protected** must be **switched off**
+otherwise an error like
+```
+1 error has occurred
+Session state protection violation: This may be caused by manual alteration of protected page item P16_DATA. If you are unsure what caused this error, please contact the application administrator for assistance.
+```
+will occure.
 
 ### Example-application
 
@@ -140,6 +148,7 @@ The subdirectory **examples** contains a small demo-application to show the poss
 
 ## Next steps
 
-- support of **$defs** 
+- support of **$defs**, **$ref**
+- support of nested objects
 - support of arrays
 - support of configurable labels (not only derived from column name)

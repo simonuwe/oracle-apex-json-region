@@ -14,7 +14,11 @@ sqlplus  username@db @install.sql
 sqlplus  username@db @initdata.sql
 ```
 
-## install APEX-application
+## install APEX-demo-application
+
+```
+sqlplus  username@db @json-region-demo.sql
+```
 
 ## deinstall APEX-application
 
@@ -28,6 +32,6 @@ sqlplus  username@db @deinstall.sql
 
 The example demonstrates how to use row-dependent JSON-schemas.
 It uses a "generic" database-schema with 2 tables **object** and **relation**
-Via **object_types** it is possible to configure object_type_id dependend JSON-schema.
+Via **object_types** it is possible to configure object_type dependend JSON-schemas.
 
-When creating a new object in **objects** the matching input fields will be displays depending on the selected **Object type**.
+After creating a new object in **objects** the matching input fields will be displays depending on the selected **Object Type**.

@@ -25,8 +25,8 @@
         "plugin" : {
           "internalName" : "JSON_REGION.UWESIMON.SELFHOST.EU",
           "type" : "region",
-          "demo" : "https://tlodfjxbrej9i6r-apex01.adb.eu-frankfurt-1.oraclecloudapps.com/ords/r/uwe/json-region-demo",
-          "previewImage" : "https://github.com/simonuwe/oracle-apex-json-region/blob/main/demo.gif"
+          "demo" : "https://tlodfjxbrej9i6r-apex01.adb.eu-frankfurt-1.oraclecloudapps.com/ords/r/uwe/json-region-demo/objects",
+          "previewImage" : "https://raw.githubusercontent.com/simonuwe/oracle-apex-json-region/main/demo.gif
         }
       }
     }
