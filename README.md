@@ -72,14 +72,28 @@ The supported datatypes for JSON-attributes are
   "type": "object",
   "required": [ "propx", "propy", ...],
   "properties": {
-    "prop1": { "type": "boolean" },
-    "prop2": { "type": "integer", "minimum": 0, "maximum": 100},
-    "prop3": { "type": "number", "minimum": 0, "maximum": 100 },
-    "prop4": { "type": "string", "maxLength": 99, "pattern": "[A-Z]+[0-9]*"},
-    "prop5": { "type": "string", "enum": ["val1", "val2", ..] },
-    "prop7": { "type": "string", "format": "date"},
-    "prop8": { "type": "string", "format": "date-time"}
+    "prop1":  { "type": "boolean" },
+    "prop2":  { "type": "integer", "minimum": 0, "maximum": 100},
+    "prop3":  { "type": "number", "minimum": 0, "maximum": 100 },
+    "prop4":  { "type": "string", "maxLength": 99, "pattern": "[A-Z]+[0-9]*"},
+    "prop5":  { "type": "string", "enum": ["val1", "val2", ..] },
+    "prop7":  { "type": "string", "format": "date"},
+    "prop8":  { "type": "string", "format": "date-time"},
+    "prop9":  { "$ref": "#/$defs/id"},
+    "prop10": { "$ref": "#/$defs/address"}
     ...
+  },
+  "$defs}:{
+    "id"{ "type": "string", "maxLength": 30},
+    "address": {
+      "type": "object",
+       "required": ["zipcode", "town", "street"],
+      "properties":{
+        "zipcode": {"type": "string"},
+        "town":    {"type": "string"},
+        "street":  {"type": "string"}
+      }
+    }
   }
 }
 ```
@@ -148,7 +162,5 @@ The subdirectory **examples** contains a small demo-application to show the poss
 
 ## Next steps
 
-- support of **$defs**, **$ref**
-- support of nested objects
 - support of arrays
 - support of configurable labels (not only derived from column name)
