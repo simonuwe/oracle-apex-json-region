@@ -97,15 +97,22 @@ The supported datatypes for JSON-attributes are
   }
 }
 ```
-The datatypes **boolean**, **integer**, **number** and **string** are supported.
+The datatypes **object**, **boolean**, **integer**, **number** and **string** are supported.
 
 The attribute **required** contains all required properties (NOT NULL).
 
 The **type** attribute is mandatory, all others are optional.
+Types are
+- **string** could have an additional attribute **format** 
+  - **date** displayed as a date-picker
+  - **date-time** displayed as a date-picker
+  - **email** a valid email-address
+  - **uri** a valid url
 
-Type **string** supports the optional "integer" attributes **minLength** and **maxLength**, a string attribue **pattern** which is a regular-expression like '[0-9A-F]*' for an optional HEX-string and an array **enum**, which contains a list a valid values (emtpy string).
-
-Types **integer** and **number** support the optional "integer"/"number" attributes **minimum**, **maximum**.
+  The **string** supports the optional "integer" attributes **minLength** and **maxLength**, a string attribute **pattern** which is a regular-expression (like '[0-9A-F]*' for an optional HEX-string and an array) **enum**, which contains a list a valid values and will be shown as a pulldownlist.
+- **integer** with values like 1, 2, 100, ...
+- **number** with values like 1.5, 100.50, ...
+- **boolean** with values true and false.
 
 ### Input validation
 
@@ -114,13 +121,10 @@ Types **integer** and **number** support the optional "integer"/"number" attribu
 - Validate optional attributes
 
 Optional attributes are
-- enum (a static list of values)
 - maxLength (maximal length of the input)
-- min (minimal value for integer, number only)
-- max (maximal value for integer, number only)
+- minimum (minimal value for integer, number only)
+- maximum (maximal value for integer, number only)
 - pattern (a regular expression)
-- date (YYYY-MM-DD)
-- date-time (YYYY-MM-DD HH24:MI)
 
 ### Not supported JSON-schema attributes
 The following attributes defined in JSON-schema are not supported by the APEX-field-validaten and are ignored

@@ -44,6 +44,16 @@ INSERT INTO object_type(object_type_name, object_schema) VALUES ('Printer', q'[{
     "papersize": {"type": "string", "enum":["A4", "A3", "Letter"]}
    }
 }]');
+INSERT INTO object_type(object_type_name, object_schema) VALUES ('Full-Example', q'[{
+  "type": "object",
+  "required": ["vendor", "model"],
+  "properties": {
+    "vendor": {"type": "string", "maxLength": 30},
+    "model": {"type": "string", "maxLength": 30},
+    "color": {"type": "boolean"},
+    "papersize": {"type": "string", "enum":["A4", "A3", "Letter"]}
+   }
+}]');
 COMMIT;
 
 -- relation types
