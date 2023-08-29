@@ -3,7 +3,7 @@
 An Oracle-APEX-plugin that dynamicaly provides for each property of a JSON-schema an input field to support an easy way to display and edit a JSON item. 
 
 ## Screenshots
-![demo](demo.gif)
+![demo](docu/demo.gif)
 
 
 ## Idea
@@ -152,6 +152,19 @@ otherwise an error like
 Session state protection violation: This may be caused by manual alteration of protected page item P16_DATA. If you are unsure what caused this error, please contact the application administrator for assistance.
 ```
 will occure.
+#### Example config
+The JSON-CLOB is named **P16_DATA**, the schema ist stored in table **object_type** and cann be selected by **object_type_id=:P16_OBJECT_TYPE_ID**
+
+Configuration of the **JSON-data-column**
+
+![region-config-1](docu/region-config-3.png)
+
+
+Configuration of the **JSON-region**
+
+![region-config-1](docu/region-config-1.png)
+![region-config-2](docu/region-config-2.png)
+
 
 ### Example-application
 
