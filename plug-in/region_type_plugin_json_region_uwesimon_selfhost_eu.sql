@@ -21,24 +21,24 @@ wwv_flow_imp.import_begin (
  p_version_yyyy_mm_dd=>'2023.04.28'
 ,p_release=>'23.1.2'
 ,p_default_workspace_id=>9021288505501819
-,p_default_application_id=>100
+,p_default_application_id=>101
 ,p_default_id_offset=>0
 ,p_default_owner=>'UWE'
 );
 end;
 /
  
-prompt APPLICATION 100 - MyConfigMgmt
+prompt APPLICATION 101 - json-region-demo
 --
 -- Application Export:
---   Application:     100
---   Name:            MyConfigMgmt
---   Date and Time:   20:55 Wednesday September 13, 2023
+--   Application:     101
+--   Name:            json-region-demo
+--   Date and Time:   16:26 Sunday September 24, 2023
 --   Exported By:     UWE
 --   Flashback:       0
 --   Export Type:     Component Export
 --   Manifest
---     PLUGIN: 26691891510080560
+--     PLUGIN: 12191915839008328
 --   Manifest End
 --   Version:         23.1.2
 --   Instance ID:     9020994001549397
@@ -52,7 +52,7 @@ end;
 prompt --application/shared_components/plugins/region_type/json_region_uwesimon_selfhost_eu
 begin
 wwv_flow_imp_shared.create_plugin(
- p_id=>wwv_flow_imp.id(26691891510080560)
+ p_id=>wwv_flow_imp.id(12191915839008328)
 ,p_plugin_type=>'REGION TYPE'
 ,p_name=>'JSON_REGION.UWESIMON.SELFHOST.EU'
 ,p_display_name=>'JSON-Region'
@@ -67,8 +67,8 @@ wwv_flow_imp_shared.create_plugin(
 '  l_dataitem            p_region.source%TYPE := UPPER(p_region.source);',
 '  l_schema              p_region.attribute_03%TYPE := NVL(p_region.attribute_03, ''{"type": "object"}'');',
 '  l_query               p_region.attribute_04%TYPE := p_region.attribute_04;',
-'  l_colwidth            p_region.attribute_05%TYPE := NVL(p_region.attribute_05, 1);',
-'  l_textareawidth       p_region.attribute_01%TYPE := NVL(p_region.attribute_01, 250);',
+'  l_colwidth            p_region.attribute_05%TYPE := p_region.attribute_05;',
+'  l_textareawidth       p_region.attribute_01%TYPE :=  NVL(p_region.attribute_01, 250);',
 '  l_columns             p_region.region_columns%TYPE := p_region.region_columns;',
 '  l_column_value_list   apex_plugin_util.t_column_value_list;',
 '--  l_columun     apex_plugin.t_region_column := p_region.region_columns(0);',
@@ -139,8 +139,8 @@ wwv_flow_imp_shared.create_plugin(
 ,p_files_version=>1081
 );
 wwv_flow_imp_shared.create_plugin_attribute(
- p_id=>wwv_flow_imp.id(27850141523650107)
-,p_plugin_id=>wwv_flow_imp.id(26691891510080560)
+ p_id=>wwv_flow_imp.id(13350165852577875)
+,p_plugin_id=>wwv_flow_imp.id(12191915839008328)
 ,p_attribute_scope=>'COMPONENT'
 ,p_attribute_sequence=>1
 ,p_display_sequence=>60
@@ -151,8 +151,8 @@ wwv_flow_imp_shared.create_plugin_attribute(
 ,p_is_translatable=>false
 );
 wwv_flow_imp_shared.create_plugin_attribute(
- p_id=>wwv_flow_imp.id(26770279087957794)
-,p_plugin_id=>wwv_flow_imp.id(26691891510080560)
+ p_id=>wwv_flow_imp.id(12270303416885562)
+,p_plugin_id=>wwv_flow_imp.id(12191915839008328)
 ,p_attribute_scope=>'COMPONENT'
 ,p_attribute_sequence=>2
 ,p_display_sequence=>20
@@ -164,22 +164,22 @@ wwv_flow_imp_shared.create_plugin_attribute(
 ,p_lov_type=>'STATIC'
 );
 wwv_flow_imp_shared.create_plugin_attr_value(
- p_id=>wwv_flow_imp.id(26770928566959086)
-,p_plugin_attribute_id=>wwv_flow_imp.id(26770279087957794)
+ p_id=>wwv_flow_imp.id(12270952895886854)
+,p_plugin_attribute_id=>wwv_flow_imp.id(12270303416885562)
 ,p_display_sequence=>10
 ,p_display_value=>'Static'
 ,p_return_value=>'1'
 );
 wwv_flow_imp_shared.create_plugin_attr_value(
- p_id=>wwv_flow_imp.id(26771639257966870)
-,p_plugin_attribute_id=>wwv_flow_imp.id(26770279087957794)
+ p_id=>wwv_flow_imp.id(12271663586894638)
+,p_plugin_attribute_id=>wwv_flow_imp.id(12270303416885562)
 ,p_display_sequence=>20
 ,p_display_value=>'SQL-Query'
 ,p_return_value=>'2'
 );
 wwv_flow_imp_shared.create_plugin_attribute(
- p_id=>wwv_flow_imp.id(26773365288979323)
-,p_plugin_id=>wwv_flow_imp.id(26691891510080560)
+ p_id=>wwv_flow_imp.id(12273389617907091)
+,p_plugin_id=>wwv_flow_imp.id(12191915839008328)
 ,p_attribute_scope=>'COMPONENT'
 ,p_attribute_sequence=>3
 ,p_display_sequence=>30
@@ -189,14 +189,14 @@ wwv_flow_imp_shared.create_plugin_attribute(
 ,p_display_length=>80
 ,p_max_length=>4000
 ,p_is_translatable=>false
-,p_depending_on_attribute_id=>wwv_flow_imp.id(26770279087957794)
+,p_depending_on_attribute_id=>wwv_flow_imp.id(12270303416885562)
 ,p_depending_on_has_to_exist=>true
 ,p_depending_on_condition_type=>'EQUALS'
 ,p_depending_on_expression=>'1'
 );
 wwv_flow_imp_shared.create_plugin_attribute(
- p_id=>wwv_flow_imp.id(26774011391984840)
-,p_plugin_id=>wwv_flow_imp.id(26691891510080560)
+ p_id=>wwv_flow_imp.id(12274035720912608)
+,p_plugin_id=>wwv_flow_imp.id(12191915839008328)
 ,p_attribute_scope=>'COMPONENT'
 ,p_attribute_sequence=>4
 ,p_display_sequence=>40
@@ -206,14 +206,14 @@ wwv_flow_imp_shared.create_plugin_attribute(
 ,p_display_length=>80
 ,p_max_length=>4000
 ,p_is_translatable=>false
-,p_depending_on_attribute_id=>wwv_flow_imp.id(26770279087957794)
+,p_depending_on_attribute_id=>wwv_flow_imp.id(12270303416885562)
 ,p_depending_on_has_to_exist=>true
 ,p_depending_on_condition_type=>'NOT_EQUALS'
 ,p_depending_on_expression=>'1'
 );
 wwv_flow_imp_shared.create_plugin_attribute(
- p_id=>wwv_flow_imp.id(26774729187989351)
-,p_plugin_id=>wwv_flow_imp.id(26691891510080560)
+ p_id=>wwv_flow_imp.id(12274753516917119)
+,p_plugin_id=>wwv_flow_imp.id(12191915839008328)
 ,p_attribute_scope=>'COMPONENT'
 ,p_attribute_sequence=>5
 ,p_display_sequence=>50
@@ -224,8 +224,8 @@ wwv_flow_imp_shared.create_plugin_attribute(
 ,p_is_translatable=>false
 );
 wwv_flow_imp_shared.create_plugin_std_attribute(
- p_id=>wwv_flow_imp.id(27711084702884202)
-,p_plugin_id=>wwv_flow_imp.id(26691891510080560)
+ p_id=>wwv_flow_imp.id(13211109031811970)
+,p_plugin_id=>wwv_flow_imp.id(12191915839008328)
 ,p_name=>'SOURCE_PLAIN'
 ,p_is_required=>false
 );
@@ -412,8 +412,8 @@ end;
 /
 begin
 wwv_flow_imp_shared.create_plugin_file(
- p_id=>wwv_flow_imp.id(26705467746797644)
-,p_plugin_id=>wwv_flow_imp.id(26691891510080560)
+ p_id=>wwv_flow_imp.id(12205492075725412)
+,p_plugin_id=>wwv_flow_imp.id(12191915839008328)
 ,p_file_name=>'json-region.js'
 ,p_mime_type=>'text/javascript'
 ,p_file_charset=>'utf-8'
@@ -533,8 +533,8 @@ end;
 /
 begin
 wwv_flow_imp_shared.create_plugin_file(
- p_id=>wwv_flow_imp.id(28999501420120957)
-,p_plugin_id=>wwv_flow_imp.id(26691891510080560)
+ p_id=>wwv_flow_imp.id(14499525749048725)
+,p_plugin_id=>wwv_flow_imp.id(12191915839008328)
 ,p_file_name=>'json-region.min.js'
 ,p_mime_type=>'text/javascript'
 ,p_file_charset=>'utf-8'
