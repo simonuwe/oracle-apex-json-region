@@ -44,14 +44,38 @@ INSERT INTO object_type(object_type_name, object_schema) VALUES ('Printer', q'[{
     "papersize": {"type": "string", "enum":["A4", "A3", "Letter"]}
    }
 }]');
-INSERT INTO object_type(object_type_name, object_schema) VALUES ('Full-Example', q'[{
+INSERT INTO object_type(object_type_name, object_schema) VALUES ('Full-Example', q'[
+{
   "type": "object",
-  "required": ["vendor", "model"],
+  "required": ["lastname", "gender"],
   "properties": {
-    "vendor": {"type": "string", "maxLength": 30},
-    "model": {"type": "string", "maxLength": 30},
-    "color": {"type": "boolean"},
-    "papersize": {"type": "string", "enum":["A4", "A3", "Letter"]}
+    "lastname":    {"$ref": "#/$defs/name"},
+    "firstname":   {"$ref": "#/$defs/name"},
+    "birthday":    {"type": "string", "format": "date", "minimum": "1900-01-01"},
+    "gender":      {"type": "string", "enum":["female", "male", "diverse"]},
+    "creditcard":  {"type": "string", "enum":["Visa", "Mastercard", "Amex", "Diners"]},
+    "creditid":    {"$ref": "#/$defs/cardid"},
+    "salary":      {"type": "integer", "minimum": 10000},
+    "retired":     {"type": "boolean"},
+    "email":       {"type": "string", "format": "email"},
+    "website":     {"type": "string", "format": "uri"},
+    "address":     {"$ref": "#/$defs/address"},
+    "lastlogin":   {"type": "string", "format": "date-time"}
+  },
+  "$defs":{
+      "name": {"type": "string", "maxLength": 30},
+      "address": {
+        "type": "object",
+        "required": ["zipcode", "city"],
+        "properties": {
+           "country": {"type": "string"},
+           "state":   {"type": "string"},
+           "zipcode": {"type": "string"},
+           "city":    {"type": "string"},
+           "street":  {"type": "string"}
+         }
+       }, 
+      "cardid": {"type": "string", "pattern": "[0-9]{4}( [0-9]{4}){3}"}
    }
 }]');
 COMMIT;
@@ -68,6 +92,8 @@ INSERT INTO object(objecT_type_id, objecT_name, created_at, data)
 SELECT objecT_type_id, 'Printer1', current_timestamp, q'[{}]' FROM object_type WHERE object_type_name='Printer';
 INSERT INTO object(objecT_type_id, objecT_name, created_at, data)
 SELECT objecT_type_id, 'Switch1', current_timestamp, q'[{}]' FROM object_type WHERE object_type_name='Switch';
+INSERT INTO object(objecT_type_id, objecT_name, created_at, data)
+SELECT objecT_type_id, 'Full-Example', current_timestamp, q'[{}]' FROM object_type WHERE object_type_name='Full-Example';
 COMMIT;
 
 exit;

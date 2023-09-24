@@ -25,15 +25,15 @@ Here an example
   "type": "object",
   "required": ["vendor", "model", "os", "purchased_at"],
   "properties": {
-     "vendor": {"type": "string", "maxLength": 20},
-     "model": {"type": "string"},
-     "os": {"type": "string"},
-     "cputype": {"type": "string"},
-     "cpus": {"type": "integer", "min": 1, "max":8},
-     "cores": {"type": "integer", "min": 1},
-     "ram": {"type": "number", "min": 0},
-     "storageSize": { "type": "integer"},
-     "purchased_at": { "type": "string", "format": "date-time"} ,
+     "vendor":        {"type": "string", "maxLength": 20},
+     "model":         {"type": "string"},
+     "os":            {"type": "string"},
+     "cputype":       {"type": "string"},
+     "cpus":          {"type": "integer", "min": 1, "max":8},
+     "cores":         {"type": "integer", "min": 1},
+     "ram":           {"type": "number", "min": 0},
+     "storageSize":   { "type": "integer"},
+     "purchased_at":  { "type": "string", "format": "date-time"} ,
      "warranty_ends": { "type": "string", "format": "date"} 
    }
 }
@@ -55,7 +55,7 @@ Here an example
 }
 ```
 
-This Oracle-APEX-plugin provides a new item-type **json-item**. 
+This Oracle-APEX-plugin provides a new region-type **JSON-region**. 
 
 ## Supported datatypes
 
@@ -135,13 +135,14 @@ The following attributes defined in JSON-schema are not supported by the APEX-fi
 
 ## Configuration in the APEX-page-designer
 
-To use the json-region-plugin in the APEX-page-designer create a region on your page and set the **type** tom **JSON-Region**.
+To use the json-region-plugin in the APEX-page-designer create a region on your page and set the **Type** to **JSON-Region**.
+In **Source** enter the name for the hidden JSON-item which is used in the torm
 
 The plugin provides in the configuration view input for configuring
-- the name of the dataitem containing the JSON
 - static JSON-schema used in the form 
 - dynamic JSON-schema retrieved by a SQL-query. Make sure that the query returns a single row, disable the item when no row could be returned.
-- the width used in the form to display the JSON-data
+- the width used in the form to display the JSON-data (1-12)
+- The length-limit above which a **textarea** is used for string-items insted of the **text-field**.
 
 The **readonly** Attribute is supported for the JSON-item.
 
@@ -152,7 +153,8 @@ otherwise an error like
 Session state protection violation: This may be caused by manual alteration of protected page item P16_DATA. If you are unsure what caused this error, please contact the application administrator for assistance.
 ```
 will occure.
-#### Example config
+
+### Example config
 The JSON-CLOB is named **P16_DATA**, the schema ist stored in table **object_type** and cann be selected by **object_type_id=:P16_OBJECT_TYPE_ID**
 
 Configuration of the **JSON-data-column**
@@ -170,11 +172,16 @@ Configuration of the **JSON-region**
 
 The subdirectory **examples** contains a small demo-application to show the possibilities.
 
+## Know issues##
+
+There is a mismatch in the JSON-validation-check between Oracle's **IS JSON** and Javascript's **JSON.parse**.
+For JSON in **Oracle** it is **optional to enclose identifiers by "**, in **Javascript** it is **mandatory to enclose identifiers by "**, so currently only enclosed identifiers are allowed in the JSON-schema/-data columns, this can be enforced in Oracle with the check **IS JSON(STRICT)**.
+
 ## Current status
-- Form only, only **simple** JSON-schema without any hierarchy
+- Form only, only **simple** JSON-schema with nested objects
 - no arrays in JSON-schema
-- only support of standard APEX-field-validation
-- APEX does not support the column-type JSON, use CLOB with check-constraint "ISJSON"
+- only support of standard APEX-field-validation (APEX's date/date-time Javascript-validation has a Bug)
+- APEX does not support the column-type JSON, use CLOB with check-constraint **IS JSON(STRICT)**
 - No PWA support
 
 ## Next steps

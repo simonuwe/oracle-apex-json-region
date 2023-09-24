@@ -6,7 +6,7 @@ CREATE TABLE object_type(
   object_schema    CLOB NOT NULL,   -- JSON not supported by APEX
   CONSTRAINT object_type_pk PRIMARY KEY (object_type_id),
   CONSTRAINT object_type_un UNIQUE(object_type_name),
-  CONSTRAINT object_type_ck1 CHECK ( object_schema IS JSON )
+  CONSTRAINT object_type_ck1 CHECK ( object_schema IS JSON(STRICT) )
 );
 
 CREATE TABLE cardinality(
@@ -25,7 +25,7 @@ CREATE TABLE relation_type(
   relation_schema     CLOB NOT NULL,   -- JSON not supported by APEX
   CONSTRAINT relation_type_pk PRIMARY KEY (relation_type_id),
   CONSTRAINT relation_type_un UNIQUE(relation_type_name),
-  CONSTRAINT relation_type_ck1 CHECK ( relation_schema IS JSON )
+  CONSTRAINT relation_type_ck1 CHECK ( relation_schema IS JSON(STRICT) )
 );
 
 CREATE TABLE object(
@@ -35,7 +35,7 @@ CREATE TABLE object(
   created_at     DATE DEFAULT CURRENT_DATE NOT NULL,
   data           CLOB,   -- JSON not supported by APEX
   CONSTRAINT object_pk PRIMARY KEY (object_id),
-  CONSTRAINT object_ck1 CHECK ( data IS JSON )
+  CONSTRAINT object_ck1 CHECK ( data IS JSON(STRICT) )
 );
 
 CREATE TABLE relation(
@@ -46,7 +46,7 @@ CREATE TABLE relation(
   to_object_id        INTEGER NOT NULL,
   data                CLOB,   -- JSON not supported by APEX
   CONSTRAINT relation_pk PRIMARY KEY (relation_id),
-  CONSTRAINT relation_ck1 CHECK ( data IS JSON )
+  CONSTRAINT relation_ck1 CHECK ( data IS JSON(STRICT) )
 );
 
 ALTER TABLE relation_type ADD CONSTRAINT relation_type_fk1 FOREIGN KEY(from_object_type_id) REFERENCING object_type;
