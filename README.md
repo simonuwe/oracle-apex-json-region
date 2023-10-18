@@ -136,13 +136,15 @@ The following attributes defined in JSON-schema are not supported by the APEX-fi
 ## Configuration in the APEX-page-designer
 
 To use the json-region-plugin in the APEX-page-designer create a region on your page and set the **Type** to **JSON-Region**.
-In **Source** enter the name for the hidden JSON-item which is used in the torm
+In **Source** enter the name for the hidden JSON-item which is used in the form
 
 The plugin provides in the configuration view input for configuring
 - static JSON-schema used in the form 
 - dynamic JSON-schema retrieved by a SQL-query. Make sure that the query returns a single row, disable the item when no row could be returned.
 - the width used in the form to display the JSON-data (1-12)
 - The length-limit above which a **textarea** is used for string-items insted of the **text-field**.
+- 
+-
 
 The **readonly** Attribute is supported for the JSON-item.
 

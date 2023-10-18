@@ -1,3 +1,10 @@
+# Release 0.6 2023-01-00
+- #7 Support of PWA
+- #19 Option to keep attributes not specified in JSON-schema 
+- #20 Header for subobjects 
+- #21 Support of theming 
+- #22 Refresh JSON-region on demand 
+
 # Release 0.5 2023-09-14
 - #6 Support of textarea: New plugin-configuration **textareawidth** for textareas. Input of **string** with **maxLength>textareawidth** will be displayied as textareas (5 rows).
 - #18, missing part in JSON-schema description cause javascript errors
