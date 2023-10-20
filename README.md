@@ -150,13 +150,15 @@ The plugin provides in the configuration view input for configuring
 - dynamic JSON-schema retrieved by a SQL-query. Make sure that the query returns a single row, disable the item when no row could be returned.
 - the width used in the form to display the JSON-data (1-12)
 - The length-limit above which a **textarea** is used for string-items insted of the **text-field**.
-- 
--
+- If **keep additional attributes** is set, the plugin will keep all attributes not mentioned in the JSON-schema.
+- If **Headers** is set, the plugin will generate additional headers for nested objects.
+- If **Hide JSON** is unset, the Item with the JSON data is shown on the form, otherwqise it will be hidden
+- If **Remove NULLs from JSON** is set, all attributes with value **null** will be remove make the generated JSON more compact.
 
 The **readonly** Attribute is supported for the JSON-item.
 
 In the configuration of the json column the **Type** must be **text** or **textara**. This item is set to hidden when the plugin is initialized.This is required, because otherwise APEX does not recoginse the data is changed in the region.
- 
+
 ### Example config
 The JSON-CLOB is named **P16_DATA**, the schema ist stored in table **object_type** and cann be selected by **object_type_id=:P16_OBJECT_TYPE_ID**
 
