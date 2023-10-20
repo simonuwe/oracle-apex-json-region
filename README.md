@@ -1,6 +1,6 @@
 # oracle-apex-json-item
 
-An Oracle-APEX-plugin that dynamicaly provides for each property of a JSON-schema an input field to support an easy way to display and edit a JSON item. 
+An Oracle-APEX-plugin that dynamically provides for each property of a JSON-schema an input field to support an easy way to display and edit a JSON item. 
 
 ## Screenshots
 ![demo](docu/demo.gif)
@@ -64,6 +64,9 @@ The supported datatypes for JSON-attributes are
 - integer
 - number (float)
 - boolean
+- null
+
+In addition the keyword **const** for a constant value is accepted.
 
 ### Supported schema
 
@@ -80,7 +83,9 @@ The supported datatypes for JSON-attributes are
     "prop7":  { "type": "string", "format": "date"},
     "prop8":  { "type": "string", "format": "date-time"},
     "prop9":  { "$ref": "#/$defs/id"},
-    "prop10": { "$ref": "#/$defs/address"}
+    "prop10": { "$ref": "#/$defs/address"},
+    "prop11": { "type": "null"},
+    "prop12": { "const": "a constant value"}
     ...
   },
   "$defs}:{
@@ -97,7 +102,6 @@ The supported datatypes for JSON-attributes are
   }
 }
 ```
-The datatypes **object**, **boolean**, **integer**, **number** and **string** are supported.
 
 The attribute **required** contains all required properties (NOT NULL).
 
@@ -113,6 +117,9 @@ Types are
 - **integer** with values like 1, 2, 100, ...
 - **number** with values like 1.5, 100.50, ...
 - **boolean** with values true and false.
+- **null** always a NULL value
+
+The **const** attribute identifies a constant value of types **string**, **number**, **integer**, boolean.
 
 ### Input validation
 
@@ -148,20 +155,14 @@ The plugin provides in the configuration view input for configuring
 
 The **readonly** Attribute is supported for the JSON-item.
 
-In the configuration of the json column the **Type** must be **hidden**, and in **Settings** the **Value Protected** must be **switched off**
-otherwise an error like
-```
-1 error has occurred
-Session state protection violation: This may be caused by manual alteration of protected page item P16_DATA. If you are unsure what caused this error, please contact the application administrator for assistance.
-```
-will occure.
-
+In the configuration of the json column the **Type** must be **text** or **textara**. This item is set to hidden when the plugin is initialized.This is required, because otherwise APEX does not recoginse the data is changed in the region.
+ 
 ### Example config
 The JSON-CLOB is named **P16_DATA**, the schema ist stored in table **object_type** and cann be selected by **object_type_id=:P16_OBJECT_TYPE_ID**
 
 Configuration of the **JSON-data-column**
 
-![region-config-1](docu/region-config-3.png)
+![region-config-3](docu/region-config-3.png)
 
 
 Configuration of the **JSON-region**
