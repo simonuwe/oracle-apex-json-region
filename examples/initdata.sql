@@ -46,23 +46,26 @@ INSERT INTO object_type(object_type_name, object_schema) VALUES ('Printer', q'[{
 }]');
 INSERT INTO object_type(object_type_name, object_schema) VALUES ('Full-Example', q'[
 {
+  "title": "An example schema with all supported types",
   "type": "object",
   "required": ["lastname", "gender"],
   "properties": {
-    "lastname":           {"$ref": "#/$defs/name"},
-    "firstname":          {"$ref": "#/$defs/name"},
-    "birthday":           {"type": "string", "format": "date", "minimum": "1900-01-01"},
-    "gender":             {"type": "string", "enum":["female", "male", "diverse"]},
-    "creditcard":         {"type": "string", "enum":["Visa", "Mastercard", "Amex", "Diners"]},
-    "creditid":           {"$ref": "#/$defs/cardid"},
-    "salary":             {"type": "integer", "minimum": 10000},
-    "retired":            {"type": "boolean"},
-    "email":              {"type": "string", "format": "email"},
-    "website":            {"type": "string", "format": "uri"},
+    "lastname":    {"$ref": "#/$defs/name"},
+    "firstname":   {"$ref": "#/$defs/name"},
+    "birthday":    {"type": "string", "format": "date", "minimum": "1900-01-01"},
+    "gender":      {"type": "string", "enum":["female", "male", "diverse"]},
+    "creditcard":  {"type": "string", "enum":["Visa", "Mastercard", "Amex", "Diners"]},
+    "creditid":    {"$ref": "#/$defs/cardid"},
+    "salary":      {"type": "integer", "minimum": 10000},
+    "retired":     {"type": "boolean"},
+    "email":       {"type": "string", "format": "email"},
+    "website":     {"type": "string", "format": "uri"},
     "home_address":       {"$ref": "#/$defs/address"},
     "office_address":     {"$ref": "#/$defs/address"},
-    "comment":            {"type": "string", "maxLength": 500},
-    "lastlogin":          {"type": "string", "format": "date-time"}
+    "comment":     {"type": "string", "maxLength": 500},
+    "lastlogin":   {"type": "string", "format": "date-time"},
+    "source":      {"const": "via APEX-application"},
+    "dummy":       {"type": "null"}
   },
   "$defs":{
       "name": {"type": "string", "maxLength": 30},
