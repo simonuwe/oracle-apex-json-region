@@ -1,7 +1,7 @@
 -- create the database schema for the generic demo application
 
 CREATE TABLE object_type(
-  object_type_id   INTEGER GENERATED ALWAYS AS IDENTITY,
+  object_type_id   INTEGER GENERATED ON NULL AS IDENTITY,
   object_type_name VARCHAR2(30) NOT NULL,
   object_schema    CLOB NOT NULL,   -- JSON not supported by APEX
   CONSTRAINT object_type_pk PRIMARY KEY (object_type_id),
@@ -16,7 +16,7 @@ CREATE TABLE cardinality(
 );
 
 CREATE TABLE relation_type(
-  relation_type_id    INTEGER GENERATED ALWAYS AS IDENTITY,
+  relation_type_id    INTEGER GENERATED ON NULL AS IDENTITY,
   relation_type_name  VARCHAR2(30) NOT NULL,
   from_object_type_id INTEGER NOT NULL,
   from_cardinality_id INTEGER NOT NULL,
@@ -29,7 +29,7 @@ CREATE TABLE relation_type(
 );
 
 CREATE TABLE object(
-  object_id      INTEGER GENERATED ALWAYS AS IDENTITY,
+  object_id      INTEGER GENERATED ON NULL AS IDENTITY,
   object_type_id INTEGER NOT NULL,
   object_name    VARCHAR2(30) NOT NULL,
   created_at     DATE DEFAULT CURRENT_DATE NOT NULL,
@@ -39,7 +39,7 @@ CREATE TABLE object(
 );
 
 CREATE TABLE relation(
-  relation_id         INTEGER GENERATED ALWAYS AS IDENTITY,
+  relation_id         INTEGER GENERATED ON NULL AS IDENTITY,
   created_at          DATE DEFAULT CURRENT_DATE NOT NULL,
   relation_type_id    INTEGER NOT NULL,
   from_object_id      INTEGER NOT NULL,

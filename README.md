@@ -177,7 +177,7 @@ Configuration of the **JSON-region**
 
 The subdirectory **examples** contains a small demo-application to show the possibilities.
 
-## Know issues##
+## Know issues
 
 There is a mismatch in the JSON-validation-check between Oracle's **IS JSON** and Javascript's **JSON.parse**.
 For JSON in **Oracle** it is **optional to enclose identifiers by "**, in **Javascript** it is **mandatory to enclose identifiers by "**, so currently only enclosed identifiers are allowed in the JSON-schema/-data columns, this can be enforced in Oracle with the check **IS JSON(STRICT)**.
@@ -187,9 +187,9 @@ For JSON in **Oracle** it is **optional to enclose identifiers by "**, in **Java
 - no arrays in JSON-schema
 - only support of standard APEX-field-validation (APEX's date/date-time Javascript-validation has a Bug)
 - APEX does not support the column-type JSON, use CLOB with check-constraint **IS JSON(STRICT)**
-- No PWA support
+- With PWA support
 
 ## Next steps
 
-- support of arrays
 - support of configurable labels (not only derived from column name)
+- support of arrays
