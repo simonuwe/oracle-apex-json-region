@@ -1,6 +1,9 @@
-# oracle-apex-json-item
+# json-region
 
-An Oracle-APEX-plugin that dynamically provides for each property of a JSON-schema an input field to support an easy way to display and edit a JSON item. 
+An Oracle-APEX-plugin that provides dynamic input items for an easy way to display and edit **JSON-data**. 
+
+Starting with Oracle 23c **JSON-schema** could be used for the valitions of **JSON-data**.
+So this plugin uses JSON-schema to **dynamically generate items** to display and/or edit **JSON-data**. 
 
 ## Screenshots
 ![demo](docu/demo.gif)
@@ -9,7 +12,7 @@ An Oracle-APEX-plugin that dynamically provides for each property of a JSON-sche
 ## Idea
 
 More and more database tables contain JSON-columns.
-JSON-columns gives us the possibility to show different content in different rows. For the GUI perspective this requires a dynamic layout a page during runtime.
+JSON-columns gives us the possibility to show different content in different rows. It is also quite common, that 3td-party-software supplies JSON-columns for cusomisation. From GUI perspective this requires a dynamic layout a page during runtime.
 
 When you create an Oracle-APEX-application which has to display and edit data from such tables, there should be an easy way to transform this data into seperate input fields or table columns.
 Another requirement is the input validation before saving them.
@@ -160,7 +163,7 @@ The **readonly** Attribute is supported for the JSON-item.
 In the configuration of the json column the **Type** must be **text** or **textara**. This item is set to hidden when the plugin is initialized.This is required, because otherwise APEX does not recoginse the data is changed in the region.
 
 ### Example config
-The JSON-CLOB is named **P16_DATA**, the schema ist stored in table **object_type** and cann be selected by **object_type_id=:P16_OBJECT_TYPE_ID**
+The JSON-CLOB is named **P16_DATA**, the schema ist stored in table **object_type** and can be selected by **object_type_id=:P16_OBJECT_TYPE_ID**
 
 Configuration of the **JSON-data-column**
 
@@ -172,24 +175,47 @@ Configuration of the **JSON-region**
 ![region-config-1](docu/region-config-1.png)
 ![region-config-2](docu/region-config-2.png)
 
+### Installing the Plugin
+
+The plugin could be found in subdirectory **plug-in** file 
+**region_type_plugin_json_region_uwesimon_selfhost_eu.sql**
+Import this SQL-file in your application in the **shared-components->plugins** dialog.
 
 ### Example-application
 
-The subdirectory **examples** contains a small demo-application to show the possibilities.
+The subdirectory **examples** contains a small demo-application to show the possibilities. Go into this directory and install from there.
+
+### Cool stuff for Oracle 23c
+
+Starting Oracle 23c a validation of a JSON-column with a JSON-schema via **VALIDATE '...'**  is supported. 
+When you want your APEX-application to reference this setting, you can use in the json-region-setup the query 
+
+```
+SELECT 
+  REGEXP_SUBSTR(search_condition_vc, '''(.*)''$',1,1,'n',1) json_schema
+FROM user_constraints c 
+JOIN user_cons_columns cc ON(c.table_name=cc.table_name AND c.constraint_name=cc.constraint_name)
+WHERE c.table_name='TAB' AND column_name='JSON_DATA'
+  AND c.constraint_type='C' AND search_condition_vc like '%IS JSON%';
+```
+This retrievs the JSON-schema for column **TAB.JSON_DATA** from the data dictionary, as long as the constraint-text is less than 4000 char long (the full text isin a LONG-column, which is not easy to process). So changing this VALIDATE setting will automatically adopt the layout of the json-region in your APEX-UI.
 
 ## Know issues
 
-There is a mismatch in the JSON-validation-check between Oracle's **IS JSON** and Javascript's **JSON.parse**.
-For JSON in **Oracle** it is **optional to enclose identifiers by "**, in **Javascript** it is **mandatory to enclose identifiers by "**, so currently only enclosed identifiers are allowed in the JSON-schema/-data columns, this can be enforced in Oracle with the check **IS JSON(STRICT)**.
+- In SQL-Workshop in APEX-Oracle-Cloud you can not create JSON-Columns (trying this returns ORA-00002 invalid datatype). Here you have to use CLOB columns. 
+- When using a CLOB for the JSONs use check constraint **IS JSON(STRICT)** to enforce that the JSON is returned wth **"** enclosed keys..
 
 ## Current status
 - Form only, only **simple** JSON-schema with nested objects
 - no arrays in JSON-schema
+- no schema composition (AllOf, OneOf, Anyof)
 - only support of standard APEX-field-validation (APEX's date/date-time Javascript-validation has a Bug)
-- APEX does not support the column-type JSON, use CLOB with check-constraint **IS JSON(STRICT)**
-- With PWA support
+- If JSON-data is stored in a CLOB-column use check-constraint **IS JSON(STRICT)**
+- Now with PWA support
 
 ## Next steps
 
-- support of configurable labels (not only derived from column name)
-- support of arrays
+- support of optional configurable labels (not only derived from column name)
+- support of optional Widget like **starrating** for **integer** or **switch** for **boolean**
+- (partial) support of arrays
+- For Oracle >=23c extract the JSON-schema from VALIDATE-check-constraint of the JSON-column 

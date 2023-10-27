@@ -6,6 +6,10 @@
 ![Switch](switch.png)
 
 
+# Installation
+
+To install the demo step into the **examples** directory.
+
 
 ## install database schema
 
@@ -19,6 +23,7 @@ sqlplus  username@db @initdata.sql
 ```
 sqlplus  username@db @json-region-demo.sql
 ```
+This installs the demo-application and the json-region-plugin which is already part of this application.
 
 ## deinstall APEX-application
 

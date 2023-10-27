@@ -1,17 +1,17 @@
 {
-    "name" : "JSON-Region",
-    "version" : "0.6",
-    "description" : "A region containing dynamically generated input items defined by a JSON-schema. Field validation and a readonly view are supported",
-    "keywords" : ["JSON", "JSON-schema", "dynamic input items"],
-    "homepage" : "https://github.com/simonuwe/oracle-apex-json-region/",
+    "name" :        "JSON-Region",
+    "version" :     "0.6",
+    "description" : "A region for dynamically generated input items defined by a JSON-schema. Field validation and a readonly view are supported",
+    "keywords" :    ["JSON", "JSON-schema", "dynamic input items"],
+    "homepage" :    "https://github.com/simonuwe/oracle-apex-json-region/",
     "bugs" : {
-      "url" : "https://github.com/simonuwe/oracle-apex-json-region/issues",
+      "url" :   "https://github.com/simonuwe/oracle-apex-json-region/issues",
       "email" : "uwe.simon@magenta.de"
     },
-    "license" : "Apache 2.0",
+    "license" :    "Apache 2.0",
     "commercial" : "No",
     "author" : {
-      "name" : "Uwe Simon",
+      "name" :  "Uwe Simon",
       "email" : "uwe.simon@magenta.de"
     },
     "repository" : {
@@ -24,8 +24,8 @@
         "versions" : ["21.02", "22.01", "22.02", "23.01"],
         "plugin" : {
           "internalName" : "JSON_REGION.UWESIMON.SELFHOST.EU",
-          "type" : "region",
-          "demo" : "https://tlodfjxbrej9i6r-apex01.adb.eu-frankfurt-1.oraclecloudapps.com/ords/r/uwe/json-region-demo/objects/",
+          "type" :         "region",
+          "demo" :         "https://tlodfjxbrej9i6r-apex01.adb.eu-frankfurt-1.oraclecloudapps.com/ords/r/uwe/json-region-demo/objects/",
           "previewImage" : "https://raw.githubusercontent.com/simonuwe/oracle-apex-json-region/main/docu/demo.gif"
         }
       }

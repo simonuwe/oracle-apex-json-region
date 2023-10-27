@@ -90,15 +90,7 @@ COMMIT;
 
 -- objects
 INSERT INTO object(objecT_type_id, objecT_name, created_at, data)
-SELECT objecT_type_id, 'Server1', current_timestamp, q'[{}]' FROM object_type WHERE object_type_name='Server';
-INSERT INTO object(objecT_type_id, objecT_name, created_at, data)
-SELECT objecT_type_id, 'Server2', current_timestamp, q'[{}]' FROM object_type WHERE object_type_name='Server';
-INSERT INTO object(objecT_type_id, objecT_name, created_at, data)
-SELECT objecT_type_id, 'Printer1', current_timestamp, q'[{}]' FROM object_type WHERE object_type_name='Printer';
-INSERT INTO object(objecT_type_id, objecT_name, created_at, data)
-SELECT objecT_type_id, 'Switch1', current_timestamp, q'[{}]' FROM object_type WHERE object_type_name='Switch';
-INSERT INTO object(objecT_type_id, objecT_name, created_at, data)
-SELECT objecT_type_id, 'Full-Example', current_timestamp, q'[{}]' FROM object_type WHERE object_type_name='Full-Example';
+SELECT objecT_type_id, 'uwe', current_timestamp, q'[{"lastname": "Simon", "firstname": "Uwe", "email": "uwe.simon@magenta.de", "job": "admin"}]' FROM object_type WHERE object_type_name='Person';
 COMMIT;
 
 exit;
