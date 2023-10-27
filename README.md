@@ -12,7 +12,7 @@ So this plugin uses JSON-schema to **dynamically generate items** to display and
 ## Idea
 
 More and more database tables contain JSON-columns.
-JSON-columns gives us the possibility to show different content in different rows. It is also quite common, that 3td-party-software supplies JSON-columns for cusomisation. From GUI perspective this requires a dynamic layout a page during runtime.
+JSON-columns gives us the possibility to show different content in different rows. It is also quite common, that 3rd-party-software offers JSON-columns for customisation. From GUI perspective this requires a dynamic layout a page during runtime.
 
 When you create an Oracle-APEX-application which has to display and edit data from such tables, there should be an easy way to transform this data into seperate input fields or table columns.
 Another requirement is the input validation before saving them.
