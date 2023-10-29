@@ -105,7 +105,7 @@ INSERT INTO object_type(object_type_name, object_schema) VALUES ('Hotel', q'[
     },
     "comment": {
       "type": "string", "maxLength": 4000,
-      "apex": {"newRow": true, "rows": 10, "colSpan": 6}
+      "apex": {"newRow": true, "lines": 10, "colSpan": 6}
     }
 
   },
