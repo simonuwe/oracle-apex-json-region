@@ -83,6 +83,34 @@ INSERT INTO object_type(object_type_name, object_schema) VALUES ('Full-Example',
       "cardid": {"type": "string", "pattern": "[0-9]{4}( [0-9]{4}){3}"}
    }
 }]');
+
+INSERT INTO object_type(object_type_name, object_schema) VALUES ('Hotel', q'[
+{
+  "type": "object",
+  "properties": {
+     "name":    {"type": "string"},
+     "country": {"type": "string"},
+     "city":    {"type": "string"},
+     "stars":   {
+        "type": "integer", "maximum": 5,
+        "apex": {"itemtype": "starrating"}
+     },
+    "allinclusive": {
+      "type": "boolean", 
+      "apex": {"itemtype": "switch"}
+    },
+    "breakfastincluded": {
+      "type": "boolean", 
+      "apex": {"itemtype": "switch"}
+    },
+    "comment": {
+      "type": "string", "maxLength": 4000,
+      "apex": {"newRow": true, "rows": 10, "colSpan": 6}
+    }
+
+  },
+  "required": ["name", "city"]
+}]');
 COMMIT;
 
 -- relation types

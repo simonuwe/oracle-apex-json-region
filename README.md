@@ -78,7 +78,7 @@ In addition the keyword **const** for a constant value is accepted.
   "type": "object",
   "required": [ "propx", "propy", ...],
   "properties": {
-    "prop1":  { "type": "boolean" },
+    "prop1":  { "type": "boolean", },
     "prop2":  { "type": "integer", "minimum": 0, "maximum": 100},
     "prop3":  { "type": "number", "minimum": 0, "maximum": 100 },
     "prop4":  { "type": "string", "maxLength": 99, "pattern": "[A-Z]+[0-9]*"},
@@ -124,6 +124,37 @@ Types are
 
 The **const** attribute identifies a constant value of types **string**, **number**, **integer**, boolean.
 
+The json-region-plugin uses an optional extension item **"apex"** in the JSON-schema. Here APEX-specific information are specified.
+Currently supported are
+```
+"prop1": {
+  "type": "boolean", 
+  "apex": {"itemtype": "switch", "label": "your label"}
+},
+"prop2": {
+  "type": "integer", 
+  "maximum": 5,
+  "apex": {"itemtype": "starrating", "label": "your label"}
+},
+"prop3": {
+  "type": "number", 
+  "maximum": 5,
+  "apex": {"itemtype": "starrating", "label": "your label"}
+},
+"prop4": {
+  "type": "string", 
+  "apex": {"newRow": true, "colSpan": 3, "rows": 5, "label": "your label"}
+},
+```
+- **label** could be used in any **type**, it is used to set a specific label for the input-item.
+- **newRow** starts a new row, so the current filed will be the first i this row.
+- **rows** defines for long strings the rows used for the textarea.
+- **colSpan** defines the width of the item (values are 1-12)
+
+- **itemtype** defines how the item is shown in APEX
+  - **switch** changes for **boolean** the default checkbox to a switch.
+  - **starrating** uses for the numeric types **integer** and **number** stars to enter the value. The property **maximum** (which also defines in JSON-schema the max value for the item) is used for the number of displayed stars.
+
 ### Input validation
 
 - check for mandatory properties
@@ -151,14 +182,14 @@ In **Source** enter the name for the hidden JSON-item which is used in the form
 The plugin provides in the configuration view input for configuring
 - static JSON-schema used in the form 
 - dynamic JSON-schema retrieved by a SQL-query. Make sure that the query returns a single row, disable the item when no row could be returned.
-- the width used in the form to display the JSON-data (1-12)
-- The length-limit above which a **textarea** is used for string-items insted of the **text-field**.
-- If **keep additional attributes** is set, the plugin will keep all attributes not mentioned in the JSON-schema.
+- the **Column width** is used in the form for the width of the input items (values are 1-12)
+- When the **maxLength** of an item is above the **Textarealimit** a **textarea** is used for then string-item instead of the **text-field**.
 - If **Headers** is set, the plugin will generate additional headers for nested objects.
 - If **Hide JSON** is unset, the Item with the JSON data is shown on the form, otherwqise it will be hidden
+- If **Keep additional attributes** is set, the plugin will keep for updating the data all attributes not mentioned in the JSON-schema.
 - If **Remove NULLs from JSON** is set, all attributes with value **null** will be remove make the generated JSON more compact.
 
-The **readonly** Attribute is supported for the JSON-item.
+The **readonly** Attribute is supported for the JSON-region.
 
 In the configuration of the json column the **Type** must be **text** or **textara**. This item is set to hidden when the plugin is initialized.This is required, because otherwise APEX does not recoginse the data is changed in the region.
 
@@ -198,7 +229,53 @@ JOIN user_cons_columns cc ON(c.table_name=cc.table_name AND c.constraint_name=cc
 WHERE c.table_name='TAB' AND column_name='JSON_DATA'
   AND c.constraint_type='C' AND search_condition_vc like '%IS JSON%';
 ```
+
 This retrievs the JSON-schema for column **TAB.JSON_DATA** from the data dictionary, as long as the constraint-text is less than 4000 char long (the full text isin a LONG-column, which is not easy to process). So changing this VALIDATE setting will automatically adopt the layout of the json-region in your APEX-UI.
+
+The datatype **DATE** is not native to JSON-schema, where it is documented as
+``` 
+{
+  "type": "string",
+  "format": "date",
+  ...
+}
+```
+For date/time handling JSON-schema knows the formats
+**date** (2023-10-28), **date-time** (2023-10-28T10:15:00), **time** (12:15:10) and **duration** (5H10M for 5:10 hours) which implements the date/timeformats from ISO8601
+
+Oracle 23c does not use these JSON-schema definitions for validation, but introduced a new keyword **extendedType** for defining date/
+
+```
+{
+  "extendedType": "date",
+  ...
+}
+```
+
+which is always **date-time** in JSON-schema-definition!!!!
+
+To handle "standard-JSON-schema" date/time data the vaidation of the JSON-column with the JSON-schema must be defined as
+```
+IS JSON VALIDATE CAST '{...}' 
+```
+
+You can write now
+```
+{
+  ...
+  "created": "2023-10-28"
+  ...
+}
+```
+to the json-column, but when reading it back you will get
+```
+{
+  ...
+  "created": "2023-10-28T00:00:00"
+  ...
+} 
+```
+This could cause some trouble when comparing "old" and "new" values.
 
 ## Know issues
 

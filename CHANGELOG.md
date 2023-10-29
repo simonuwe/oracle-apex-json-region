@@ -1,3 +1,6 @@
+# Release 0.7 2023-11-00
+
+
 # Release 0.6 2023-10-28
 - #7 Support of PWA
 - #19 Option to keep attributes not specified in JSON-schema 

@@ -54,6 +54,7 @@ ALTER TABLE relation_type ADD CONSTRAINT relation_type_fk2 FOREIGN KEY(to_object
 ALTER TABLE relation_type ADD CONSTRAINT relation_type_fk3 FOREIGN KEY(from_cardinality_id) REFERENCING cardinality;
 ALTER TABLE relation_type ADD CONSTRAINT relation_type_fk4 FOREIGN KEY(to_cardinality_id) REFERENCING cardinality;
 
+ALTER TABLE object ADD CONSTRAINT object_un UNIQUE(object_type_id, object_name);
 ALTER TABLE object ADD CONSTRAINT object_fk1 FOREIGN KEY(object_type_id) REFERENCING object_type;
 
 ALTER TABLE relation ADD CONSTRAINT relation_fk1 FOREIGN KEY(relation_type_id) REFERENCING relation_type;
