@@ -88,7 +88,9 @@ In addition the keyword **const** for a constant value is accepted.
     "prop9":  { "$ref": "#/$defs/id"},
     "prop10": { "$ref": "#/$defs/address"},
     "prop11": { "type": "null"},
-    "prop12": { "const": "a constant value"}
+    "prop12": { "const": "a constant value"},
+    "prop13": { "extendedType": "date", "format": "date"},
+    "prop14": { "extendedType": "timestamp"},
     ...
   },
   "$defs}:{
@@ -124,6 +126,8 @@ Types are
 
 The **const** attribute identifies a constant value of types **string**, **number**, **integer**, boolean.
 
+The Oracle23-extension to JSON-schema-validation **extendedType** is sopported too. Because **date** always produces a **date-time** a format could be specified to force a **date**
+
 The json-region-plugin uses an optional extension item **"apex"** in the JSON-schema. Here APEX-specific information are specified.
 Currently supported are
 ```
@@ -143,17 +147,23 @@ Currently supported are
 },
 "prop4": {
   "type": "string", 
-  "apex": {"newRow": true, "colSpan": 3, "rows": 5, "label": "your label"}
+  "apex": {"newRow": true, "colSpan": 3, "lines": 5, "label": "your label"}
 },
+"prop4": {
+  "type": "string", 
+  "apex": {"itemtype": "radio", "enum": ["val1", "val2",...]}
+},
+
 ```
 - **label** could be used in any **type**, it is used to set a specific label for the input-item.
 - **newRow** starts a new row, so the current filed will be the first i this row.
-- **rows** defines for long strings the rows used for the textarea.
+- **lines** defines for long strings the rows used for the textarea.
 - **colSpan** defines the width of the item (values are 1-12)
 
 - **itemtype** defines how the item is shown in APEX
   - **switch** changes for **boolean** the default checkbox to a switch.
   - **starrating** uses for the numeric types **integer** and **number** stars to enter the value. The property **maximum** (which also defines in JSON-schema the max value for the item) is used for the number of displayed stars.
+  - **radio** uses a radio group to show the values of an enum.
 
 ### Input validation
 
@@ -180,8 +190,8 @@ To use the json-region-plugin in the APEX-page-designer create a region on your 
 In **Source** enter the name for the hidden JSON-item which is used in the form
 
 The plugin provides in the configuration view input for configuring
-- static JSON-schema used in the form 
-- dynamic JSON-schema retrieved by a SQL-query. Make sure that the query returns a single row, disable the item when no row could be returned.
+- A **static JSON-schema** used in the form. Starting with **Oracle 23c** a **JSON-schema** for **column-validation** is stored in the **datadictionary**. The Plugin tries to use this when the static **schema** is left empty. This keeps the schema of the JSON-column an the UI for this column in sync.  
+- A **dynamic JSON-schema** retrieved by a SQL-query. Make sure that the query returns a single row, disable the item when no row could be returned.
 - the **Column width** is used in the form for the width of the input items (values are 1-12)
 - When the **maxLength** of an item is above the **Textarealimit** a **textarea** is used for then string-item instead of the **text-field**.
 - If **Headers** is set, the plugin will generate additional headers for nested objects.
@@ -191,7 +201,7 @@ The plugin provides in the configuration view input for configuring
 
 The **readonly** Attribute is supported for the JSON-region.
 
-In the configuration of the json column the **Type** must be **text** or **textara**. This item is set to hidden when the plugin is initialized.This is required, because otherwise APEX does not recoginse the data is changed in the region.
+In the configuration of the json column the **Type** must be **text** or **textara**. This item is set to hidden when the plugin is initialized. This is required, because otherwise APEX does not recoginse the data is changed in the region.
 
 ### Example config
 The JSON-CLOB is named **P16_DATA**, the schema ist stored in table **object_type** and can be selected by **object_type_id=:P16_OBJECT_TYPE_ID**
@@ -243,7 +253,9 @@ The datatype **DATE** is not native to JSON-schema, where it is documented as
 For date/time handling JSON-schema knows the formats
 **date** (2023-10-28), **date-time** (2023-10-28T10:15:00), **time** (12:15:10) and **duration** (5H10M for 5:10 hours) which implements the date/timeformats from ISO8601
 
-Oracle 23c does not use these JSON-schema definitions for validation, but introduced a new keyword **extendedType** for defining date/
+Oracle 23c does not implement it this way.
+As for the native datatye **DATE** the json formats **date** and **date-time** always result in date+time..
+Also Oracle introduced a new keyword **extendedType** for defining date/
 
 ```
 {
@@ -252,7 +264,7 @@ Oracle 23c does not use these JSON-schema definitions for validation, but introd
 }
 ```
 
-which is always **date-time** in JSON-schema-definition!!!!
+which is **date-time** in JSON-schema-definition too !!!!
 
 To handle "standard-JSON-schema" date/time data the vaidation of the JSON-column with the JSON-schema must be defined as
 ```
@@ -292,7 +304,4 @@ This could cause some trouble when comparing "old" and "new" values.
 
 ## Next steps
 
-- support of optional configurable labels (not only derived from column name)
-- support of optional Widget like **starrating** for **integer** or **switch** for **boolean**
 - (partial) support of arrays
-- For Oracle >=23c extract the JSON-schema from VALIDATE-check-constraint of the JSON-column 

@@ -49,6 +49,9 @@ INSERT INTO object_type(object_type_name, object_schema) VALUES ('Full-Example',
   "title": "An example schema with all supported types",
   "type": "object",
   "required": ["lastname", "gender"],
+  "dependentRequired":{
+    "creditcard": ["creditid"]
+  },
   "properties": {
     "lastname":    {"$ref": "#/$defs/name"},
     "firstname":   {"$ref": "#/$defs/name"},
@@ -56,12 +59,17 @@ INSERT INTO object_type(object_type_name, object_schema) VALUES ('Full-Example',
     "gender":      {"type": "string", "enum":["female", "male", "diverse"]},
     "creditcard":  {"type": "string", "enum":["Visa", "Mastercard", "Amex", "Diners"]},
     "creditid":    {"$ref": "#/$defs/cardid"},
-    "salary":      {"type": "integer", "minimum": 10000},
+    "salary":      {"type": "number", "minimum": 10000.00,
+                    "apex": {"format": "currency"}
+                   },
+    "payments":    {"type": "integer", "minimum": 1, "maximum": 15},
     "retired":     {"type": "boolean"},
     "email":       {"type": "string", "format": "email"},
     "website":     {"type": "string", "format": "uri"},
     "home_address":       {"$ref": "#/$defs/address"},
-    "office_address":     {"$ref": "#/$defs/address"},
+    "office_address":     {"$ref": "#/$defs/address",
+                           "room": {"type": "string"}
+                          },
     "comment":     {"type": "string", "maxLength": 500},
     "lastlogin":   {"type": "string", "format": "date-time"},
     "source":      {"const": "via APEX-application"},
@@ -73,11 +81,11 @@ INSERT INTO object_type(object_type_name, object_schema) VALUES ('Full-Example',
         "type": "object",
         "required": ["zipcode", "city"],
         "properties": {
-           "country": {"type": "string"},
-           "state":   {"type": "string"},
-           "zipcode": {"type": "string"},
-           "city":    {"type": "string"},
-           "street":  {"type": "string"}
+           "country": {"$ref": "#/$defs/name"},
+           "state":   {"$ref": "#/$defs/name"},
+           "zipcode": {"type": "string", "maxLength": 10},
+           "city":    {"$ref": "#/$defs/name"},
+           "street":  {"$ref": "#/$defs/name"}
          }
        }, 
       "cardid": {"type": "string", "pattern": "[0-9]{4}( [0-9]{4}){3}"}
@@ -88,13 +96,24 @@ INSERT INTO object_type(object_type_name, object_schema) VALUES ('Hotel', q'[
 {
   "type": "object",
   "properties": {
-     "name":    {"type": "string"},
-     "country": {"type": "string"},
-     "city":    {"type": "string"},
-     "stars":   {
+     "name":      { "type": "string"},
+     "continent": { "type": "string",
+                    "enum": ["Europe", "Africa", "America", "Antarctica", "Asia", "Australia"],
+                    "apex": {"itemtype": "radio", "newRow": true}
+                  },
+     "country":   { "type": "string"},
+     "city":      { "type": "string"},
+     "stars": {
         "type": "integer", "maximum": 5,
         "apex": {"itemtype": "starrating"}
      },
+    "roomrates": {
+       "type": "object",
+       "properties":{
+          "from": {"$ref": "#/$defs/price"},
+          "to":   {"$ref": "#/$defs/price"}
+       }
+    },
     "allinclusive": {
       "type": "boolean", 
       "apex": {"itemtype": "switch"}
@@ -103,13 +122,22 @@ INSERT INTO object_type(object_type_name, object_schema) VALUES ('Hotel', q'[
       "type": "boolean", 
       "apex": {"itemtype": "switch"}
     },
+    "updated": {"extendedType": "date",
+                "format": "date-time"
+    },
     "comment": {
-      "type": "string", "maxLength": 4000,
-      "apex": {"newRow": true, "lines": 10, "colSpan": 6}
+      "type": "string", "maxLength": 4000,          
+      "apex": {"lines": 10, "colSpan": 6}
     }
-
   },
-  "required": ["name", "city"]
+  "required": ["name", "continent", "city"],
+  "$defs" :{
+    "price": {
+        "type": "number",
+        "minimum": 0,
+        "apex": {"format": "currency"}
+     }
+  }
 }]');
 COMMIT;
 
