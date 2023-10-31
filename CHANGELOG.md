@@ -1,4 +1,4 @@
-# Release 0.7 2023-11-00
+# Release 0.7 2023-11-06
  - #3 display of date/date-time and numbers in local format
  - #4 configurable labels
  - #30 Support of "dependentRequired"

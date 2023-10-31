@@ -139,14 +139,76 @@ INSERT INTO object_type(object_type_name, object_schema) VALUES ('Hotel', q'[
      }
   }
 }]');
+
+INSERT INTO object_type(object_type_name, object_schema) VALUES ('Person', q'[
+{
+  "type": "object",
+  "required": ["lastname", "email"],
+  "properties": {
+    "lastname":  {"type": "string", "maxLength": 30},
+    "firstname": {"type": "string", "maxLength": 30},
+    "email":     {"type": "string", "format": "email"},
+    "home_address":     {"$ref": "#/$defs/address"},
+    "office_address":     {"$ref": "#/$defs/address"},
+    "job":       {"type": "string", "enum": ["User", "DBA", "Admin"]}
+   },
+  "$defs":{
+      "name": {"type": "string", "maxLength": 30},
+      "address": {
+        "type": "object",
+        "required": ["zipcode", "city"],
+        "properties": {
+           "country": {"type": "string"},
+           "state":   {"type": "string"},
+           "zipcode": {"type": "string"},
+           "city":    {"type": "string"},
+           "street":  {"type": "string"}
+         }
+       }, 
+      "cardid": {"type": "string", "pattern": "[0-9]{4}( [0-9]{4}){3}"}
+   }
+}]');
 COMMIT;
 
 -- relation types
+INSERT INTO relation_type (relation_type_NAME,from_object_type_id,from_cardinality_id,to_object_type_id,to_cardinality_id,relation_schema) 
+VALUES ('booking','21','3','61','3',q'[{
+  "type":  "object",
+  "properties": {
+     "checkin":      { "type":  "string", "format":  "date"},
+     "checkout":   { "type":  "string", "format":  "date"},
+     "checkedin":  { "type":  "boolean"}, 
+      "room": {"type": "string"}
+  },
+  "required": ["checkin", "checkout"]
+}]');
+INSERT INTO relation_type (relation_type_NAME,from_object_type_id,from_cardinality_id,to_object_type_id,to_cardinality_id,relation_schema) 
+VALUES ('Server->Switch','1','3','2','4',q'[{"type": "object",
+  "properties": {
+    "port": { "type": "integer"}
+  }
+}]');
+INSERT INTO relation_type (relation_type_NAME,from_object_type_id,from_cardinality_id,to_object_type_id,to_cardinality_id,relation_schema) 
+VALUES ('Switch->Switch','2','3','2','3','{}');
+INSERT INTO relation_type (relation_type_NAME,from_object_type_id,from_cardinality_id,to_object_type_id,to_cardinality_id,relation_schema) 
+VALUES ('Printer->Switch','3','3','2','4',q'[{"type": "object",
+  "properties": {
+    "port": { "type": "integer"}
+  }
+}]');
+
+INSERT INTO relation_type (relation_type_NAME,from_object_type_id,from_cardinality_id,to_object_type_id,to_cardinality_id,relation_schema)  
+SELECT 'Server owned by',f.object_type_id, 3, t.object_type_id,2,'{}'
+FROM object_type f, object_type t where f.object_type_name='Server' and t.object_type_name='Person';
+
+INSERT INTO relation_type (relation_type_NAME,from_object_type_id,from_cardinality_id,to_object_type_id,to_cardinality_id,relation_schema)  
+SELECT 'Server->Admin',f.object_type_id,4,t.object_type_id,3,'{}'
+FROM object_type f, object_type t where f.object_type_name='Server' and t.object_type_name='Person';
 COMMIT;
 
 -- objects
-INSERT INTO object(objecT_type_id, objecT_name, created_at, data)
-SELECT objecT_type_id, 'uwe', current_timestamp, q'[{"lastname": "Simon", "firstname": "Uwe", "email": "uwe.simon@magenta.de", "job": "admin"}]' FROM object_type WHERE object_type_name='Person';
+INSERT INTO object(object_type_id, object_name, created_at, data)
+SELECT object_type_id, 'uwe', current_timestamp, q'[{"lastname": "Simon", "firstname": "Uwe", "email": "uwe.simon@magenta.de", "job": "admin"}]' FROM object_type WHERE object_type_name='Person';
 COMMIT;
 
 exit;
