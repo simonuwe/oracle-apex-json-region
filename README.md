@@ -1,13 +1,20 @@
 # json-region
 
-An Oracle-APEX-plugin that provides dynamic input items for an easy way to display and edit **JSON-data**. 
+An Oracle-APEX-plugin that provides dynamic input items for an easy way to display and edit **JSON-data** in an APEX-application. 
+The field-items are dynamically generate based on a JSON-schema. The JSON-schema could be fixed for a page or dynamically based on a JSON-schema found by a SQL_query.
 
-Starting with Oracle 23c **JSON-schema** could be used for the valitions of **JSON-data**.
-So this plugin uses JSON-schema to **dynamically generate items** to display and/or edit **JSON-data**. 
+Starting with **Oracle 23c** a **JSON-schema** could be used for the valition of a column with datatype **JSON**.
+So this plugin could also use the JSON-schema of the JSON-validation to **dynamically generate items** to display and/or edit **JSON-data**. 
+In this way the field-items of an application always match with the format of your JSON-column.
 
 ## Screenshots
-![demo](docu/demo.gif)
+![screenshots](docu/demo.gif)
 
+## Demo
+
+An online demo could be found **[here](https://tlodfjxbrej9i6r-apex01.adb.eu-frankfurt-1.oraclecloudapps.com/ords/r/uwe/json-region-demo/objects)**. You can create new objects and edit existing. When creating a new object you can select one of the existings schemas in **object_types**. Type **Full-Example** and **Hotel** both together show the variaty of supported field-items/formats.
+
+Click here on **menu** on top left and there on **objects**
 
 ## Idea
 
@@ -59,6 +66,7 @@ Here an example
 ```
 
 This Oracle-APEX-plugin provides a new region-type **JSON-region**. 
+
 
 ## Supported datatypes
 

@@ -122,8 +122,11 @@ INSERT INTO object_type(object_type_name, object_schema) VALUES ('Hotel', q'[
       "type": "boolean", 
       "apex": {"itemtype": "switch"}
     },
-    "updated": {"extendedType": "date",
-                "format": "date-time"
+    "updated":   {"extendedType": "date",
+                  "format": "date-time"
+    },
+    "features":  {"type": "array",
+                  "items": {"type": "string", "enum": ["Pool", "Bar", "Restaurant", "Carpark"]} 
     },
     "comment": {
       "type": "string", "maxLength": 4000,          
@@ -172,7 +175,7 @@ COMMIT;
 
 -- relation types
 INSERT INTO relation_type (relation_type_NAME,from_object_type_id,from_cardinality_id,to_object_type_id,to_cardinality_id,relation_schema) 
-VALUES ('booking','21','3','61','3',q'[{
+SELECT 'booking', f.object_type_id, 3, t.object_type_id, 3,q'[{
   "type":  "object",
   "properties": {
      "checkin":      { "type":  "string", "format":  "date"},
@@ -181,28 +184,35 @@ VALUES ('booking','21','3','61','3',q'[{
       "room": {"type": "string"}
   },
   "required": ["checkin", "checkout"]
-}]');
+}]'
+FROM object_type f, object_type t where f.object_type_name='Person' and t.object_type_name='Hotel';
+
 INSERT INTO relation_type (relation_type_NAME,from_object_type_id,from_cardinality_id,to_object_type_id,to_cardinality_id,relation_schema) 
-VALUES ('Server->Switch','1','3','2','4',q'[{"type": "object",
+SELECT 'Server->Switch', f.object_type_id, 3, t.object_type_id, 4,q'[{"type": "object",
   "properties": {
     "port": { "type": "integer"}
   }
-}]');
+}]'
+FROM object_type f, object_type t where f.object_type_name='Server' and t.object_type_name='Switch';
+
 INSERT INTO relation_type (relation_type_NAME,from_object_type_id,from_cardinality_id,to_object_type_id,to_cardinality_id,relation_schema) 
-VALUES ('Switch->Switch','2','3','2','3','{}');
+SELECT 'Switch->Switch', f.object_type_id, 3, t.object_type_id, 3, '{}'
+FROM object_type f, object_type t where f.object_type_name='Switch' and t.object_type_name='Switch';
+
 INSERT INTO relation_type (relation_type_NAME,from_object_type_id,from_cardinality_id,to_object_type_id,to_cardinality_id,relation_schema) 
-VALUES ('Printer->Switch','3','3','2','4',q'[{"type": "object",
+SELECT 'Printer->Switch', '3', f.object_type_id, '2', t.object_type_id, q'[{"type": "object",
   "properties": {
     "port": { "type": "integer"}
   }
-}]');
+}]'
+FROM object_type f, object_type t where f.object_type_name='Printer' and t.object_type_name='Switch';
 
 INSERT INTO relation_type (relation_type_NAME,from_object_type_id,from_cardinality_id,to_object_type_id,to_cardinality_id,relation_schema)  
-SELECT 'Server owned by',f.object_type_id, 3, t.object_type_id,2,'{}'
+SELECT 'Server owned by', f.object_type_id, 3, t.object_type_id, 2, '{}'
 FROM object_type f, object_type t where f.object_type_name='Server' and t.object_type_name='Person';
 
 INSERT INTO relation_type (relation_type_NAME,from_object_type_id,from_cardinality_id,to_object_type_id,to_cardinality_id,relation_schema)  
-SELECT 'Server->Admin',f.object_type_id,4,t.object_type_id,3,'{}'
+SELECT 'Server->Admin',f.object_type_id, 4, t.object_type_id, 3, '{}'
 FROM object_type f, object_type t where f.object_type_name='Server' and t.object_type_name='Person';
 COMMIT;
 
