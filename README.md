@@ -85,25 +85,32 @@ In addition the keyword **const** for a constant value is accepted.
 
 ```JSON
 {
-  "type": "object",
-  "required": [ "propx", "propy", ...],
-  "properties": {
-    "prop1":  { "type": "boolean", },
-    "prop2":  { "type": "integer", "minimum": 0, "maximum": 100},
-    "prop3":  { "type": "number", "minimum": 0, "maximum": 100 },
-    "prop4":  { "type": "string", "maxLength": 99, "pattern": "[A-Z]+[0-9]*"},
-    "prop5":  { "type": "string", "enum": ["val1", "val2", ..] },
-    "prop7":  { "type": "string", "format": "date"},
-    "prop8":  { "type": "string", "format": "date-time"},
-    "prop9":  { "$ref": "#/$defs/id"},
-    "prop10": { "$ref": "#/$defs/address"},
-    "prop11": { "type": "null"},
-    "prop12": { "const": "a constant value"},
-    "prop13": { "extendedType": "date", "format": "date"},
-    "prop14": { "extendedType": "timestamp"},
-    ...
+  "obj1":{
+    "type": "object",
+    "required": [ "propx", "propy", ...],
+    "properties": {
+      "prop1":  { "type": "boolean", },
+      "prop2":  { "type": "integer", "minimum": 0, "maximum": 100},
+      "prop3":  { "type": "number", "minimum": 0, "maximum": 100 },
+      "prop4":  { "type": "string", "maxLength": 99, "pattern": "[A-Z]+[0-9]*"},
+      "prop5":  { "type": "string", "enum": ["val1", "val2", ..] },
+      "prop7":  { "type": "string", "format": "date"},
+      "prop8":  { "type": "string", "format": "date-time"},
+      "prop9":  { "$ref": "#/$defs/id"},
+      "prop10": { "$ref": "#/$defs/address"},
+      "prop11": { "type": "null"},
+      "prop12": { "const": "a constant value"},
+      "prop13": { "extendedType": "date", "format": "date"},
+      "prop14": { "extendedType": "timestamp"},
+      ...
+    },
+    "additionalProperties": true
   },
-  "$defs}:{
+  "arr1": {
+    "type": "array",
+    "items": {"type": "string", "enum": ["val1", "val2", ..]}
+  },
+  "$defs":{
     "id"{ "type": "string", "maxLength": 30},
     "address": {
       "type": "object",
@@ -115,56 +122,104 @@ In addition the keyword **const** for a constant value is accepted.
       }
     }
   }
-}
+},
 ```
 
 The attribute **required** contains all required properties (NOT NULL).
 
 The **type** attribute is mandatory, all others are optional.
 Types are
+- **object** is o object with properties, for each property UI-widgets are created
+- **array** is only supported as a "simple array" which generates a multiselection checkbox-group with a **checkbox per enum value**. The array stores the checked items.
 - **string** could have an additional attribute **format** 
   - **date** displayed as a date-picker
   - **date-time** displayed as a date-picker
   - **email** a valid email-address
   - **uri** a valid url
 
-  The **string** supports the optional "integer" attributes **minLength** and **maxLength**, a string attribute **pattern** which is a regular-expression (like '[0-9A-F]*' for an optional HEX-string and an array) **enum**, which contains a list a valid values and will be shown as a pulldownlist.
+  The **string** supports the optional "integer" attributes **minLength** and **maxLength**, a string attribute **pattern** which is a regular-expression (like **'[0-9A-F]*'** for an optional HEX-string and an array) **enum**, which contains a list a valid values. The enum will be shown as a pulldownlist.
 - **integer** with values like 1, 2, 100, ...
 - **number** with values like 1.5, 100.50, ...
 - **boolean** with values true and false.
 - **null** always a NULL value
 
+The optional **additionalProperties** defines whether the object is allowed to have properties not defined in then JSON-schema. This additional properties are kept when updating the data.
+
 The **const** attribute identifies a constant value of types **string**, **number**, **integer**, boolean.
 
-The Oracle23-extension to JSON-schema-validation **extendedType** is sopported too. Because **date** always produces a **date-time** a format could be specified to force a **date**
+The Oracle23-JSON-schema-extension **extendedType** is supported too. Because **date** always produces a **date-time** a format could be specified to force a **date**
 
-The json-region-plugin uses an optional extension item **"apex"** in the JSON-schema. Here APEX-specific information are specified.
+### Advanced schema
+
+The json-region-plugin uses an optional extension item **"apex"** in the JSON-schema. Here APEX-specific information are specified. To get more flexible UIs the properties **"dependentRequired"**, **"dependentSchema"**, **"if"**, **"then"** and **"else"** are supported too.
+
 Currently supported are
 ```
-"prop1": {
-  "type": "boolean", 
-  "apex": {"itemtype": "switch", "label": "your label"}
-},
-"prop2": {
-  "type": "integer", 
-  "maximum": 5,
-  "apex": {"itemtype": "starrating", "label": "your label"}
-},
-"prop3": {
-  "type": "number", 
-  "maximum": 5,
-  "apex": {"itemtype": "starrating", "label": "your label"}
-},
-"prop4": {
-  "type": "string", 
-  "apex": {"newRow": true, "colSpan": 3, "lines": 5, "label": "your label"}
-},
-"prop4": {
-  "type": "string", 
-  "apex": {"itemtype": "radio", "enum": ["val1", "val2",...]}
-},
+{ "type": "object"
+  "properties": {
+    "prop1": {
+      "type": "boolean", 
+      "apex": {"itemtype": "switch", "label": "your label"}
+    },
+    "prop2": {
+      "type": "integer", 
+      "maximum": 5,
+      "apex": {"itemtype": "starrating", "label": "your label"}
+    },
+    "prop3": {
+      "type": "number", 
+      "maximum": 5,
+      "apex": {"itemtype": "starrating", "label": "your label"}
+    },
+    "prop4": {
+      "type": "string", 
+      "apex": {"newRow": true, "colSpan": 3, "lines": 5, "label": "your label"}
+    },
+    "prop4": {
+      "type": "string", 
+      "apex": {"readonly": true, "itemtype": "radio", "enum": ["val1", "val2",...]}
+    },
+    "prop5": {
+      "type": "array",
+      "items": {"type": "string", "enum": {"val1", "val2", ...]}} 
+    },
+    "prop6": {"type": null},
+    "prop7": ["const": "const string"],
+  ...
+  },
+  "required": ["prop1", "pro2", ...]
+  "dependentRequired": {
+    "prop1": ["prop4", ...]
+  },
+  "dependentSchemas": {
+    "prop1": { 
+      "properties": {
+        "prop11": {"type": "integer"},
+        "prop12": {"type": string"},
+        ....
+      }
+     }
+  },
+  "if": {
+    "properties": {
+      "prop1": { "const": true }
+    }
+  },
+  "then": {
+    "properties": {
+      "prop1a": { "type": "string" }
+    }
+  },
+  "else": {
+    "properties": {
+      "prop1b": { "type": "string", "format": "date" }
+    }
+  }
 
+}
 ```
+#### Advanced APEX-properties
+
 - **label** could be used in any **type**, it is used to set a specific label for the input-item.
 - **newRow** starts a new row, so the current filed will be the first i this row.
 - **lines** defines for long strings the rows used for the textarea.
@@ -174,6 +229,16 @@ Currently supported are
   - **switch** changes for **boolean** the default checkbox to a switch.
   - **starrating** uses for the numeric types **integer** and **number** stars to enter the value. The property **maximum** (which also defines in JSON-schema the max value for the item) is used for the number of displayed stars.
   - **radio** uses a radio group to show the values of an enum.
+  - **readonly** set a single object/property to readonly.
+  - simple **array** to support multiselect checkbox-groups, the checkboxes are generate from the **enum**.
+  
+#### Advanced JSON-schema properties
+
+  - With **dependentRequired** fielditems could be set to **required** depending on a **not empty** fielditem.
+  - With **dependentSchemas** the fielditems could be shown depending on an **not empty** fielditem, currently only one dependent schema is supported.
+  - The 3 properties **if**, **then**, **else** support conditional "UI-parts". For example in case the boolean **differentBillingAddress** is true additional entry items for a 2nd address are shown.
+
+Details could be found in at https://json-schema.org
 
 ### Input validation
 
@@ -191,8 +256,7 @@ Optional attributes are
 The following attributes defined in JSON-schema are not supported by the APEX-field-validaten and are ignored
 - **string**: attributes **minLength**, **time**, **duration**
 - **integer**, **number** the attributes **multiplyOf**, **excludeMinimum**, **excludeMaximum**
-- **object**: the attributes **minProperties**, **maxProperties**, **dependentRequired**
-- **array**: arrays and there attributes are not supported
+- **object**: the attributes **minProperties**, **maxProperties**,  - **array**: arrays and there attributes are not supported
 
 ## Configuration in the APEX-page-designer
 
@@ -306,8 +370,9 @@ This could cause some trouble when comparing "old" and "new" values.
 
 ## Current status
 - Form only, only **simple** JSON-schema with nested objects
-- no arrays in JSON-schema
-- no schema composition (AllOf, OneOf, Anyof)
+- limited arrays in JSON-schema
+- only one schema in **dependentSchemas**
+- no schema composition (**AllOf**, **OneOf**, **AnyOf**)
 - only support of standard APEX-field-validation (APEX's date/date-time Javascript-validation has a Bug)
 - If JSON-data is stored in a CLOB-column use check-constraint **IS JSON(STRICT)**
 - Now with PWA support
