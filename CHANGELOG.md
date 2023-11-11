@@ -1,4 +1,4 @@
-# Release 0.7 2023-11-06
+# Release 0.6.5 2023-11-11
  - #3 display of date/date-time and numbers in local format
  - #4 configurable labels
  - #30 Support of "dependentRequired"
@@ -7,6 +7,9 @@
  - #34 Oracle 23c JSON-schema and date
  - #37 Recursive $ref does not work in JSON-schema
  - #39 switch always "false" when readonly
+ - #45 Compatibility broken
+ - #47 APEX-22.1 has another date/time-picker
+
 
 # Release 0.6 2023-10-28
 - #7 Support of PWA

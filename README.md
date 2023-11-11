@@ -278,7 +278,7 @@ The **readonly** Attribute is supported for the JSON-region.
 In the configuration of the json column the **Type** must be **text** or **textara**. This item is set to hidden when the plugin is initialized. This is required, because otherwise APEX does not recoginse the data is changed in the region.
 
 ### Example config
-The JSON-CLOB is named **P16_DATA**, the schema ist stored in table **object_type** and can be selected by **object_type_id=:P16_OBJECT_TYPE_ID**
+The JSON-CLOB is named **P2_DATA**, the schema ist stored in table **object_type** and can be selected by **object_type_id=:P2_OBJECT_TYPE_ID**
 
 Configuration of the **JSON-data-column**
 
@@ -367,6 +367,7 @@ This could cause some trouble when comparing "old" and "new" values.
 
 - In SQL-Workshop in APEX-Oracle-Cloud you can not create JSON-Columns (trying this returns ORA-00002 invalid datatype). Here you have to use CLOB columns. 
 - When using a CLOB for the JSONs use check constraint **IS JSON(STRICT)** to enforce that the JSON is returned wth **"** enclosed keys..
+- In APEX 22.1 there is aa general issue (with plugin and without) with "**Modal Dialog** with template **Drawer**", this causes a jquery-error (looks like a datepicker issue). Without "Drawer" all work fine. 
 
 ## Current status
 - Form only, only **simple** JSON-schema with nested objects

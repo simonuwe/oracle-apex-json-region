@@ -19,9 +19,9 @@
       "url" :  "https://github.com/simonuwe/oracle-apex-json-region.git"
     },
     "oracle" : {
-      "versions" :   ["18.0.0", "19.0.0", "23.0.0"],
+      "versions" :   ["19.0.0", "23.0.0"],
       "apex" : {
-        "versions" : ["21.02", "22.01", "22.02", "23.01"],
+        "versions" : ["22.01", "22.02", "23.01"],
         "plugin" : {
           "internalName" : "JSON_REGION.UWESIMON.SELFHOST.EU",
           "type" :         "region",
