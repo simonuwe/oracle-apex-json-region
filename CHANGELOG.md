@@ -1,3 +1,7 @@
+# Release 0.7.0 2023-12-03
+- #48 css lost for APEX-22.1
+- #49 Help texts lost during backport to APEX-22.1
+
 # Release 0.6.5 2023-11-11
  - #3 display of date/date-time and numbers in local format
  - #4 configurable labels
@@ -8,6 +12,7 @@
  - #37 Recursive $ref does not work in JSON-schema
  - #39 switch always "false" when readonly
  - #45 Compatibility broken
+ - #46 Export/Import of application causes inline-errormessages to disapear 
  - #47 APEX-22.1 has another date/time-picker
 
 
