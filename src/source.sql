@@ -1,8 +1,7 @@
 /*
-
-APEX JSON-region plugin
-Copyright Uwe Simon 2023
-
+ * JSON-region-plugin
+ * (c) Uwe Simon 2023
+ * Apache License Version 2.0
 */
 
 /*

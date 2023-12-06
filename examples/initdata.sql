@@ -105,7 +105,7 @@ INSERT INTO object_type(object_type_name, object_schema) VALUES ('Hotel', q'[
      "city":      { "type": "string"},
      "stars": {
         "type": "integer", "maximum": 5,
-        "apex": {"itemtype": "starrating"}
+        "apex": {"itemtype": "starrating", "label": "*-rating"}
      },
     "roomrates": {
        "type": "object",
@@ -143,18 +143,32 @@ INSERT INTO object_type(object_type_name, object_schema) VALUES ('Hotel', q'[
   }
 }]');
 
-INSERT INTO object_type(object_type_name, object_schema) VALUES ('Person', q'[
-{
+INSERT INTO object_type(object_type_name, object_schema) VALUES ('Person', q'[{
   "type": "object",
   "required": ["lastname", "email"],
   "properties": {
     "lastname":  {"type": "string", "maxLength": 30},
     "firstname": {"type": "string", "maxLength": 30},
     "email":     {"type": "string", "format": "email"},
-    "home_address":     {"$ref": "#/$defs/address"},
+    "job":       {"type": "string", "enum": ["User", "DBA", "Admin"]},
     "office_address":     {"$ref": "#/$defs/address"},
-    "job":       {"type": "string", "enum": ["User", "DBA", "Admin"]}
-   },
+    "deliverytohome":     { "type": "boolean", "apex": {"type": "switch", "label": "Delivery to homeoffice"}}
+  },
+  "if": {
+      "properties": {
+        "deliverytohome": { "const": true}
+      }
+  },
+  "then": {
+     "properties": {
+       "home_address":     {"$ref": "#/$defs/address"}
+     }
+  },
+  "else": {
+     "properties": {
+       "delivery_info":     {"type": "string"}
+     }
+  },
   "$defs":{
       "name": {"type": "string", "maxLength": 30},
       "address": {

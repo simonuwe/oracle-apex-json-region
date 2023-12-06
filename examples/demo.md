@@ -6,6 +6,8 @@ You can create create here new objects and edit existing with varying JSON-schem
 
 When creating a new object you can select one of the existings schemas in **object_types**. Type **Full-Example** and **Hotel** both together show the variaty of supported field-items/formats.
 
+Clicking on **Help** will show the **JSON-schema** and the **JSON-data** of the current object.
+
 Click here on **menu** on top left and there on **objects**
 
 The the datamodel looks like this.
@@ -16,3 +18,4 @@ The table **OBJECT_TYPE** contains in column **OBJECT_SCHEMA** for every objectt
 # Example-application
 
 The subdirectory **examples** contains the demo-application to show the possibilities. Go into this directory and install from there.
+

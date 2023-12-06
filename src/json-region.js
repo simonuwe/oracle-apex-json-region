@@ -1,8 +1,7 @@
 /*
-
-APEX JSON-region plugin
-Copyright Uwe Simon 2023
-
+ * APEX JSON-region plugin
+ * (c) Uwe Simon 2023
+ * Apache License Version 2.0
 */
 
 "use strict";
@@ -11,9 +10,6 @@ Copyright Uwe Simon 2023
      * initialize the JSON-region plugin, call form inside PL/SQL when plugin ist initialized
      */
 function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
-    console.dir($('.a-Form-error[data-template-id]'));
-    console.log($($('.a-Form-error[data-template-id]')[0]).attr('data-template-id').replace('_ET',''));
-
         // get the datat-template-id for inline errors from another input field
     pOptions.datatemplateET = $($('.a-Form-error[data-template-id]')[0]).attr('data-template-id') || 'xx_ET';
         // Hacks to make the fields of json-region work like regular APEX-item-fields 
@@ -54,6 +50,15 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
     apex.debug.trace(">>jsonRegion.propagateShow", dataitem, schema, mode);
     if(schema.type=='object'){
       for(let [l_name, l_item] of Object.entries(schema.properties)){
+        if(pOptions.headers){
+            console.log('switch headers', dataitem);
+            if(mode==true)  { 
+              $('#' + dataitem + '_heading').show(); 
+            }
+            if(mode==false) { 
+              $('#' + dataitem + '_heading').hide(); 
+            }
+        }
         propagateShow(itemname(dataitem, l_name), l_item, mode);
       }
     } else {
@@ -237,15 +242,17 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
     if(schema.if){
       let l_eval = evalExpression(schema.if, data);
       if(schema.then) {  // conditional schema then
-        attachObject(dataitem, dataitem, {type: 'object', properties: schema.then.properties}, l_readonly, data);
-        for(const [l_name, l_item] of Object.entries(schema.then.properties)){
+        let properties = schema.then.properties||{};
+        attachObject(dataitem, dataitem, {type: 'object', properties: properties}, l_readonly, data);
+        for(const [l_name, l_item] of Object.entries(properties)){
           propagateShow(itemname(dataitem, l_name), l_item, l_eval===true);
         }
       }
 
       if(schema.else) { // conditional schema else
-        attachObject(dataitem, dataitem, {type: 'object', properties: schema.else.properties}, l_readonly, data);
-        for(const [l_name, l_item] of Object.entries(schema.else.properties)){
+        let properties = schema.else.properties||{};
+        attachObject(dataitem, dataitem, {type: 'object', properties: properties}, l_readonly, data);
+        for(const [l_name, l_item] of Object.entries(properties)){
           propagateShow(itemname(dataitem, l_name), l_item, l_eval===false);
         }
       }
@@ -259,13 +266,15 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
             let l_json = getData(dataitem, schema, {})
             let l_eval = evalExpression(schema.if, l_json);
             if(schema.then){ 
-              for(const [l_name,l_item] of Object.entries(schema.then.properties)){
+              let properties = schema.then.properties||{};
+              for(const [l_name,l_item] of Object.entries(properties)){
                 propagateShow(itemname(dataitem, l_name), l_item, l_eval==true);
               }
             }
 
             if(schema.else){ 
-              for(const [l_name, l_item] of Object.entries(schema.else.properties)){
+              let properties = schema.else.properties||{};
+              for(const [l_name, l_item] of Object.entries(properties)){
                 propagateShow(itemname(dataitem, l_name), l_item, l_eval==false);
               }
             }                              
@@ -302,6 +311,11 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
       l_json = schema.additionalProperties?oldData:{};  // when there are additionalProperties, keep there values
       switch(schema.type){
       case 'object':
+        if(!(oldData instanceof Object)) {
+          apex.debug.error('Schema mismatch: ', l_json, 'must be an object');
+          l_json = {};
+          oldData ={};
+        }
         if(schema.properties){
           for(let [l_name, l_schema] of Object.entries(schema.properties)){
             l_json[l_name]=getData(itemname(dataitem, l_name), l_schema, oldData[l_name]);
@@ -341,14 +355,16 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
         // getting the data depends on the evaluation of the if clause.
       let l_eval = evalExpression(schema.if, l_json);
       if(schema.then && l_eval==true){
-        let l_newJson = getData(dataitem, {type: 'object', properties: schema.then.properties}, oldData);
+        let properties = schema.then.properties||{};
+        let l_newJson = getData(dataitem, {type: 'object', properties: properties}, oldData);
         console.dir(l_newJson);
         // merge conditional input into current result
         l_json = {...l_json, ...l_newJson};
       }
 
       if(schema.else && l_eval==false){
-        let l_newJson = getData(dataitem, {type: 'object', properties: schema.else.properties}, oldData);
+        let properties = schema.else.properties||{};
+        let l_newJson = getData(dataitem, {type: 'object', properties: properties}, oldData);
         console.dir(l_newJson);
         // merge conditional input into current result
         l_json = {...l_json, ...l_newJson};
@@ -751,7 +767,7 @@ console.log(l_html);
       if(schema.apex && schema.apex.newRow) { // current field should start at a new row
           l_html += apex.util.applyTemplate(`
 </div>
-<div id="#ID#" class="row jsonregion  c1">
+<div id="#ID#" class="row jsonregion">
 `,                                  { placeholders: {
                                                       "ID": prefix + '_OBJ'
                                                     }
@@ -773,18 +789,18 @@ console.log(l_html);
 
             l_html += apex.util.applyTemplate(`
 </div>
-<div class="row jsonregion c2">
+<div class="row jsonregion">
   <div class="t-Region-header">
     <div class="t-Region-headerItems t-Region-headerItems--title">
-      <h2 class="t-Region-title" id="R17715610701691854_heading" data-apex-heading="">#LABEL#</h2>
+      <h2 class="t-Region-title" id="#ID#_heading" data-apex-heading="">#LABEL#</h2>
     </div>
    </div>
 </div>
-<div id="#ID#" class="row jsonregion c3">
+<div id="#ID#_CONTAINER" class="row jsonregion">
  `,
                                     { placeholders: {
                                                       "LABEL": label,
-                                                      "ID":    itemname(prefix, name) + '_CONTAINER'
+                                                      "ID":    itemname(prefix, name)
                                                     }
                                     });
           }
@@ -800,7 +816,7 @@ console.log(l_html);
           if(pOptions.headers && level>0){
               l_html += `
 </div>
-<div class="row jsonregion c4">
+<div class="row jsonregion">
 `;
           }
         break;
@@ -878,6 +894,7 @@ console.log(l_html);
                       .map((s) => s.charAt(0).toUpperCase() + s.substring(1))
                       .join(' ');
         }
+        console.log(data, schema)
         l_html += apex.util.applyTemplate(
 `
   <div class="col col-#COLWIDTH# apex-col-auto #COLSTARTEND#">
@@ -933,7 +950,7 @@ console.log(l_html);
     apex.debug.trace(">>jsonRegion.refresh");
     apex.debug.info('Data', gData);
     let l_html = `
-<div class="row jsonregion c5">
+<div class="row jsonregion">
 ` + 
     generateForObject(0, pOptions.schema, gData, '', pOptions.dataitem, 0) + 
 `
@@ -949,7 +966,7 @@ console.log(l_html);
 
   function showFields(){
         let l_html = `
-<div class="row jsonregion c6">
+<div class="row jsonregion">
 ` + 
   generateForObject(0, pOptions.schema, gData, '', pOptions.dataitem, pOptions.colwidth, 0, 0) + 
 
@@ -987,13 +1004,21 @@ console.log(l_html);
     if(schema && data){
       switch(schema.type){
       case "object":
-        for(const l_key in schema.properties){
-           data[l_key] = reformatValues(schema.properties[l_key], data[l_key], read);
+        if(data instanceof Object) {
+          for(const l_key in schema.properties){
+             data[l_key] = reformatValues(schema.properties[l_key], data[l_key], read);
+          }
+        } else {
+          apex.debug.error('can not display data:', data, 'must be an object');
         }
       break;
       case "array":
-        for(var i = 0; i < schema.items.length; i++){
-           data[i] = reformatValues(schema.items[i], data[i], read);
+        if(Array.isArray(data)){
+          for(var i = 0; i < schema.items.length; i++){
+             data[i] = reformatValues(schema.items[i], data[i], read);
+          }
+        } else {
+          apex.debug.error('can not display data:', data, 'must be an array');
         }     
       break;
       case "string":
