@@ -1,6 +1,6 @@
 {
     "name" :        "JSON-Region",
-    "version" :     "0.6",
+    "version" :     "0.7",
     "description" : "A region for dynamically generated input items defined by a JSON-schema. Field validation and a readonly view are supported",
     "keywords" :    ["JSON", "JSON-schema", "dynamic input items"],
     "homepage" :    "https://github.com/simonuwe/oracle-apex-json-region/",
@@ -21,7 +21,7 @@
     "oracle" : {
       "versions" :   ["19.0.0", "23.0.0"],
       "apex" : {
-        "versions" : ["22.01", "22.02", "23.01"],
+        "versions" : ["22.01", "22.02", "23.01", "23.02"],
         "plugin" : {
           "internalName" : "JSON_REGION.UWESIMON.SELFHOST.EU",
           "type" :         "region",
