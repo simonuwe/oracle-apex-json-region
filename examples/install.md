@@ -36,7 +36,17 @@ sqlplus  username@db @deinstall.sql
 ## Use the generic database example
 
 The example demonstrates how to use row-dependent JSON-schemas.
-It uses a "generic" database-schema with 2 tables **object** and **relation**
-Via **object_types** it is possible to configure object_type dependend JSON-schemas.
+It uses a "generic" database-schema with 2 tables **object** and **object_type**
+Via **object_type** it is possible to configure object_type dependend JSON-schemas.
 
-After creating a new object in **objects** the matching input fields will be displays depending on the selected **Object Type**.
+While creating a new object in **objects** the matching input fields will be displays after selecting an **Object Type**.
+
+## Example for Oracle 23c
+
+The script install23.sql installs a JSON-schema validation .
+
+```
+sqlplus  username@db @validate23.sql
+```
+
+You can try modifying the validation of the JSON-column and see how the UI is changing.
