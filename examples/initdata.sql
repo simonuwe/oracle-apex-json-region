@@ -71,7 +71,7 @@ INSERT INTO object_type(object_type_name, object_schema) VALUES ('Full-Example',
                            "room": {"type": "string"}
                           },
     "comment":     {"type": "string", "maxLength": 500},
-    "lastlogin":   {"type": "string", "format": "date-time"},
+    "lastlogin":   {"type": "string", "format": "date-time", "default": "2023-01-02T12:10:20"},
     "source":      {"const": "via APEX-application"},
     "dummy":       {"type": "null"}
   },
@@ -99,9 +99,10 @@ INSERT INTO object_type(object_type_name, object_schema) VALUES ('Hotel', q'[
      "name":      { "type": "string"},
      "continent": { "type": "string",
                     "enum": ["Europe", "Africa", "America", "Antarctica", "Asia", "Australia"],
-                    "apex": {"itemtype": "radio", "newRow": true}
+                    "apex": {"itemtype": "radio", "newRow": true, "textBefore": "Location Info"}
                   },
-     "country":   { "type": "string"},
+     "country":   { "type": "string"
+                  },
      "city":      { "type": "string"},
      "stars": {
         "type": "integer", "maximum": 5,
@@ -123,7 +124,8 @@ INSERT INTO object_type(object_type_name, object_schema) VALUES ('Hotel', q'[
       "apex": {"itemtype": "switch"}
     },
     "updated":   {"extendedType": "date",
-                  "format": "date-time"
+                  "format": "date-time",
+                  "default": "NOW"
     },
     "features":  {"type": "array",
                   "items": {"type": "string", "enum": ["Pool", "Bar", "Restaurant", "Carpark"]} 
@@ -151,6 +153,8 @@ INSERT INTO object_type(object_type_name, object_schema) VALUES ('Person', q'[{
     "firstname": {"type": "string", "maxLength": 30},
     "email":     {"type": "string", "format": "email"},
     "job":       {"type": "string", "enum": ["User", "DBA", "Admin"]},
+    "password":  {"type": "string", "minLength": 8, "maxLength": 8, 
+                  "apex": {"itemtype": "password"}},
     "office_address":     {"$ref": "#/$defs/address"},
     "deliverytohome":     { "type": "boolean", "apex": {"type": "switch", "label": "Delivery to homeoffice"}}
   },

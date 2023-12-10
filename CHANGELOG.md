@@ -1,6 +1,15 @@
+# Release 0.7.5 2023-12-10
+ - #59 Oracle 23c extraction of JSON-schema sometimes not working
+ - #60 add a table with Oracle23c IS JSON VALIDATE constraint to examples
+ - #61 Text separator before items
+ - #62 Default values
+ - #63 support of password item
+
 # Release 0.7.0 2023-12-03
 - #48 css lost for APEX-22.1
 - #49 Help texts lost during backport to APEX-22.1
+- #44 support of conditional JSON-schema "IF", "THEN", "ELSE" 
+- #54 conditional schema always show header of subobjects
 
 # Release 0.6.5 2023-11-11
  - #3 display of date/date-time and numbers in local format

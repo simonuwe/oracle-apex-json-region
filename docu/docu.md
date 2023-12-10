@@ -31,7 +31,7 @@ In addition the keyword **const** for a constant value is accepted.
       "prop1":  { "type": "boolean", },
       "prop2":  { "type": "integer", "minimum": 0, "maximum": 100},
       "prop3":  { "type": "number", "minimum": 0, "maximum": 100 },
-      "prop4":  { "type": "string", "maxLength": 99, "pattern": "[A-Z]+[0-9]*"},
+      "prop4":  { "type": "string", "default": "abc", "maxLength": 99, "pattern": "[A-Z]+[0-9]*"},
       "prop5":  { "type": "string", "enum": ["val1", "val2", ..] },
       "prop7":  { "type": "string", "format": "date"},
       "prop8":  { "type": "string", "format": "date-time"},
@@ -68,7 +68,7 @@ The attribute **required** contains all required properties (NOT NULL).
 
 The **type** attribute is mandatory, all others are optional.
 Types are
-- **object** is o object with properties, for each property UI-widgets are created
+- **object** is an object with properties, for each property UI-widgets are created
 - **array** is only supported as a "simple array" which generates a multiselection checkbox-group with a **checkbox per enum value**. The array stores the checked items.
 - **string** could have an additional attribute **format** 
   - **date** displayed as a date-picker
@@ -81,6 +81,10 @@ Types are
 - **number** with values like 1.5, 100.50, ...
 - **boolean** with values true and false.
 - **null** always a NULL value
+
+The **default** attribute can be added to each property. It must have the same type as the related property, so when type=integer it must be an integer.
+
+For properties with format **date** and **date-time** the **default** could be **NOW**, which means the current date for a **date** and the current date-time for **date-time**.
 
 The optional **additionalProperties** defines whether the object is allowed to have properties not defined in then JSON-schema. This additional properties are kept when updating the data.
 
@@ -111,7 +115,8 @@ Currently supported are
       "apex": {"itemtype": "starrating", "label": "your label"}
     },
     "prop4": {
-      "type": "string", 
+      "type": "string",
+      "default": "abc", 
       "apex": {"newRow": true, "colSpan": 3, "lines": 5, "label": "your label"}
     },
     "prop4": {
@@ -159,17 +164,21 @@ Currently supported are
 ```
 #### Advanced APEX-properties
 
+Optional configurations for the UI could be done with the **"apex": {...}**. The supported  properties are
 - **label** could be used in any **type**, it is used to set a specific label for the input-item.
 - **newRow** starts a new row, so the current filed will be the first i this row.
+- **textBefore** defines text with is shown in a row above the current field. This can be used for logically grouping properties. This will always start a **newRow** 
 - **lines** defines for long strings the rows used for the textarea.
 - **colSpan** defines the width of the item (values are 1-12)
 
 - **itemtype** defines how the item is shown in APEX
+  - **password** the text is not shown but a * for each character.  
   - **switch** changes for **boolean** the default checkbox to a switch.
   - **starrating** uses for the numeric types **integer** and **number** stars to enter the value. The property **maximum** (which also defines in JSON-schema the max value for the item) is used for the number of displayed stars.
   - **radio** uses a radio group to show the values of an enum.
   - **readonly** set a single object/property to readonly.
   - simple **array** to support multiselect checkbox-groups, the checkboxes are generate from the **enum**.
+  - **format** is used for chnaging the display format of a JOSN-value. Currently **format** supportes only **currency** which will show **integer** and **number** values with a currency symbol and **number** with 2 decimal places.
   
 #### Advanced JSON-schema properties
 
