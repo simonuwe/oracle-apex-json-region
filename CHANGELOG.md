@@ -1,3 +1,6 @@
+# Release 0.7.6 2023-12-19
+ - #67 somtimes javascript errors when json-region contains datepicker
+
 # Release 0.7.5 2023-12-10
  - #59 Oracle 23c extraction of JSON-schema sometimes not working
  - #60 add a table with Oracle23c IS JSON VALIDATE constraint to examples
