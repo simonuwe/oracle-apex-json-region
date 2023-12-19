@@ -13,14 +13,27 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
         // get the datat-template-id for inline errors from another input field
     pOptions.datatemplateET = $($('.a-Form-error[data-template-id]')[0]).attr('data-template-id') || 'xx_ET';
         // Hacks to make the fields of json-region work like regular APEX-item-fields 
+
+        // load item combobox for APEX >= 23.2, fixed load produces brwoser-console errors for formr versions
+    if(apex.env.APEX_VERSION >='23.2.0'){
+      apex.server.loadScript({
+        path: apex.env.APEX_FILES + "libraries/apex/minified/item.Combobox.min.js", function() {
+                apex.debug.trace( "item.Combobox.js is ready." );
+              }
+      });
+    }
+
   function apexHacks(){
     // Hack to attach all Handler to the fields in the json-region  
+    apex.debug.trace('>>apexHacks');
     apex.item.attach($('#' + pRegionId));
           // hack to support floating lables for universal-thema 42
     if(apex.theme42){
       apex.debug.info('Theme42 patch');
       apex.event.trigger(apex.gPageContext$, 'apexreadyend');
     }
+
+    apex.debug.trace('<<apexHacks');
   }
 
   const C_JSON_OBJECT           = 'object';
@@ -185,10 +198,7 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
                 value = value.replace(' ', 'T'); // except datetime with " " or "T" between date and time 
                 if(apex.env.APEX_VERSION>='22.2.0'){
                   l_value = apex.date.format(apex.date.parse(value,'YYYY-MM-DDTHH24:MI'), apex.locale.getDateFormat()+' HH24:MI:SS');
-                } else {
-                  l_value = value;
                 }
-
               break;  
             }
           break;  
@@ -212,14 +222,17 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
     apex.debug.trace(">>jsonRegion.attachArray", dataitem, schema, readonly, data);
     let l_value = jsonValue2Item(schema, data, newItem);
     schema.apex = schema.apex || {};
-    console.warn(C_JSON_ARRAY, 'not yet implemented');
-    if(schema.apex && schema.apex.itemtype == C_APEX_COMBO){
-      apex.item.create(dataitem, {item_type: 'combobox'});
-      // apex.widget.combobox(dataitem, {multipleValues: true, multipleValueDelimiter: "|"});
-      //  apex.item(dataitem).setValue(l_value||'a,b,c');
+    let item = schema.items;
+    if(item && item.type==C_JSON_STRING){
+      if(apex.env.APEX_VERSION >='23.2.0' && item.apex && item.apex.itemtype == C_APEX_COMBO){
+        apex.item.create(dataitem, {item_type: 'combobox'});
+        apex.item(dataitem).setValue(l_value||[]);
+      } else {
+        apex.widget.checkboxAndRadio('#'+ dataitem,'checkbox');
+        apex.item(dataitem).setValue(l_value||[]);
+      }
     } else {
-      apex.widget.checkboxAndRadio('#'+ dataitem,'checkbox');
-      apex.item(dataitem).setValue(l_value||[]);
+      apex.debug.error('Support for simple string array only', item?item.type:'???')
     }
     if(readonly) {
       apex.item(dataitem).disable(); 
@@ -243,7 +256,7 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
       }
     break;
     case C_JSON_ARRAY:   
-      attachArray(dataitem, dataitem, schema.items, l_readonly, data, newItem);
+      attachArray(dataitem, dataitem, schema, l_readonly, data, newItem);
     break;
     case 'null':
     break;
@@ -371,9 +384,8 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
       case 'null':
         l_json = null;
       break;
-      case C_JSON_ARRAY: {  // currently only support for a "simple array" with checkboxes
+      case C_JSON_ARRAY: {  // currently only support for a "simple array" with checkboxes/multiselect combobox
         let l_data = apex.item(dataitem).getValue();
-        // console.error(l_data, apex.item(dataitem));
         l_json = itemValue2Json(schema, l_data);
       }
       break;
@@ -381,7 +393,7 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
       case C_JSON_INTEGER:
       case C_JSON_NUMBER:
       case C_JSON_BOOLEAN:{
-        let l_data  = apex.item(dataitem).getValue();
+        let l_data = apex.item(dataitem).getValue();
         let l_value = itemValue2Json(schema, l_data);
         if(l_value!=null){
           l_json = l_value;
@@ -576,39 +588,32 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
                                                    }
                                                 });
 
-
-    for(const l_value of data||[]){
-      l_html += apex.util.applyTemplate(`
-      <li class="a-Chip a-Chip--applied" aria-hidden="true" data-value="#VALUE#"><span class="a-Chip-text"><span class="a-Chip-value">#VALUE#</span></span><span class="a-Chip-divider"></span><span class="a-Chip-remove js-removeChip"><span class="a-Icon icon-multi-remove" aria-hidden="true"></span></span></li>
-`,
-                                                {
-                                                    placeholders: {
-                                                      "VALUE": l_value
-                                                   }
-                                                });
-    }
-
     l_html += apex.util.applyTemplate(`
       <li class="a-Chip a-Chip--input is-empty">
         <input type="text" class="apex-item-text" aria-labelledby="#ID#_LABEL" value="#VALUES#" maxlength="100" role="combobox" aria-expanded="false" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" aria-autocomplete="list" aria-describedby="#ID#_desc" aria-busy="false">
         <span class="a-Chip-clear js-clearInput"><span class="a-Icon icon-multi-remove" aria-hidden="true"></span></span>
       </li>
     </ul>
-    <div class="u-vh js-active-description" aria-live="assertive">abc. Press Backspace to delete.</div>
-    <div id="#ID#_desc" class="u-vh">#VALUES#</div>
-    <div class="u-vh js-results-description" aria-live="polite">2 matches found</div>
-    <div role="dialog" id="CS_3_#ID#" aria-label="Search" class="a-Combobox-popup-mockup u-vh">
-      <ul role="listbox"></ul>
-    </div>
   </div>
-</a-combobox>
+  <a-column-metadata name="#ID#" searchable="true" index="0"></a-column-metadata>
 `,
                                                 {
                                                     placeholders: {
-                                                      "VALUES": l_values
+                                                      "VALUES": apex.util.escapeHTML(l_values)
                                                    }
                                                 });
-
+    for(const l_option of schema.enum ||[]){
+      l_html += apex.util.applyTemplate(`
+  <a-option value="1">#OPTION#<a-option-column-value>#OPTION#</a-option-column-value></a-option>
+`,                                                 {
+                                                    placeholders: {
+                                                      "OPTION": apex.util.escapeHTML(l_option)
+                                                   }
+                                                });
+    }
+    l_html += `
+</a-combobox>
+`;
     apex.debug.trace("<<jsonRegion.generateForCombo");
     return(l_html);
   }
@@ -635,7 +640,7 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
                                                 {
                                                     placeholders: {
                                                       "TYPE":  checkbox?C_APEX_CHECKBOX:C_APEX_RADIO,
-                                                      "VALUE": l_value,
+                                                      "VALUE": apex.util.escapeHTML(l_value),
                                                       "NR":    l_nr++
                                                    }
                                                 });
@@ -690,9 +695,7 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
 `;
         break;
         case "date":
-console.log('APEX-Version', apex.env.APEX_VERSION);
           if(apex.env.APEX_VERSION >='22.2.0'){
-console.log('New date-picker');             
             l_html = `
 <a-date-picker id="#ID#" #REQUIRED# change-month="true" change-year="true" display-as="popup" display-weeks="number"  #MIN# #MAX# previous-next-distance="one-month" show-days-outside-month="visible" show-on="focus" today-button="true" format="#FORMAT#" valid-example="#EXAMPLE#" year-selection-range="5" class="apex-item-datepicker--popup">
   <input aria-haspopup="dialog" class=" apex-item-text apex-item-datepicker" name="#ID#" size="20" maxlength="20" type="text" id="#ID#_input" required="" aria-labelledby="#ID#_LABEL" maxlength="255" value="#VALUE#">
@@ -703,12 +706,10 @@ console.log('New date-picker');
 </a-date-picker>
 `;
           } else {
-console.log('Old date-picker');             
             l_html =`
 <oj-input-date id="#ID#" #REQUIRED# class="apex-jet-component apex-item-datepicker-jet oj-inputdatetime-date-only oj-component oj-inputdatetime oj-form-control oj-text-field  #MIN# #MAX# oj-required oj-complete" data-format="#FORMAT#" data-maxlength="255" data-name="#ID#" data-oracle-date-value="#VALUE#" data-size="32" data-valid-example="#EXAMPLE#" date-picker.change-month="select" date-picker.change-year="select" date-picker.days-outside-month="visible" date-picker.show-on="focus" date-picker.week-display="none" display-options.converter-hint="none" display-options.messages="none" display-options.validator-hint="none" time-picker.time-increment="00:15:00:00" translations.next-text="Next" translations.prev-text="Previous" value="#VALUE#">
 </oj-input-date>
 `;
-console.log(l_html);
           }
         break;
         case "date-time":
@@ -740,11 +741,10 @@ console.log(l_html);
 <input type="text" id="#ID#" name="#ID#" #REQUIRED# #PATTERN# class=" text_field apex-item-text" size="32" #MINLENGTH# #MAXLENGTH# data-trim-spaces="#TRIMSPACES#" aria-describedby="#ID#_error">
 `;
             }else { 
-              if(schema.apex && schema.apex.itemtype==C_APEX_EDITOR){
+              if(apex.env.APEX_VERSION>='23.2.0' && schema.apex && schema.apex.itemtype==C_APEX_EDITOR){
                 l_html = `
-<div class="apex-item-group apex-item-group--textarea">
-  <textarea name="#NAME#" rows="#ROWS#" cols="100" id="#ID#" class=" textarea apex-item-textarea" data-resizable="true" style="resize: both;">#QUOTEVALUE#</textarea>
-</div>
+<a-rich-text-editor id="#ID#" mode="markdown" value="#QUOTEVALUE#">
+</a-rich-text-editor>
 `;
               } else {
                 l_html = `
@@ -830,19 +830,27 @@ console.log(l_html);
 
     // generate UI for type="array"
   function generateForArray(level, schema, data, prefix, name, startend, newItem){
+    let l_wrappertype = '';
     let l_html='';
     apex.debug.trace(">>jsonRegion.generateForArray", level, schema, data, prefix, name, startend, newItem);
-    if(schema.type == C_JSON_STRING && Array.isArray(schema.enum)){
-      if(apex.env.APEX_VERSION >='23.2.0' && schema.apex && schema.apex.itemtype==C_APEX_COMBO){
-        l_html = generateForCombo(level, schema, data, prefix, name, startend, newItem);
+    let item = schema.items;
+    if(item && item.type == C_JSON_STRING){
+      if( Array.isArray(item.enum)){
+        if(apex.env.APEX_VERSION >='23.2.0' && item.apex && item.apex.itemtype==C_APEX_COMBO){
+          l_html = generateForCombo(level, item, data, prefix, name, startend, newItem);
+          l_wrappertype = 'apex-item-wrapper--combobox apex-item-wrapper--combobox-many'
+        } else {
+          l_html = generateForSelect(level, item, data, prefix, name, startend, true);
+          l_wrappertype = 'apex-item-wrapper--checkbox';
+        }
       } else {
-        l_html = generateForSelect(level, schema, data, prefix, name, startend, true);
+        console.warn('ARRAY simple type string with enum', level, schema, data, prefix, name, startend);
       }
     } else {
-      console.warn('ARRAY not yet implemented', level, schema, data, prefix, name, startend);
+      apex.debug.error('Support for simple string array only: itemtype', item?item.type:'???');
     }
-    apex.debug.trace("<<jsonRegion.generateForArray");    
-    return(l_html);
+    apex.debug.trace("<<jsonRegion.generateForArray", l_wrappertype, l_html);   
+    return([l_wrappertype, l_html]);
   }
 
     // generate UI for conditional schem
@@ -910,13 +918,9 @@ console.log(l_html);
 
       switch(schema.type){
         case "array":
-          // console.error(apex.env.APEX_VERSION, schema)
-          l_input = generateForArray(level+1, schema.items, data, (prefix?prefix+C_DELIMITER:'')+name, name, startend, newItem);
-          if(apex.env.APEX_VERSION >='23.2.0' && schema.apex && schema.apex.itemtype==C_APEX_COMBO){
-            l_wrappertype = 'apex-item-wrapper--combobox apex-item-wrapper--combobox-many'
-          } else {
-            l_wrappertype = 'apex-item-wrapper--checkbox';
-          }
+          let ret = generateForArray(level+1, schema, data, (prefix?prefix+C_DELIMITER:'')+name, name, startend, newItem);
+          l_wrappertype=ret[0];
+          l_input = ret[1];
         break;
         case "object": // an object, so generate all of its properties
           data = data ||'{}';
@@ -963,7 +967,7 @@ console.log(l_html);
             } else {    // long string textarea
               l_wrappertype = 'apex-item-wrapper--textarea';
             }
-            if(schema.apex && schema.apex.itemtype==C_APEX_EDITOR){
+            if(apex.env.APEX_VERSION>='23.2.0' && schema.apex && schema.apex.itemtype==C_APEX_EDITOR){
               l_wrappertype = 'apex-item-wrapper--rich-text-editor';
             }
             if(schema.apex && schema.apex.itemtype==C_APEX_PASSWORD){
@@ -1063,7 +1067,15 @@ console.log(l_html);
   function refresh(newItem) {
     apex.debug.trace(">>jsonRegion.refresh");
     apex.debug.info('jsonRegion.refresh', 'data', gData);
-    let l_html = `
+    let l_html = '';
+    if(apex.env.APEX_VERSION <'22.2'){  //HACK for APEX <22.2, here and old datepicker is used
+      l_html += '<link rel="stylesheet" type="text/css" href="' + apex.env.APEX_FILES + 'libraries/oraclejet/' + apex.libVersions.oraclejet + '/css/libs/oj/v' + apex.libVersions.oraclejet + '/redwood/oj-redwood-notag-min.css" />';
+      l_html += '<script src="' + apex.env.APEX_FILES + 'libraries/oraclejet/' + apex.libVersions.oraclejet +  '/js/libs/require/require.js"></script>'
+      l_html += '<script src="' + apex.env.APEX_FILES + 'libraries/apex/minified/requirejs.jetConfig.min.js"></script>'
+      l_html += '<script src="' + apex.env.APEX_FILES + 'libraries/apex/minified/jetCommonBundle.min.js"></script>'
+      l_html += '<script src="' + apex.env.APEX_FILES + 'libraries/apex/minified/jetDatePickerBundle.min.js"></script>'
+    }
+    l_html +=`
 <div class="row jsonregion">
 ` + 
     generateForObject(0, pOptions.schema, gData, '', pOptions.dataitem, 0, newItem) + 
@@ -1174,6 +1186,7 @@ console.log(l_html);
     gData = {};
   }
 
+  apex.debug.trace('initJsonRegion', gData);
   let newItem = !(gData && Object.keys(gData).length);
 
     // resolve all $refs
@@ -1201,7 +1214,6 @@ console.log(l_html);
                 // for some reason the $defs property is returned as "$defs"
                 gData["$defs"]=gData['"$defs"'];
                 apex.debug.trace('WORARROUND $defs');
-                console.dir(gData);
                 pOptions.schema = gData;
               }
             }  
@@ -1260,6 +1272,13 @@ console.log(l_html);
   apex.jQuery( apex.gPageContext$ ).on( "apexpagesubmit", function() {
     callbacks.submit();
   });
+  apex.jQuery( "body" ).on( "apexbeforerefresh", function() {
+    console.error('apexbeforerefresh');
+  });
+  apex.jQuery( "body" ).on( "apexafterrefresh", function() {
+    console.error('apexafterrefresh');
+  });
+
     // if reagion already exists destroy it first
   if(apex.region.isRegion(pRegionId)) {
     apex.debug.trace('DESTROY REGION', pRegionId);
@@ -1267,5 +1286,6 @@ console.log(l_html);
   }
   apex.region.create( pRegionId, callbacks);
   apex.item.attach($('#' + pRegionId));
+
   apex.debug.trace("<<initJsonRegion");  
 }
