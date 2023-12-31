@@ -13,18 +13,6 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
         // get the datat-template-id for inline errors from another input field
     pOptions.datatemplateET = $($('.a-Form-error[data-template-id]')[0]).attr('data-template-id') || 'xx_ET';
 
-        // Hacks to make the fields of json-region work like regular APEX-item-fields 
-
-        // load item combobox for APEX >= 23.2, fixed load produces brwoser-console errors for formr versions
-/*
-    if(apex.env.APEX_VERSION >='23.2.0'){
-      apex.server.loadScript({
-        path: apex.env.APEX_FILES + "libraries/apex/minified/item.Combobox.min.js", function() {
-                apex.debug.trace( "item.Combobox.js is ready." );
-              }
-      });
-    }
-*/
   function apexHacks(){
     // Hack to attach all Handler to the fields in the json-region  
     apex.debug.trace('>>apexHacks');
