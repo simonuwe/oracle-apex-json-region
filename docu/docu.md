@@ -307,6 +307,10 @@ to the json-column, but when reading it back you will get
 ```
 This could cause some trouble when comparing "old" and "new" values.
 
+### Import to a APEX23.2
+
+To use the features of APEX23.2, for example the new combobox, dont forget to refresh your theme (shared-components->themes), otherwith the combobox doesn't look as expected. 
+
 ## Know issues
 
 - In SQL-Workshop in APEX-Oracle-Cloud you can not create JSON-Columns (trying this returns ORA-00002 invalid datatype). Here you have to use CLOB columns. 
