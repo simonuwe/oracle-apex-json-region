@@ -12,16 +12,6 @@
 function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
         // get the datat-template-id for inline errors from another input field
     pOptions.datatemplateET = $($('.a-Form-error[data-template-id]')[0]).attr('data-template-id') || 'xx_ET';
-        // Hacks to make the fields of json-region work like regular APEX-item-fields 
-
-        // load item combobox for APEX >= 23.2, fixed load produces brwoser-console errors for formr versions
-    if(apex.env.APEX_VERSION >='23.2.0'){
-      apex.server.loadScript({
-        path: apex.env.APEX_FILES + "libraries/apex/minified/item.Combobox.min.js", function() {
-                apex.debug.trace( "item.Combobox.js is ready." );
-              }
-      });
-    }
 
   function apexHacks(){
     // Hack to attach all Handler to the fields in the json-region  
@@ -1069,12 +1059,27 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
     apex.debug.info('jsonRegion.refresh', 'data', gData);
     let l_html = '';
     if(apex.env.APEX_VERSION <'22.2'){  //HACK for APEX <22.2, here and old datepicker is used
-      l_html += '<link rel="stylesheet" type="text/css" href="' + apex.env.APEX_FILES + 'libraries/oraclejet/' + apex.libVersions.oraclejet + '/css/libs/oj/v' + apex.libVersions.oraclejet + '/redwood/oj-redwood-notag-min.css" />';
+      l_html += '<link rel="stylesheet" href="' + apex.env.APEX_FILES + 'libraries/oraclejet/' + apex.libVersions.oraclejet +  '/css/libs/oj/v' + apex.libVersions.oraclejet +  '/redwood/oj-redwood-notag-min.css" type="text/css"/>';
       l_html += '<script src="' + apex.env.APEX_FILES + 'libraries/oraclejet/' + apex.libVersions.oraclejet +  '/js/libs/require/require.js"></script>'
       l_html += '<script src="' + apex.env.APEX_FILES + 'libraries/apex/minified/requirejs.jetConfig.min.js"></script>'
       l_html += '<script src="' + apex.env.APEX_FILES + 'libraries/apex/minified/jetCommonBundle.min.js"></script>'
       l_html += '<script src="' + apex.env.APEX_FILES + 'libraries/apex/minified/jetDatePickerBundle.min.js"></script>'
     }
+    if(apex.env.APEX_VERSION >='23.2'){  // new Featurs for 23.2
+      if(!customElements.get('a-combobox')){ // the files for new combobox are already loaded
+        l_html += '<script src="' + apex.env.APEX_FILES + 'libraries/apex/minified/item.Combobox.min.js"></script>';
+      }
+      if(!customElements.get('a-rich-text-editor')){  // the files for rich-text-editor are already loaded
+        l_html += '<link rel="stylesheet" href="' + apex.env.APEX_FILES + 'libraries/tinymce/' + apex.libVersions.tinymce + '/skins/ui/oxide/skin.css" type="text/css"/>';
+        l_html += '<script src="' + apex.env.APEX_FILES + 'libraries/tinymce/' + apex.libVersions.tinymce + '/tinymce.min.js"></script>';
+        l_html += '<script src="' + apex.env.APEX_FILES + 'libraries/purify/'  + apex.libVersions.domPurify + '/purify.min.js"></script>';
+        l_html += '<script data-manual src="' + apex.env.APEX_FILES + 'libraries/prismjs/' + apex.libVersions.prismJs + '/prism.js"></script>';
+        l_html += '<script src="' + apex.env.APEX_FILES + 'libraries/markedjs/' + apex.libVersions.markedJs + '/marked.min.js"></script>';
+        l_html += '<script src="' + apex.env.APEX_FILES + 'libraries/turndown/' + apex.libVersions.turndown + '/turndown.js"></script>';
+        l_html += '<script src="' + apex.env.APEX_FILES + 'libraries/apex/minified/item.RichTextEditor.min.js"></script>'
+      }
+    }
+
     l_html +=`
 <div class="row jsonregion">
 ` + 

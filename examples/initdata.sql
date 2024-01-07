@@ -136,7 +136,7 @@ INSERT INTO object_type(object_type_name, object_schema) VALUES ('Hotel', q'[
     },
     "comment": {
       "type": "string", "maxLength": 4000,          
-      "apex": {"lines": 10, "colSpan": 6}
+      "apex": {"itemtype": "richtext", "lines": 10, "colSpan": 6}
     }
   },
   "required": ["name", "continent", "city"],
