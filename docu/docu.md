@@ -125,7 +125,9 @@ Currently supported are
     },
     "prop5": {
       "type": "array",
-      "items": {"type": "string", "enum": {"val1", "val2", ...]}} 
+      "items": {"type": "string", 
+                "enum": ["val1", "val2", ...]},
+      "apex":  {"itemtype": "combobox"} 
     },
     "prop6": {"type": null},
     "prop7": ["const": "const string"],
@@ -164,22 +166,26 @@ Currently supported are
 ```
 #### Advanced APEX-properties
 
+The **type** **array** is supported for multiselect checkbox-groups, the checkboxes are generate from the **enum**. For APEX >=23.2 it also supports the **combobox** which allows chips and the input of additional values beside the valies defined in the enum.
+
 Optional configurations for the UI could be done with the **"apex": {...}**. The supported  properties are
 - **label** could be used in any **type**, it is used to set a specific label for the input-item.
 - **newRow** starts a new row, so the current filed will be the first i this row.
 - **textBefore** defines text with is shown in a row above the current field. This can be used for logically grouping properties. This will always start a **newRow** 
 - **lines** defines for long strings the rows used for the textarea.
-- **colSpan** defines the width of the item (values are 1-12)
+- **colSpan** defines the width of the item, values are 1 (small)  to 12 (full width)
 
 - **itemtype** defines how the item is shown in APEX
   - **password** the text is not shown but a * for each character.  
-  - **switch** changes for **boolean** the default checkbox to a switch.
+  - **switch** changes the display for a **boolean** to a switch, the default is a single checkbox.
   - **starrating** uses for the numeric types **integer** and **number** stars to enter the value. The property **maximum** (which also defines in JSON-schema the max value for the item) is used for the number of displayed stars.
-  - **radio** uses a radio group to show the values of an enum.
-  - **readonly** set a single object/property to readonly.
-  - simple **array** to support multiselect checkbox-groups, the checkboxes are generate from the **enum**.
-  - **format** is used for chnaging the display format of a JOSN-value. Currently **format** supportes only **currency** which will show **integer** and **number** values with a currency symbol and **number** with 2 decimal places.
-  
+  - **checkbox** use checkboxes for the values of an **array** of **string** with an **enum**. 
+  - **radio** use a radio group for the values of an **enum** (default is a selectlist).
+  - **combobox** to support a combobox with **chips** for an **array** of **string** with an **enum** (for APEX >=23.2)
+  - **richtext** to support a textarea with a richtext-editor (for APEX >=23.2). Use **collspan the use expand the columns, so that the iconbar of the richtext-editor fits  
+- **readonly** set a single object/property to readonly.
+- **format** is used for changing the display format of a JSON-value. Currently **format** supportes only **currency** which will show **integer** and **number** values with a currency symbol and **number** with 2 decimal places and **integoer** without an decimal places.
+
 #### Advanced JSON-schema properties
 
   - With **dependentRequired** fielditems could be set to **required** depending on a **not empty** fielditem.
