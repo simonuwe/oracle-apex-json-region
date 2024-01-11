@@ -149,7 +149,7 @@ BEGIN
   apex_plugin_util.debug_region(p_plugin => p_plugin, p_region => p_region);
   BEGIN
     l_json := readschema(l_sqlquery);
-    apex_json.parse(l_j , l_json);
+    apex_json.parse(l_j, l_json);
     apex_json.write(l_j);
   EXCEPTION WHEN NO_DATA_FOUND THEN
     apex_json.open_object;

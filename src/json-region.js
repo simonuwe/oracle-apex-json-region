@@ -66,6 +66,35 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
     return(l_ret);
   }
 
+    // get used types, itemtypes and formats used in the JSON-schema
+  function getItemtypes(schema, itemtypes){
+    itemtypes = itemtypes || {type: {}, itemtype: {}, format: {}};
+    apex.debug.trace(">>jsonRegion.getItemtypes", schema, itemtypes);
+
+    itemtypes.type[schema.type]=true;
+    switch(schema.type){
+    case C_JSON_OBJECT:
+      for(let [l_name, l_property] of Object.entries(schema.properties)){
+        itemtypes = getItemtypes(l_property, itemtypes);
+      }
+    break;
+    case C_JSON_ARRAY:
+      itemtypes = getItemtypes(schema.items, itemtypes);
+    break;
+    default:
+      if(schema.format){
+        itemtypes.format[schema.format] = true;
+      }
+      if(schema.apex){
+        itemtypes.itemtype[schema.apex.itemtype] = true;
+      }
+    break;
+    }
+ 
+    apex.debug.trace("<<jsonRegion.getItemtypes", itemtypes);
+    return(itemtypes);
+  }
+
     // set show/fide the fields from list
   function propagateShow(dataitem, schema, mode){
     apex.debug.trace(">>jsonRegion.propagateShow", dataitem, schema, mode);
@@ -1058,7 +1087,10 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
     apex.debug.trace(">>jsonRegion.refresh");
     apex.debug.info('jsonRegion.refresh', 'data', gData);
     let l_html = '';
-    if(apex.env.APEX_VERSION <'22.2'){  //HACK for APEX <22.2, here and old datepicker is used
+    let l_itemtypes = null;
+    l_itemtypes = getItemtypes(pOptions.schema, l_itemtypes);
+
+    if(apex.env.APEX_VERSION <'22.2' && (l_itemtypes.format.date || l_itemtypes.format["date-time"])){  //HACK for APEX <22.2, here and old datepicker is used
       l_html += '<link rel="stylesheet" href="' + apex.env.APEX_FILES + 'libraries/oraclejet/' + apex.libVersions.oraclejet +  '/css/libs/oj/v' + apex.libVersions.oraclejet +  '/redwood/oj-redwood-notag-min.css" type="text/css"/>';
       l_html += '<script src="' + apex.env.APEX_FILES + 'libraries/oraclejet/' + apex.libVersions.oraclejet +  '/js/libs/require/require.js"></script>'
       l_html += '<script src="' + apex.env.APEX_FILES + 'libraries/apex/minified/requirejs.jetConfig.min.js"></script>'
@@ -1066,10 +1098,10 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
       l_html += '<script src="' + apex.env.APEX_FILES + 'libraries/apex/minified/jetDatePickerBundle.min.js"></script>'
     }
     if(apex.env.APEX_VERSION >='23.2'){  // new Featurs for 23.2
-      if(!customElements.get('a-combobox')){ // the files for new combobox are already loaded
+      if(!customElements.get('a-combobox')  && l_itemtypes.itemtype.combobox){ // the files for new combobox are already loaded
         l_html += '<script src="' + apex.env.APEX_FILES + 'libraries/apex/minified/item.Combobox.min.js"></script>';
       }
-      if(!customElements.get('a-rich-text-editor')){  // the files for rich-text-editor are already loaded
+      if(!customElements.get('a-rich-text-editor') && l_itemtypes.itemtype.richtext){  // the files for rich-text-editor are already loaded
         l_html += '<link rel="stylesheet" href="' + apex.env.APEX_FILES + 'libraries/tinymce/' + apex.libVersions.tinymce + '/skins/ui/oxide/skin.css" type="text/css"/>';
         l_html += '<script src="' + apex.env.APEX_FILES + 'libraries/tinymce/' + apex.libVersions.tinymce + '/tinymce.min.js"></script>';
         l_html += '<script src="' + apex.env.APEX_FILES + 'libraries/purify/'  + apex.libVersions.domPurify + '/purify.min.js"></script>';
@@ -1238,17 +1270,7 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
         apex.debug.trace(">>jsonRegion.beforeSubmit", pRegionId, pOptions.dataitem, pOptions.schema);
         if(!pOptions.readonly){  // do nothing for readonly json-region
           apex.debug.trace('jsonRegion', pOptions);
-          let l_json=getData(pOptions.dataitem, pOptions.schema, gData);
-/*          
-          if(pOptions.keepAttributes){
-            apex.debug.trace('KEEPATTRIBUTES');
-            let l_oldjson = JSON.parse(apex.item(pOptions.dataitem).getValue()||'{}');
-            l_json = {
-              ...l_oldjson,
-              ...l_json
-            };
-          }
-*/          
+          let l_json=getData(pOptions.dataitem, pOptions.schema, gData);        
           if(pOptions.removeNulls){
             l_json = removeNulls(l_json);
             apex.debug.trace('removed NULLs', l_json);
