@@ -7,7 +7,7 @@
 "use strict";
 
     /*
-     * initialize the JSON-region plugin, call form inside PL/SQL when plugin ist initialized
+     * initialize the JSON-region plugin, call form inside PL/SQL when plugin is initialized
      */
 function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
         // get the datat-template-id for inline errors from another input field
