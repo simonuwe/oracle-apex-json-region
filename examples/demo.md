@@ -1,6 +1,6 @@
 # Demo
 
-An online-demo could be found **[here](https://tlodfjxbrej9i6r-apex01.adb.eu-frankfurt-1.oraclecloudapps.com/ords/r/uwe/json-region-demo/objects)**. 
+An online-demo could be found **[here](https://tlodfjxbrej9i6r-apex01.adb.eu-frankfurt-1.oraclecloudapps.com/ords/r/uwe/json-region-demo/){:target="_blank"}**. 
 
 You can create create here new objects and edit existing with varying JSON-schemas. 
 

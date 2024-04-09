@@ -33,29 +33,34 @@ END readschema;
 FUNCTION readschemafromdictionary(pItem IN VARCHAR2) 
   RETURN CLOB IS 
   l_json                CLOB;
-  l_table_name          VARCHAR2(128);
-  l_column_name         VARCHAR2(128);
+  l_table_name          all_tab_columns.table_name%TYPE;
+  l_owner               all_tab_columns.owner%TYPE;
+  l_column_name         all_tab_columns.column_name%TYPE;
 BEGIN
-  SELECT table_name, item_source
-  INTO l_table_name, l_column_name
-  FROM apex_application_page_items i 
-  JOIN apex_application_page_regions r ON (r.region_id=i.region_id)
-  WHERE i.application_id=NV('APP_ID') AND item_name=pItem;
+  $IF DBMS_DB_VERSION.VERSION>=23
+  $THEN
+    APEX_DEBUG.INFO('readschemafromdictionary for database version %d', DBMS_DB_VERSION.VERSION);
+    SELECT table_name, item_source
+    INTO l_table_name, l_column_name
+    FROM apex_application_page_items i 
+    JOIN apex_application_page_regions r ON (r.region_id=i.region_id)
+    WHERE i.application_id=NV('APP_ID') AND item_name=pItem;
 
-  APEX_DEBUG.INFO('readschemafromdictionary: %s %s', l_table_name, l_column_name);
+    APEX_DEBUG.INFO('readschemafromdictionary: %s %s %s', l_owner, l_table_name, l_column_name);
 
-  SELECT REGEXP_SUBSTR(text, '''(.*)''$',1,1,'n',1) AS json_schema
-  INTO l_json
-  FROM (
-    SELECT table_name, constraint_name,
-      SYS_DBURIGEN(table_name, constraint_name, search_condition, 'text()').getclob() as text 
-    FROM user_constraints WHERE search_condition_vc like '%IS JSON%' AND constraint_type='C'
-  ) c 
-  JOIN user_cons_columns cc ON(c.table_name=cc.table_name AND c.constraint_name=cc.constraint_name)
-  WHERE c.table_name=l_table_name AND column_name=l_column_name;
-
-  APEX_DEBUG.INFO('JSON %s', substr(l_json,1,1000));
-
+    SELECT REGEXP_SUBSTR(text, '({.+})',1,1,'n',1) AS json_schema
+    INTO l_json
+    FROM (
+      SELECT table_name, constraint_name,
+        SYS_DBURIGEN(table_name, constraint_name, search_condition, 'text()').getclob() as text 
+      FROM user_constraints WHERE UPPER(search_condition_vc) like '%IS JSON%' AND constraint_type='C'
+    ) c 
+    JOIN user_cons_columns cc ON(c.table_name=cc.table_name AND c.constraint_name=cc.constraint_name)
+    WHERE c.table_name=l_table_name AND column_name=l_column_name;
+    APEX_DEBUG.INFO('JSON %s', substr(l_json,1,1000));
+  $ELSE
+    APEX_DEBUG.ERROR('readschemafromdictionary not supported for database version %d', DBMS_DB_VERSION.VERSION);
+  $END
   RETURN l_json;
 END readschemafromdictionary;
 /*
@@ -98,11 +103,12 @@ BEGIN
     IF(l_schema IS NULL OR LENGTH(l_schema)=0) THEN
       l_schema:=readschemafromdictionary(l_dataitem);
     END IF;
+
     EXCEPTION WHEN NO_DATA_FOUND THEN
       l_schema:=NULL;
   END;
   
-  l_schema:=NVL(l_schema, '{"type": "object"}');
+  l_schema:=NVL(l_schema, '{"type": "object", "properties": {}}');
   -- escape input
   l_dataitem  := NVL(apex_escape.html(l_dataitem), '{}');
   l_schema    := apex_escape.json(l_schema);
@@ -149,7 +155,7 @@ BEGIN
   apex_plugin_util.debug_region(p_plugin => p_plugin, p_region => p_region);
   BEGIN
     l_json := readschema(l_sqlquery);
-    apex_json.parse(l_j, l_json);
+    apex_json.parse(l_j , l_json);
     apex_json.write(l_j);
   EXCEPTION WHEN NO_DATA_FOUND THEN
     apex_json.open_object;

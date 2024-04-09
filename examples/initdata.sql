@@ -130,9 +130,9 @@ INSERT INTO object_type(object_type_name, object_schema) VALUES ('Hotel', q'[
     "features":  {"type": "array",
                   "items": { 
                     "type": "string", 
-                    "enum": ["Pool", "Bar", "Restaurant", "Carpark"],
-                    "apex": {"itemtype": "combobox"}
-                  } 
+                    "enum": ["Pool", "Bar", "Restaurant", "Carpark"]
+                  },
+                  "apex": {"itemtype": "combobox"} 
     },
     "comment": {
       "type": "string", "maxLength": 4000,          
