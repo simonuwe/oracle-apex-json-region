@@ -1,3 +1,7 @@
 .jsonregion {
-  margin: -0.5rem
+  margin: -0.5rem;
+}
+
+.t-Form-itemWrapper img {
+  height: 100%
 }
