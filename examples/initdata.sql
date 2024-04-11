@@ -152,6 +152,7 @@ INSERT INTO object_type(object_type_name, object_schema) VALUES ('Hotel', q'[
 INSERT INTO object_type(object_type_name, object_schema) VALUES ('Person', q'[{
   "type": "object",
   "required": ["lastname", "email"],
+  "additionalProperties": false,
   "properties": {
     "lastname":  {"type": "string", "maxLength": 30},
     "firstname": {"type": "string", "maxLength": 30},
