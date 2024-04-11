@@ -84,6 +84,8 @@ Types are
 
 The **default** attribute can be added to each property. It must have the same type as the related property, so when type=integer it must be an integer.
 
+The **readOnly** sets a single object/property to readonly, so it can not be changed in the APEX-UI.
+
 For properties with format **date** and **date-time** the **default** could be **NOW** or **now**, which means the current date for a **date** and the current date-time for **date-time**.
 
 The optional **additionalProperties** defines whether the object is allowed to have properties not defined in then JSON-schema. This additional properties are kept when updating the data.
@@ -120,8 +122,10 @@ Currently supported are
       "apex": {"newRow": true, "colSpan": 3, "lines": 5, "label": "your label"}
     },
     "prop4": {
-      "type": "string", 
-      "apex": {"readonly": true, "itemtype": "radio", "enum": ["val1", "val2",...], "direction": "horizontal"}
+      "type": "string",
+      "readOnly": true,  
+      "enum": ["val1", "val2", ...], 
+      "apex": {"itemtype": "radio", "enum": {"val1": "disp1", "val2": "disp2",...}, "direction": "horizontal"}
     },
     "prop5": {
       "type": "array",
@@ -174,8 +178,11 @@ Optional configurations for the UI could be done with the **"apex": {...}**. The
 - **textBefore** defines text with is shown in a row above the current field. This can be used for logically grouping properties. This will always start a **newRow** 
 - **lines** defines for long strings the rows used for the textarea.
 - **colSpan** defines the width of the item, values are 1 (small)  to 12 (full width)
+- **enum** is used for mapping the JSON-values to display-values.
+For example JSON-data has **"enum": ["a", "b", "c"]**, so the **"apex": {"enum": {"a": "dispA", "b": "dispB", "c": "dispC"}}** will map a->dispA, ... in the APEX-UI.
+- **format** is used for changing the display format of a JSON-value. Currently **format** supportes only **currency** which will show **integer** and **number** values with a currency symbol and **number** with 2 decimal places and **integoer** without an decimal places.
 
-- **itemtype** defines how the item is shown in APEX
+- **itemtype** defines which UI-item is used in the APEX-UI
   - **password** the text is not shown but a * for each character.  
   - **switch** changes the display for a **boolean** to a switch, the default is a single checkbox.
   - **starrating** uses for the numeric types **integer** and **number** stars to enter the value. The property **maximum** (which also defines in JSON-schema the max value for the item) is used for the number of displayed stars.
@@ -183,8 +190,7 @@ Optional configurations for the UI could be done with the **"apex": {...}**. The
   - **radio** use a radio group for the values of an **enum** (default is a selectlist).
   - **combobox** to support a combobox with **chips** for an **array** of **string** with an **enum** (for APEX >=23.2)
   - **richtext** to support a textarea with a richtext-editor (for APEX >=23.2). Use **collspan the use expand the columns, so that the iconbar of the richtext-editor fits  
-- **readonly** set a single object/property to readonly.
-- **format** is used for changing the display format of a JSON-value. Currently **format** supportes only **currency** which will show **integer** and **number** values with a currency symbol and **number** with 2 decimal places and **integoer** without an decimal places.
+
 
 For a better support of questionnaires, the output direction for itemtypes **radio** and **checkbox**  could be specified with **"direction": "horizontal"** (place the radiobutton or checkbox in a line), default is **vertical** (place in a column)
 
@@ -271,12 +277,14 @@ Starting Oracle 23c a validation of a JSON-column with a JSON-schema via **VALID
 When you want your APEX-application to reference this setting, you can use in the json-region-setup the query 
 
 ```
-SELECT 
-  REGEXP_SUBSTR(search_condition_vc, '''(.*)''$',1,1,'n',1) json_schema
-FROM user_constraints c 
+SELECT REGEXP_SUBSTR(text, '({.+})',1,1,'n',1) AS json_schema
+FROM (
+  SELECT table_name, constraint_name,
+    SYS_DBURIGEN(table_name, constraint_name, search_condition, 'text()').getclob() as text 
+  FROM user_constraints WHERE UPPER(search_condition_vc) like '%IS JSON%' AND constraint_type='C'
+) c 
 JOIN user_cons_columns cc ON(c.table_name=cc.table_name AND c.constraint_name=cc.constraint_name)
 WHERE c.table_name='TAB' AND column_name='JSON_DATA'
-  AND c.constraint_type='C' AND search_condition_vc like '%IS JSON%';
 ```
 
 This retrievs the JSON-schema for column **TAB.JSON_DATA** from the data dictionary, as long as the constraint-text is less than 4000 char long (the full text isin a LONG-column, which is not easy to process). So changing this VALIDATE setting will automatically adopt the layout of the json-region in your APEX-UI.
