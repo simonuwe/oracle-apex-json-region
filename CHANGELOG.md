@@ -1,3 +1,23 @@
+# 0.8.1 2024-04-11
+- #88 readonly on property level not 100% working bug
+- #89 enum for "type": "integer or "number" does not work bug
+- #85 readonly does not work for Richttext-Editor bug
+- #77 richttext-editor not shown, when JSON-schema is changed on page bug
+- #73 undefined reference bug
+- #84 "itemtype": "combobox", configuration at wrong property bug
+- #82 Optionally place Checkboxes and Radio in a row not column enhancement
+- #81 Wrong default for "additionalProperties" bug
+- #79 "default": "now" does not work enhancement
+- #78 Oracle 23c: extraction of JSON-Schema from constraint sometimes not working bug
+- #76 Wrong example for date, date-time error message bug
+- #75 1 pixel border on json-region bug
+- #71 plugin-configuration enhancement
+- #70 css and js files loaded even when not required enhancement
+
+# 0.8.0 2024-01-07
+- #36 textarea with markdown- and/or richttext-editor enhancement
+- #50 Support APEX-23.2 combobox enhancement
+
 # Release 0.7.6 2023-12-19
  - #67 somtimes javascript errors when json-region contains datepicker
 
