@@ -1,6 +1,6 @@
-/*
+*
  * JSON-region-plugin
- * (c) Uwe Simon 2023
+ * (c) Uwe Simon 2023,2024
  * Apache License Version 2.0
 */
 
@@ -151,15 +151,28 @@ FUNCTION ajax_region(p_region IN apex_plugin.t_region,
   l_result   apex_plugin.t_region_ajax_result;
   l_json     VARCHAR2(32000);
   l_j        APEX_JSON.T_VALUES;
+  l_svg      clob;
 BEGIN
+  APEX_DEBUG.TRACE('ajax_region %s', APEX_APPLICATION.g_x01);
   apex_plugin_util.debug_region(p_plugin => p_plugin, p_region => p_region);
   BEGIN
-    l_json := readschema(l_sqlquery);
-    apex_json.parse(l_j , l_json);
-    apex_json.write(l_j);
+    IF(APEX_APPLICATION.g_x01 IS NOT NULL) THEN  -- generate a QR-code 
+$if wwv_flow_api.c_current>=20231031 $then   -- apex_barcode is only available in APEX >=23.2 (20231031), so conditional compile
+      l_svg := apex_barcode.get_qrcode_svg(p_value => APEX_APPLICATION.g_x01); 
+      apex_json.open_object;
+      apex_json.write('QR', l_svg);
+      apex_json.close_all();
+$else
+      apex_json.open_object;
+$end
+    ELSE   -- read JSON-schema
+      l_json := readschema(l_sqlquery);
+      apex_json.parse(l_j , l_json);
+      apex_json.write(l_j);
+    END IF;
   EXCEPTION WHEN NO_DATA_FOUND THEN
-    apex_json.open_object;
-    apex_json.close_all;  
+    apex_json.open_object();
+    apex_json.close_all();  
   END;
   RETURN l_result;
 END ajax_region;

@@ -2,6 +2,19 @@
   margin: -0.5rem;
 }
 
-.t-Form-itemWrapper img {
+.jsonregion .t-Form-itemWrapper img {
   height: 100%
+}
+
+.jsonregion .t-Form-itemWrapper svg {
+  height: 100%
+}
+
+.jsonregion .t-Form-itemWrapper input[type=time]::-webkit-calendar-picker-indicator {
+  position: relative;
+  top: -10px;
+}
+
+.jsonregion .t-Form-itemWrapper input[type=time]{
+  height: 3rem;
 }

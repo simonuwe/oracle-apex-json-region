@@ -13,27 +13,38 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
         // get the datat-template-id for inline errors from another input field
   pOptions.datatemplateET = $($('.a-Form-error[data-template-id]')[0]).attr('data-template-id') || 'xx_ET';
 
+  /*
+   *  set boolean val1 wo val2 when val1 is not set
+  */
   function booleanIfNotSet(val1, val2){
      return ((typeof val1 == 'boolean')?val1:val2)
   }
 
+  /*
+   * Log JSON-schema related errormessages
+  */
   function logSchemaError(msg, ...args){
     if(Array.isArray(args) && args.length>0){
-      apex.debug.error('JSON-schema invalid: '+ msg, args)
+      apex.debug.error('JSON-schema invalid: '+ msg, ...args)
     } else {
       apex.debug.error('JSON-schema invalid: '+ msg)
     }
   }
 
-  // Somw hacks
-  // Wait for Richttext-Editor to be initialized
-  // otherwise apex.item('richtext-ITEM').setValue(...) will cause undefined error 
+  /*
+   * Somw hacks
+   * Wait for Richttext-Editor to be initialized
+   * otherwise apex.item('richtext-ITEM').setValue(...) will cause undefined error 
+  */
   function waitForEditor() {
     return new Promise(function (resolve, reject) {
         checkEditor(resolve);
     });
   }
 
+  /*
+   * Check whether the richtext-editor is initialized
+  */
   function checkEditor(resolve) {
     let editorElement = $('a-rich-text-editor');
     if (!(editorElement && editorElement[0] && editorElement[0].getEditor())) {
@@ -43,6 +54,9 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
     }
   }
 
+  /*
+   * Wait until the richtext-editor is initialized
+  */
   async function richtextHack(){
     let editorElement = $('a-rich-text-editor');
     if(editorElement && editorElement[0]){
@@ -51,11 +65,14 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
     }
   }
 
+  /*
+   * some Hacks to make the plugin work
+  */
   function apexHacks(){
 
     // Hack to attach all Handler to the fields in the json-region  
     apex.debug.trace('>>apexHacks');
-    apex.item.attach($('#' + pRegionId));
+       // apex.item.attach($('#' + pRegionId));
           // hack to support floating lables for universal-thema 42
     if(apex.theme42){
       apex.debug.info('Theme42 patch');
@@ -71,6 +88,8 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
                                                    // JSON "type": "..."
   const C_JSON_OBJECT           = 'object';
   const C_JSON_ARRAY            = 'array';
+  const C_JSON_PROPERTIES       = 'properties';
+  const C_JSON_REQUIRED         = 'required';
   const C_JSON_REF              = '$ref';
   const C_JSON_STRING           = 'string';
   const C_JSON_INTEGER          = 'integer';
@@ -79,17 +98,26 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
   const C_JSON_CONST            = 'const';
   const C_JSON_FORMAT_DATE      = 'date';
   const C_JSON_FORMAT_DATETIME  = 'date-time';
+  const C_JSON_FORMAT_TIME      = 'time';
+  const C_JSON_FORMAT_EMAIL     = 'email';
+  const C_JSON_FORMAT_URI       = 'uri';
+
+                                            // conditional keywords
+  const C_JSON_COND_ALL_OF      = 'allOf';
+  const C_JSON_COND_ANY_OF      = 'anyOf';
+  const C_JSON_COND_NOT         = 'not';
+  
                                                    // JSON encoded strings
   const C_JSON_IMAGE_PNG        = 'image/png';
   const C_JSON_IMAGE_JPG        = 'image/jpg';
   const C_JSON_IMAGE_GIF        = 'image/gif';
   const C_JSON_BASE64           = 'base64';
 
-
   const C_DELIMITER         = '_'                  // delimiter for path of nested objects
                                                    // "apex": {"itemtype": "...", ...} 
   const C_APEX_SWITCH       = 'switch';            // itemtype switch
-  const C_APEX_EDITOR       = 'richtext';          // itemtype richtext editor
+  const C_APEX_RICHTEXT     = 'richtext';          // itemtype richtext editor
+  const C_APEX_TEXTAREA     = 'textarea';
   const C_APEX_COMBO        = 'combobox';          // itemtype combobox
   const C_APEX_RADIO        = 'radio';
   const C_APEX_CHECKBOX     = 'checkbox';
@@ -101,61 +129,85 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
   const C_APEX_CURRENCY     = 'currency';
   const C_APEX_HORIZONTAL   = 'horizontal';
   const C_APEX_VERTICAL     = 'vertical';
-  
+  const C_APEX_PCTGRAPH     = 'pctgraph';
                                                    // Extended Oracle types 
   const C_ORACLE_TIMESTAMP  = 'timestamp';      
 
   let   gData = {};  // holds the JSON-data as an object hierarchie
 
+  /*
+   * build the name of an item in the JSON-region from tha 
+  */
   function itemname(dataitem, field){
       let l_name = dataitem + C_DELIMITER + field;
       return l_name;
   }
-    // evaluates the if-expression of a conditional schema
+
+  /* 
+   * evaluates the if-expression of a conditional schema using the values of the JSON-data
+  */
   function evalExpression(schema, data){
     let l_ret = true;
     schema = schema||{};
     apex.debug.trace(">>jsonRegion.evalExpression", schema, data);
             // check whether values are not empty
-    if(schema.required){
+    for(const [l_field, l_comp] of Object.entries(schema)){
+    console.log('EVAL', l_field, l_comp);
+    switch(l_field){
+    case C_JSON_REQUIRED:
       apex.debug.trace('evalExpression: ', schema.required, 'not empty', data);
-    }
-
-      if(l_ret && schema.allOf){
-        apex.debug.trace('evalExpression: ', schema.allOff, 'AND');
-        for(const l_prop in schema.allOf){
-          l_ret = l_ret && evalExpression(l_prop, data);
+      if(Array.isArray(l_comp)){
+        for(const l_field of l_comp){
+          if((data[l_field]==null) || (data[l_field].length==0)){  // field is empty
+            l_ret = false;
+          }
         }
+      } else {
+        logSchemaError('conditional schema', l_field, 'must be an array'); 
       }
-      if(l_ret && schema.anyOf){
-        apex.debug.trace('evalExpression: ', schema.anyOf, 'OR');
-        for(const l_prop in schema.anyOf){
-          l_ret = l_ret || evalExpression(l_prop, data);
-        }
+    break;
+    case C_JSON_COND_ALL_OF:
+      for(const l_entry of l_comp){
+        l_ret = l_ret && evalExpression(l_entry, data);
       }
-
-    if(typeof schema.properties == 'object') {
-      for(const [l_field, l_comp] of Object.entries(schema.properties)){
-        if(typeof l_comp != 'undefined'){
-          apex.debug.trace('evalExpression:', l_field, "==", l_comp.const, data[l_field])
+    break;
+    case C_JSON_COND_ANY_OF:
+      apex.debug.trace('evalExpression: ', l_field, l_comp, 'OR');
+      let l_ret2 = false;
+      for(const l_entry of l_comp){
+        l_ret2 = l_ret2 || evalExpression(l_entry, data);
+      }
+      l_ret = l_ret && l_ret2;
+    break;
+    case C_JSON_COND_NOT:
+      apex.debug.trace('evalExpression: ', l_comp, 'NOT');
+      l_ret = !evalExpression(l_comp, data);
+    break;
+    case C_JSON_PROPERTIES:
+      l_ret = evalExpression(schema.properties, data);
+    break;
+    default:  // a simpre property witch == or IN
+      if(Array.isArray(l_comp.enum)){
+        apex.debug.trace('evalExpression:', l_field, "in ", l_comp, data[l_field])
+        if(!l_comp.enum.includes(data[l_field])){
+            l_ret=false;
+          }
+        } else if(typeof l_comp != 'undefined'){
+          apex.debug.trace('evalExpression:', l_field, "==", l_comp, data[l_field])
           if(l_comp.const!=data[l_field]){
             l_ret=false;
           }
         }
-        // check whether value is in enum
-        if(Array.isArray(l_comp.enum)){
-          apex.debug.trace('evalExpression:', l_field, "in ", l_comp.enum, data[l_field])
-          if(!l_comp.enum.includes(data[l_field])){
-            l_ret=false;
-          }
-        }
       }
+    break;
     }
-    apex.debug.trace("<<jsonRegion.evalExpression", l_ret);
+    apex.debug.trace("<<jsonRegion.evalExpression", schema, l_ret);
     return(l_ret);
   }
 
-      // get used types, itemtypes and formats used in the JSON-schema
+  /*
+   * fill a map thie all itemtypes used in the JSON-Schema
+  */
   function getItemtypes(schema, itemtypes){
     itemtypes = itemtypes || {type: {}, itemtype: {}, format: {}};
     apex.debug.trace(">>jsonRegion.getItemtypes", schema, itemtypes);
@@ -187,7 +239,9 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
     return(itemtypes);
   }
 
-    // set show/fide the fields from list
+  /*
+   * set show/hide attribute by mode for all fiels in schema, to show/hide conditional parts of the UI
+  */
   function propagateShow(dataitem, schema, mode){
     apex.debug.trace(">>jsonRegion.propagateShow", dataitem, schema, mode);
     if(schema.type==C_JSON_OBJECT){
@@ -215,8 +269,10 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
     }
     apex.debug.trace("<<jsonRegion.propagateShow");
   }
-  
-    // set the required attribute and UI marker
+
+  /*
+  * set the required attribute and UI marker for a UI-item
+  */
   function propagateRequired(dataitem, schema, mode){
     apex.debug.trace(">>jsonRegion.propagateRequired", dataitem, schema, mode);
     let item = $('#' + dataitem);
@@ -229,7 +285,9 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
     apex.debug.trace("<<jsonRegion.propagateRequired");
   }
 
-    // convert item-value into json-value
+  /*
+   * convert an item-value of the APEX-UI into json-value needed for storing it
+  */
   function itemValue2Json(schema, value){
     if(value === "") { value=null; };
     apex.debug.trace(">>jsonRegion.itemValue2Json", schema, value);    
@@ -245,6 +303,9 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
               case C_JSON_FORMAT_DATETIME:
                 l_value = apex.date.toISOString(apex.date.parse(value, apex.locale.getDateFormat()+' HH24:MI:SS'));
               break;  
+              case C_JSON_FORMAT_TIME:
+                l_value = value;
+              break;
             }
             l_value = l_value.length>0?l_value:null;
           break;  
@@ -270,6 +331,10 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
     return l_value;
   }
 
+  /*
+   * get the Value of a constant "const": ...
+   * used to convert the constant NOW/new int to current date/datetime
+  */
   function getConstant(format, str){
     let value = str;
     if((typeof(str)=='string') && (str.toUpperCase() == 'NOW')){
@@ -280,6 +345,9 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
       case C_JSON_FORMAT_DATETIME:
           value = apex.date.format(new Date(), 'YYYY-MM-DDTHH24:MI:SS');
       break;
+      case C_JSON_FORMAT_TIME:
+          value = apex.date.format(new Date(), 'HH24:MI');
+      break;
       default:
           value = str;
       break;
@@ -287,16 +355,22 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
     }
     return (value);
   }
-    // convert json-value into item-value
+
+  /*
+   * convert json-value into item-value required in the APEX-UI
+  */
   function jsonValue2Item(schema, value, newItem){
     let l_value = value;
-    apex.debug.trace(">>jsonRegion.jsonValue2Item", schema, value, newItem);
-    if(newItem && !value && schema.default) {// when a default is configured, use it for when a new item is in use
-      // NOW is a keyword for the current date/datetime for datw and date-time
+    apex.debug.trace(">>jsonRegion.jsonValue2Item", schema);
+    if(newItem && !value && schema.default) {
+      // When a default is configured, use it for when a new item is in use
       value = getConstant(schema.format, schema.default);
     }
 
-// console.log('DEFAULT-VALUE:', schema.default, newItem, 'VALUE:', value);
+    if(schema.writeOnly){   // do not show the current value when it is a writeOnly UI-item
+      value = null;
+      l_value =  null;
+    }
 
     if(value || value==false || value==0 || value==0.0){
       l_value = value;
@@ -321,11 +395,16 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
                   l_value = apex.date.format(apex.date.parse(value,'YYYY-MM-DDTHH24:MI'), apex.locale.getDateFormat()+' HH24:MI:SS');
                 }
               break;
+              case C_JSON_FORMAT_TIME:
+                l_value = value.substring(0,5);
+              break;
               default:
-                if(schema.readOnly && schema.apex.longString){
-                  if(schema.apex.itemtype!=C_APEX_EDITOR){  // no richtext editor, only quite < and convert \n into <br>
+                if(schema.readOnly){
+                  switch(schema.apex.itemtype){
+                  case C_APEX_RICHTEXT:
                     l_value= l_value?l_value.replaceAll('<', '&lt;').replaceAll('\n', '<br/>'):'';
-                  }else {  // use marked to convert markdown into html
+                  break;
+                  case C_APEX_TEXTAREA:
                     l_value = window.marked.parse( l_value, {
                               gfm: true,
                               breaks: true,
@@ -334,7 +413,8 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
                               xhtml: false,
                               headerIds: false
                             });
-                  }
+                  break;    
+                  }  
                 }  
             }
           break;  
@@ -355,21 +435,22 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
     return(l_value);
   }
 
-    // attach the generated fields to APEX and fill with data
+  /*
+   * attach the generated fields of an array in the JSON-schema to APEX
+  */
   function attachArray(dataitem, previtem, schema, readonly, data, newItem){ 
     apex.debug.trace(">>jsonRegion.attachArray", dataitem, schema, readonly, data);
     let l_value = jsonValue2Item(schema, data, newItem);
     schema.apex = schema.apex || {};
-    let item = schema.items;
-    if(item && item.type==C_JSON_STRING){
+    let item = schema.items||{};
+    if([C_JSON_STRING, C_JSON_INTEGER, C_JSON_NUMBER].includes(item.type)){
       if(apex.env.APEX_VERSION >='23.2.0' && (schema.apex.itemtype == C_APEX_COMBO || (item.apex && item.apex.itemtype == C_APEX_COMBO))){
         apex.item.create(dataitem, {item_type: 'combobox'});
       } else {
         apex.widget.checkboxAndRadio('#'+ dataitem,'checkbox');
-      }
-      apex.item(dataitem).setValue(l_value||[]);
+      };
     } else {
-      apex.debug.error('Support for simple string array only', item?item.type:'???')
+      apex.debug.error('Support for simple string/integer/number array only', item?item.type:'???')
     }
     if(readonly) {
       apex.item(dataitem).disable(); 
@@ -377,12 +458,32 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
     apex.debug.trace("<<jsonRegion.attachArray");
   }
 
-
-    // attach the generated fields to APEX and fill with data
-  function attachObject(dataitem, previtem, schema, readonly, data, newItem){ 
-    apex.debug.trace(">>jsonRegion.attachObject", dataitem, previtem, schema, readonly, data, newItem);
+  /*
+   * set the Values of an array in the JSON-schema
+  */
+  function setArrayValues(dataitem, previtem, schema, readonly, data){ 
+    apex.debug.trace(">>jsonRegion.setArrayValues", dataitem, previtem, schema, readonly, data);
+    let l_value = jsonValue2Item(schema, data, newItem);
     schema.apex = schema.apex || {};
+    let item = schema.items||'';
+    if([C_JSON_STRING, C_JSON_INTEGER, C_JSON_NUMBER].includes(item.type)){
+      apex.debug.trace('setArray:', l_value);
+      apex.item(dataitem).setValue(l_value||[]);
+    } else {
+      apex.debug.error('Support for simple string/integer/number array only', item?item.type:'???')
+    }
+    if(readonly) {
+      apex.item(dataitem).disable(); 
+    }
+    apex.debug.trace("<<jsonRegion.setArrayValues");
+  }
 
+  /*
+   * set the Values of a all fields in the JSON-schema
+  */
+  function setObjectValues(dataitem, previtem, schema, readonly, data){ 
+    apex.debug.trace(">>jsonRegion.setObjectValues", dataitem, previtem, schema, readonly, data);
+    schema.apex = schema.apex || {};
     let l_value = jsonValue2Item(schema, data, newItem);
     switch(schema.type){
     case null:
@@ -390,7 +491,97 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
       logSchemaError('missing "type" at "%s"', dataitem);
     break;
     case C_JSON_OBJECT:
-      if(schema.properties){
+      if(typeof schema.properties == 'object'){
+        data = data ||{};
+        for(let [l_name, l_schema] of Object.entries(schema.properties)){
+          setObjectValues(itemname(dataitem, l_name), dataitem, l_schema, schema.readOnly, data[l_name]);
+        }
+      }
+    break;
+    case C_JSON_ARRAY:   
+      setArrayValues(dataitem, dataitem, schema, schema.readOnly, data, newItem);
+    break;
+    case 'const':  // a const value
+    case 'null':  // empty object do nothing
+    break;
+    case C_JSON_BOOLEAN:
+      apex.item(dataitem).setValue(l_value);
+      if(schema.readOnly) {
+        apex.item(dataitem).disable(); 
+      }
+    break;
+    default:
+      if(!schema.readOnly || [C_APEX_QRCODE].includes(schema.apex.itemtype)){
+        apex.item(dataitem).setValue(l_value);
+      }
+    break;
+    }
+
+    if(schema.if){
+      if(schema.then) {  // conditional schema then
+        let properties = schema.then.properties||{};
+        setObjectValues(dataitem, dataitem, {type: C_JSON_OBJECT, properties: properties}, schema.readOnly, data);
+      }
+
+      if(schema.else) { // conditional schema else
+        let properties = schema.else.properties||{};
+        setObjectValues(dataitem, dataitem, {type: C_JSON_OBJECT, properties: properties}, schema.readOnly, data);
+      }
+    }
+
+
+    apex.debug.trace("<<jsonRegion.setObjectValues");
+  }
+
+  /*
+   *  Build recusively a list of all items used in the schema.if property
+  */
+  function getConditionalItems(condition){
+    apex.debug.trace(">>jsonRegion.getConditionalItems", condition);
+    let l_items = [];
+    for(const [l_field, l_comp] of Object.entries(condition)){
+      switch(l_field){
+      case C_JSON_REQUIRED:
+        if(Array.isArray(l_comp)){
+          l_items = l_comp;
+        } else {
+           logSchemaError('conditional schema', l_field, 'must be an array'); 
+        }
+      break;
+      case C_JSON_COND_ALL_OF:
+      case C_JSON_COND_ANY_OF:
+        for(const l_schema of l_comp){
+          l_items = l_items.concat(getConditionalItems(l_schema));
+        }
+      break;
+      case C_JSON_COND_NOT:
+      case C_JSON_PROPERTIES:
+        l_items = l_items.concat(getConditionalItems(condition[l_field]));
+      break;
+      default:  // a simpre property witch == or IN
+        l_items.push(l_field);
+      break;
+      }
+    }
+
+    l_items = Array.from(new Set(l_items)); // remove duplicates
+    apex.debug.trace("<<jsonRegion.getConditionalItems", l_items);
+    return(l_items);
+  }
+  /*
+   * attach the generated fields of the JSON-schma to APEX
+  */
+  function attachObject(dataitem, previtem, schema, readonly, data, newItem){ 
+    apex.debug.trace(">>jsonRegion.attachObject", dataitem, previtem, schema, readonly, data, newItem);
+    schema.apex = schema.apex || {};
+
+    switch(schema.type){
+    case null:
+    case undefined:
+      logSchemaError('missing "type" at "%s"', dataitem);
+    break;
+    case C_JSON_OBJECT:
+      if(typeof schema.properties == 'object'){
         data = data ||{};
         for(let [l_name, l_schema] of Object.entries(schema.properties)){
           attachObject(itemname(dataitem, l_name), dataitem, l_schema, schema.readOnly, data[l_name], newItem);
@@ -409,30 +600,12 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
           apex.widget.checkboxAndRadio('#'+ dataitem,'radio');
         break;
         case C_APEX_IMAGE:  // display only
-        break;
         case C_APEX_QRCODE: // display only
-          apex.debug.warn('Not yet implemented', dataitem, schema.apex.itemtype, l_value);
         break;
-
         default:
-          if(schema.apex.longString){
-            apex.item.create(dataitem, {});
-            console.log('CREATE', dataitem);
-            console.dir(apex.item(dataitem));
-          } else {
-            apex.item.create(dataitem, {});
-          }           
+          apex.item.create(dataitem, {});
+        break;
         }
-/*        
-        if(schema.apex.itemtype != C_APEX_EDITOR){  // hack, Richtext-editor is not initialized here, will show value itself
-          apex.item(dataitem).setValue(l_value);
-        } else {
-          console.log('tinymce', dataitem, l_value);
-          apex.item(dataitem).value = l_value;
-          console.dir(apex.item(dataitem).value);
-        }
-*/
-        apex.item(dataitem).setValue(l_value);
       }
     break;
     case C_JSON_BOOLEAN:
@@ -442,7 +615,6 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
       break;
       case C_APEX_RADIO:
         apex.widget.checkboxAndRadio('#'+ dataitem,'radio');
-//        apex.item(dataitem).setValue(l_value);
       break;
       case C_APEX_SELECT:
         apex.item.create(dataitem, {}); 
@@ -452,21 +624,24 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
       break;
       }
 
-      apex.item(dataitem).setValue(l_value);
       if(schema.readOnly) {
         apex.item(dataitem).disable(); 
       }
     break;
     case C_JSON_NUMBER:
     case C_JSON_INTEGER:
-      if(schema.apex.itemtype==C_APEX_STARRATING){
+      switch(schema.apex.itemtype){
+      case C_APEX_PCTGRAPH:  // do not attach pctgraph, it will distroy the display
+      break;
+      case C_APEX_STARRATING:
         apex.widget.starRating(dataitem, {showClearButton: false, numStars: schema.maximum}); 
-        apex.item(dataitem).setValue(l_value);
-      } else {       
+
+      break;
+      default:       
         if(!schema.readOnly){
           apex.item.create(dataitem, {});
-          apex.item(dataitem).setValue(l_value);
         }
+      break;
       }
     break;
     default:
@@ -496,11 +671,15 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
     }
 
     if(schema.if){  // conditional schema, add event on items
-      let l_dependOn = Object.keys(schema.if.properties);
+      let l_dependOn = getConditionalItems(schema.if);
+      // Object.keys(schema.if.properties);
       for(let l_name of l_dependOn){
+        console.log('onChange', dataitem, l_name);
         $("#" + itemname(dataitem, l_name)).on('change', function(){
+          console.log('clicked on', dataitem, l_name);
           if(schema.if){  // click on a conditional item
-            let l_json = getData(dataitem, schema, {})
+            let l_json = getData(dataitem, schema, {});
+            console.log('EVAL', l_json);
             let l_eval = evalExpression(schema.if, l_json);
             if(schema.then){ 
               let properties = schema.then.properties||{};
@@ -523,7 +702,8 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
             // the item has dependent items, so add callback on data change
         for(const item of schema.dependentRequired) {
           let l_item = itemname(previtem, item);
-          propagateRequired(l_item, schema[l_item], l_value && l_value.length>0);
+          let l_value = data;
+          propagateRequired(l_item, schema[item], l_value && l_value.length>0);
         }
         $("#" + dataitem).on('change', function(){
           for(const item of schema.dependentRequired) {
@@ -537,7 +717,9 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
     apex.debug.trace("<<jsonRegion.attachObject");
   }
 
-    // retrieve data for UI-fields and build JSON, oldJson is required to support fieldwise readonly
+  /*
+   * retrieve data for UI-fields of JSON-schema and build JSON, oldJson is required to support fieldwise readonly
+  */
   function getData(dataitem, schema, oldJson){ 
     apex.debug.trace(">jsonRegion.getData", dataitem, schema, oldJson);
     let l_json = {};
@@ -608,16 +790,19 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
       }
 
     }
-    apex.debug.trace("<jsonRegion.getData", l_json);
+    apex.debug.trace("<<jsonRegion.getData", l_json);
     return(l_json);
   }
 
-    // generates the label form the objectname por use an existing label
+  /*
+   * generates the label from the objectname or use an existing label
+  */
   function generateLabel(name, schema){
     let l_label='';
     if(schema.apex && schema.apex.label){
       l_label = schema.apex.label;
-    } else {
+    } else {  
+      // for default label replace -_ by a blank and set first char of each word in uppercase
       l_label =  name.toLowerCase()
                      .split(/ |\-|_/)
                      .map((s) => s.charAt(0).toUpperCase() + s.substring(1))
@@ -626,7 +811,11 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
     return(l_label);
   }
 
-     // propagate required/$refs into properties/items
+  /*
+   * propagate values of JSON-schema properties recusive into properties/items
+   * Set some properties depending on others
+   * Set missing properties to reasonable values to avoid errors in later stages
+  */
   function propagateProperties(schema, level, readonly, writeonly, additionalProperties, conditional){ 
     schema = schema || {};
     schema.apex = schema.apex||{};
@@ -704,6 +893,7 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
       }  
     }
 
+
     // calc minimum/maximum
     if(schema.minimum){
       schema.minimum = getConstant(schema.format, schema.minimum);
@@ -749,7 +939,7 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
 
         // set apex.formats
     if(apex.env.APEX_VERSION <'23.2'){ // check for new itetype in old releases, remove them and log error
-      if([C_APEX_QRCODE, C_APEX_EDITOR, C_APEX_COMBO, ].includes(schema.apex.itemtype)){
+      if([C_APEX_QRCODE, C_APEX_RICHTEXT, C_APEX_COMBO, ].includes(schema.apex.itemtype)){
         logSchemaError('itemtype "%s" not supported in "%s"', schema.apex.itemtype, apex.env.APEX_VERSION);
         delete schema.apex.itemtype;
       }
@@ -770,6 +960,9 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
       break;
       case C_JSON_INTEGER:
         schema.apex.format = (schema.apex.format==C_APEX_CURRENCY)?'FML999G999G999G999G999':(schema.apex.format||'99999999999999999999999');
+        if(schema.apex.itemtype==C_APEX_PCTGRAPH){
+          schema.readOnly = true;
+        }
       break;
       case C_JSON_STRING:
         if(schema.apex.itemtype==C_APEX_QRCODE || schema.contentEncoding == C_JSON_BASE64){
@@ -798,8 +991,13 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
            case C_JSON_FORMAT_DATETIME:
              schema.apex.format = (schema.apex.format?schema.apex.format:apex.locale.getDateFormat() + ' HH24:MI:SS');
            break;
+           case C_JSON_FORMAT_TIME:
+             schema.apex.format = 'HH24:MI';
+           break;
            default:
-             schema.apex.longString = (schema.maxLength && schema.maxLength>pOptions.textareawidth)==true;
+             if(schema.maxLength && schema.maxLength>pOptions.textareawidth){
+               schema.apex.itemtype=schema.apex.itemtype||C_APEX_TEXTAREA;  
+             }
            break;   
           }
         }
@@ -837,7 +1035,9 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
     apex.debug.trace("<<jsonRegion.propagateProperties", level);
   }
 
-    // generate HTML for 23.2 Combobox
+  /*
+   * generate the UI HTML for 23.2 Combobox 
+  */
   function generateForCombo(level, schema, data, prefix, name, startend, checkbox){
     let l_html='';
     let l_values = (data||[]).join('|');
@@ -883,7 +1083,9 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
     return(l_html);
   }
 
-    // generate the UI-item for a Pulldonw/radio/checkbox property
+  /*
+   * generate the UI-item for a pulldown/radio/checkbox property depending on itemtype
+  */
   function generateForSelect(level, schema, data, prefix, name, startend, itemtype, schemaApex){
     let l_html='';
     schema.apex = schema.apex||{};
@@ -948,13 +1150,14 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
     return(l_html);
   }
 
-    // generate the UI-item for a numeric property
+  /*
+   * generate the UI-item for a string property depending on format, ...
+  */
   function generateForString(level, schema, data, prefix, name, startend, newItem){
     let l_html='';
     schema.apex = schema.apex||{};
     schema.apex.enum = schema.apex.enum||{};
     apex.debug.trace(">>jsonRegion.generateForString", level, schema, data, prefix, name, startend, newItem);
-//    if(pOptions.readonly){
     if(schema.readOnly){
       switch(schema.apex.itemtype){
       case C_APEX_IMAGE:
@@ -966,13 +1169,9 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
 `;
       break;
       case C_APEX_QRCODE:
-            if(apex.env.APEX_VERSION>='23.2.0') {
-               l_html = `
+        l_html = `
 <a-qrcode id="#ID#" class="a-QRCode" ajax-identifier="#AJAXIDENTIFIER#" value="#VALUE#"> </a-qrcode>
 `;
-            } else {
-              logSchemaError('"itemtype": "%s" not supported', schema.apex.itemtype);  
-            }
       break;
       default:
         l_html='<span id="#ID#_DISPLAY" #REQUIRED# class="display_only apex-item-display-only" data-escape="true">#VALUE#</span>';
@@ -987,17 +1186,17 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
         }
       } else {
         switch(schema.format){
-        case "email":
+        case C_JSON_FORMAT_EMAIL:
           l_html = `
 <input type="email" id="#ID#" name="#ID#" #REQUIRED# #PATTERN# class=" text_field apex-item-text" size="32" #MINLENGTH# #MAXLENGTH# data-trim-spaces="#TRIMSPACES#" aria-describedby="#ID#_error">
 `;
         break;
-        case "uri":
+        case C_JSON_FORMAT_URI:
           l_html = `
 <input type="url" id="#ID#" name="#ID#" #REQUIRED# #PATTERN# class=" text_field apex-item-text" size="32" #MINLENGTH# #MAXLENGTH# data-trim-spaces="#TRIMSPACES#" aria-describedby="#ID#_error">
 `;
         break;
-        case "date":
+        case C_JSON_FORMAT_DATE:
           if(apex.env.APEX_VERSION >='22.2.0'){
             l_html = `
 <a-date-picker id="#ID#" #REQUIRED# change-month="true" change-year="true" display-as="popup" display-weeks="number"  #MIN# #MAX# previous-next-distance="one-month" show-days-outside-month="visible" show-on="focus" today-button="true" format="#FORMAT#" valid-example="#EXAMPLE#" year-selection-range="5" class="apex-item-datepicker--popup">
@@ -1015,7 +1214,7 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
 `;
           }
         break;
-        case "date-time":
+        case C_JSON_FORMAT_DATETIME:
           if(apex.env.APEX_VERSION >='22.2.0'){
             l_html = `
 <a-date-picker id="#ID#" #REQUIRED# change-month="true" change-year="true" display-as="popup" display-weeks="number" #MIN# #MAX# previous-next-distance="one-month" show-days-outside-month="visible" show-on="focus" show-time="true" time-increment-minute="15" today-button="true" format="#FORMAT#" valid-example="#EXAMPLE#" year-selection-range="5" class="apex-item-datepicker--popup">
@@ -1033,6 +1232,11 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
 `;
           }
         break;
+        case C_JSON_FORMAT_TIME:
+          l_html = `
+<input type="time" id="#ID#" name="#ID#" #REQUIRED# #MIN# #MAX# class="text_field apex-item-text"  size="5" data-trim-spaces="#TRIMSPACES#" aria-describedby="#ID#_error"/>
+`;
+        break;
         default:
           l_html = `
 <input type="text" id="#ID#" name="#ID#" #REQUIRED# #MINLENGTH# #MAXLENGTH# #PATTERN# class=" text_field apex-item-text" size="32" data-trim-spaces="#TRIMSPACES#" aria-describedby="#ID#_error">
@@ -1040,29 +1244,22 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
           switch (schema.apex.itemtype){
           case C_APEX_PASSWORD:
             l_html =`
-<input type="password" name="#ID#"" size="30" #REQUIRED# #MINLENGTH# #MAXLENGTH# value="" id="#ID#" class="password apex-item-text">
+<input type="password" name="#ID#"" size="30" #REQUIRED# #MINLENGTH# #MAXLENGTH# autocomplete="password" value="" id="#ID#" class="password apex-item-text">
 `;
           break;    
-          case C_APEX_EDITOR:
-            if(schema.apex.longString){
-              if(apex.env.APEX_VERSION>='23.2.0'){
-                l_html = `
-<a-rich-text-editor id="#ID#" mode="markdown" #REQUIRED# read-only="#READONLY#' value="#QUOTEVALUE#">
+          case C_APEX_RICHTEXT:
+            l_html = `
+<a-rich-text-editor id="#ID#" name="#ID#" mode="markdown" #REQUIRED# read-only="#READONLY#" display-value-mode="plain-text" visual-mode="inline" value="#QUOTEVALUE#">
 </a-rich-text-editor>
 `;
-              } else {
-                logSchemaError('%s: "itemtype": "%s" not supported', name, schema.apex.itemtype); 
-              }
-            }
-          break;
-          default:
-            if(schema.apex.longString){
-              l_html = `
+         break;
+          case C_APEX_TEXTAREA:
+            l_html = `
 <div class="apex-item-group apex-item-group--textarea">
   <textarea name="#NAME#" rows="#ROWS#" cols="100" id="#ID#" #REQUIRED# class="textarea apex-item-textarea" data-resizable="true" style="resize: both;">#QUOTEVALUE#</textarea>
 </div>
  `;
-            }
+          break;
           }
         break;
         }
@@ -1073,14 +1270,20 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
   };
 
 
-    // generate the UI-item for a numeric property
+  /*
+   * generate the UI-item for a integer/number property depending on format, ...
+  */
   function generateForNumeric(level, schema, data, prefix, name, startend, newItem){
     let l_html='';
     apex.debug.trace(">>jsonRegion.generateForNumeric", level, schema, data, prefix, name, startend);
     if(Array.isArray(schema.enum)){  // numeric Pulldown
       l_html += generateForSelect(level, schema, data, prefix, name, startend, C_APEX_SELECT, schema.apex);
     } else {
-          if(schema.apex && schema.apex.itemtype=="starrating"){
+          if(schema.apex && schema.apex.itemtype==C_APEX_PCTGRAPH){
+            l_html += `
+<div class="apex-item-pct-graph" id="#ID#" data-show-value="true"">#VALUE#</div>
+`;
+          } else if(schema.apex && schema.apex.itemtype==C_APEX_STARRATING){
             if(schema.readOnly){
               l_html = `
 <div id="#ID#" class="a-StarRating apex-item-starrating">
@@ -1116,7 +1319,9 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
     return(l_html);
   };
 
-    // generate the UI-item for a boolean property
+  /*
+   * generate the UI-item for a string property depending on itemtype.
+  */    
   function generateForBoolean(level, schema, data, prefix, name, startend, newItem){
     let l_html='';
     schema.apex = schema.apex||{};
@@ -1149,13 +1354,16 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
     return (l_html);
   }
 
-    // generate UI for type="array"
+  /*
+   * generate the UI-item for a string property depending on itemtype.
+   * Currently only arrays of simple types with "enum" 
+  */  
   function generateForArray(level, schema, data, prefix, name, startend, newItem){
     let l_wrappertype = '';
     let l_html='';
     apex.debug.trace(">>jsonRegion.generateForArray", level, schema, data, prefix, name, startend, newItem);
-    let item = schema.items;
-    if(item && item.type == C_JSON_STRING){
+    let item = schema.items||{};
+    if([C_JSON_STRING, C_JSON_INTEGER, C_JSON_NUMBER].includes(item.type)){
       if( Array.isArray(item.enum)){
         if(apex.env.APEX_VERSION >='23.2.0' && (schema.apex.itemtype==C_APEX_COMBO || (item.apex && item.apex.itemtype==C_APEX_COMBO))){
           l_html = generateForCombo(level, item, data, prefix, name, startend, newItem);
@@ -1174,35 +1382,86 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
     return([l_wrappertype, l_html]);
   }
 
-    // generate UI for conditional schem
-  function generateForCondition(level, schema, data, prefix, name, startend, newItem){
+
+  /*
+   *
+  */
+  function checkCondition(schema){
+    apex.debug.trace(">>jsonRegion.checkCondition", schema);
+
+    let l_ret = (typeof schema =='object' && !Array.isArray(schema));
+    if(l_ret && schema.allOf){    
+      l_ret = Array.isArray(schema.allOf);
+      if(l_ret){    // allOf is defined and an array
+        for(const l_schema of schema.allOf){
+          l_ret = l_ret && checkCondition(l_schema);
+        }  
+      }   
+    }
+    if(l_ret && schema.anyOf){    
+      l_ret = Array.isArray(schema.anyOf);   
+      if(l_ret){     // anyOf is defined and an array
+        for(const l_schema of schema.anyOf){
+          l_ret = l_ret && checkCondition(l_schema);
+        }
+      }  
+    }
+
+    if(l_ret && schema.not){  // not is defined and an object 
+      l_ret = (typeof schema.not == 'object');   
+      l_ret = l_ret && checkCondition(schema.not); 
+    }
+    
+    if(l_ret && schema.required){  // required is defined and an array 
+      l_ret = (Array.isArray(schema.required));   
+    }
+
+    if(l_ret && schema.properties){  // not is defined and an object 
+      l_ret = (typeof schema.properties == 'object'); 
+      l_ret = l_ret && checkCondition(schema.properties);  
+    }
+    apex.debug.trace("<<jsonRegion.checkCondition", l_ret);
+    return l_ret;
+  }
+
+  /*
+   * generate UI for conditional schema with if/then/else
+  */
+  function generateForConditional(level, schema, data, prefix, name, startend, newItem){
     let l_html='';
-    apex.debug.trace(">>jsonRegion.generateForCondition", level, schema, data, prefix, name, startend);
+    apex.debug.trace(">>jsonRegion.generateForConditional", level, schema, data, prefix, name, startend);
 
-    if(schema.if){  // there is a conditional schema
+    if(typeof schema.if == 'object'){  // there is a conditional schema
       // UI is generated for THEN and ELSE, set to hidden depending on if-clause
-      if(schema.then){
-        if(schema.then.properties){
-          for(let [l_name, l_schema] of Object.entries(schema.then.properties||{})){
-            l_html += generateForObject((l_schema.type==C_JSON_OBJECT?level+1:level), l_schema, data[l_name], (prefix?prefix+C_DELIMITER:'')+name, l_name, startend, newItem);
+      if(checkCondition(schema.if)){
+        if(schema.then){
+          if(schema.then.properties){
+            for(let [l_name, l_schema] of Object.entries(schema.then.properties||{})){
+              l_html += generateForObject((l_schema.type==C_JSON_OBJECT?level+1:level), l_schema, data[l_name], (prefix?prefix+C_DELIMITER:'')+name, l_name, startend, newItem);
+            }
           }
         }
-        // l_html += generateForObject(level, {type: "object", properties: schema.then.properties}, data, prefix, name, startend, newItem);
-      }
 
-      if(schema.else){  // with else
-        if(schema.else.properties){
-          for(let [l_name, l_schema] of Object.entries(schema.else.properties||{})){
-            l_html += generateForObject((l_schema.type==C_JSON_OBJECT?level+1:level), l_schema, data[l_name], (prefix?prefix+C_DELIMITER:'')+name, l_name, startend, newItem);
+        if(schema.else){  // with else
+          if(schema.else.properties){
+            for(let [l_name, l_schema] of Object.entries(schema.else.properties||{})){
+              l_html += generateForObject((l_schema.type==C_JSON_OBJECT?level+1:level), l_schema, data[l_name], (prefix?prefix+C_DELIMITER:'')+name, l_name, startend, newItem);
+            }
           }
         }
-//        l_html += generateForObject(level, {type: "object", properties: schema.else.properties}, data, prefix, name, startend, newItem);
+      } else {
+        logSchemaError('invalid condition', schema.if)  
       }
     }
-    apex.debug.trace("<<jsonRegion.generateForCondition"); 
+    apex.debug.trace("<<jsonRegion.generateForConditional"); 
     return(l_html);
   }
 
+  /*
+   * Generate a separator line (new row) in the APEX-UI
+   * When a label is given add it to the line
+   * The id is required to show/hide the content of the row for conditional schema
+  */
   function generateSeparator(label, id){
     apex.debug.trace(">>jsonRegion.generateSeparator", label, id); 
     let l_html ='';
@@ -1234,8 +1493,9 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
      return(l_html);
    }
 
-
-    // generate UI for type="object" and simple types
+  /*
+   * generate UI for an object schema, follow nested schemas 
+  */
   function generateForObject(level, schema, data, prefix, name, startend, newItem){
       let l_html='';
       let l_input='';
@@ -1266,7 +1526,7 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
             l_row++;
           }
 
-          l_html += generateForCondition(level, schema, data, prefix, name, startend, newItem);
+          l_html += generateForConditional(level, schema, data, prefix, name, startend, newItem);
 
           if(pOptions.headers && level>0){
               l_html += `
@@ -1293,16 +1553,22 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
             }
           break;
           default:
+            l_wrappertype = 'apex-item-wrapper--text-field';
             if(Array.isArray(schema.enum)) {    // an enum array
               l_wrappertype = (schema.apex && schema.apex.itemtype==C_APEX_RADIO)?'apex-item-wrapper--radiogroup':'apex-item-wrapper--select-list';
-            } else if(schema.apex && schema.apex.itemtype==C_APEX_PASSWORD){
+            } else if(schema.apex.itemtype==C_APEX_PASSWORD){
               l_wrappertype = 'apex-item-wrapper--password';
-            } else if(!(schema.apex && schema.apex.longString)){ //short string textfield
-              l_wrappertype = 'apex-item-wrapper--text-field';
-            } else if(apex.env.APEX_VERSION>='23.2.0' && schema.apex && schema.apex.itemtype==C_APEX_EDITOR){
-              l_wrappertype = 'apex-item-wrapper--rich-text-editor';
-            } else {
+            } else if(schema.apex.itemtype==C_APEX_TEXTAREA){ 
               l_wrappertype = 'apex-item-wrapper--textarea';
+            } else if(apex.env.APEX_VERSION>='23.2.0'){
+              switch(schema.apex.itemtype){
+              case C_APEX_QRCODE:  
+                l_wrappertype = 'apex-item-wrapper--qrcode';
+              break;
+              case C_APEX_RICHTEXT:
+                l_wrappertype = 'apex-item-wrapper--rich-text-editor';
+              break;
+              }
             }
           break;
           }          
@@ -1311,10 +1577,16 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
         case C_JSON_INTEGER:
         case C_JSON_NUMBER:
           l_input = generateForNumeric(level, schema, data, prefix, name, startend, newItem);
-          if(schema.apex.itemtype==C_APEX_STARRATING){
+          switch(schema.apex.itemtype){
+          case C_APEX_PCTGRAPH:
+            l_wrappertype = 'apex-item-wrapper--pct-graph';
+          break;
+          case C_APEX_STARRATING:
             l_wrappertype = 'apex-item-wrapper--star-rating';
-          } else {
-            l_wrappertype = 'apex-item-wrapper--number-field';              
+          break;
+          default:
+            l_wrappertype = 'apex-item-wrapper--number-field';
+          break;
           }
         break;
         case C_JSON_BOOLEAN:
@@ -1384,7 +1656,7 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
                                                      "AJAXIDENTIFIER": pAjaxIdentifier,
                                                      "DATATEMPLATE": pOptions.datatemplateET,
                                                      "FORMAT":       schema.apex.format||'',
-                                                     "EXAMPLE":      ([C_JSON_FORMAT_DATE, C_JSON_FORMAT_DATETIME].includes(schema.format)?jsonValue2Item(schema, apex.date.toISOString(new Date()), newItem):''), 
+                                                     "EXAMPLE":      ([C_JSON_FORMAT_DATE, C_JSON_FORMAT_DATETIME, C_JSON_FORMAT_TIME].includes(schema.format)?jsonValue2Item(schema, apex.date.toISOString(new Date()), newItem):''), 
                                                      "MINLENGTH":    schema.minLength?'minlength=' + schema.minLength:'',
                                                      "MAXLENGTH":    schema.maxLength?'maxlength=' + schema.maxLength:'',
                                                      "TOPLABEL":     (schema.type== C_JSON_BOOLEAN && !([C_APEX_SELECT, C_APEX_RADIO, C_APEX_SWITCH].includes(schema.apex.itemtype)))?"":label,
@@ -1392,8 +1664,8 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
                                                      "PATTERN":      schema.pattern?'pattern="'+schema.pattern+'"':"",  
                                                      "REQUIRED":     schema.isRequired?'required=""':"",
                                                      "ISREQUIRED":   schema.isRequired?'is-required':"",
-                                                     "MIN":          ("minimum" in schema)?([C_JSON_FORMAT_DATE, C_JSON_FORMAT_DATETIME].includes(schema.format)?'min':'data-min')+'='+schema.minimum:"",
-                                                     "MAX":          ("maximum" in schema)?([C_JSON_FORMAT_DATE, C_JSON_FORMAT_DATETIME].includes(schema.format)?'max':'data-max')+ '='+schema.maximum:"",
+                                                     "MIN":          ("minimum" in schema)?([C_JSON_FORMAT_DATE, C_JSON_FORMAT_DATETIME, C_JSON_FORMAT_TIME].includes(schema.format)?'min':'data-min')+'='+schema.minimum:"",
+                                                     "MAX":          ("maximum" in schema)?([C_JSON_FORMAT_DATE, C_JSON_FORMAT_DATETIME, C_JSON_FORMAT_TIME].includes(schema.format)?'max':'data-max')+ '='+schema.maximum:"",
                                                      "VALUE":        jsonValue2Item(schema, data, newItem)||'',
                                                      "QUOTEVALUE":   (schema.type== C_JSON_STRING && data)?apex.util.escapeHTML(data):(data?data:''),
                                                      "IMAGE":        schema.apex.image||""
@@ -1404,48 +1676,49 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
       return(l_html);
   }
 
-const mapType = 
-{
-  "script": {tag: "script", rel: null,         attr: "src",  prefix: "?v=" + apex.env.APEX_VERSION, type: "text/javascript"},
-  "css":    {tag: "link",   rel: "stylesheet", attr: "href", prefix: "",                            type: "text/css"}
-};
+  // mapping from file-extionsions like .js to html-tags required to opad the file
+  const mapType = {
+    "script": {tag: "script", rel: null,         attr: "src",  prefix: "?v=" + apex.env.APEX_VERSION, type: "text/javascript"},
+    "css":    {tag: "link",   rel: "stylesheet", attr: "href", prefix: "",                            type: "text/css"}
+  };
 
 
-/* hack for tinymce, this requires that it is loaded via <script src="...">
- * it calculates the path for loading plugins from src attribute
-* so JQuery's $.getScript(...) does not work
-*/
-function getFile(type, src) {
-  return new Promise(function(resolve, reject) {
-    apex.debug.trace('load file (%s): "%s"', type, src);
-    const s = document.createElement(mapType[type].tag);
-    let r = false;
-    s.type = mapType[type].type;
-    s[mapType[type].attr] = src;
-    s.rel = mapType[type].rel;
-    s.async = false;
-    s.onerror = function(err) {
-      reject(err, s);
-    };
+  /*
+   * get a file with an AJAX-request return a promise
+  */
+  function getFile(type, src) {
+    return new Promise(function(resolve, reject) {
+      apex.debug.trace('load file (%s): "%s"', type, src);
+      const s = document.createElement(mapType[type].tag);
+      let r = false;
+      s.type = mapType[type].type;
+      s[mapType[type].attr] = src;
+      s.rel = mapType[type].rel;
+      s.async = false;
+      s.onerror = function(err) {
+        reject(err, s);
+      };
 
-    s.onload = s.onreadystatechange = function() {
-      // console.log('LOAD', src, this);
-      if (!r && (!this.readyState || this.readyState == 'complete')) {
-        r = true;
-        resolve();
-      } else {
-        reject(null, s);
-      }
-    };
-    document.body.appendChild(s);
-  });
-}
+      s.onload = s.onreadystatechange = function() {
+        if (!r && (!this.readyState || this.readyState == 'complete')) {
+          r = true;
+          resolve();
+        } else {
+          reject(null, s);
+        }
+      };
+      // append script tag to body, so file will be loaded in background
+      document.body.appendChild(s);
+    });
+  }
 
 
-  function getFiles (arr, basePath) {
-    var l_arr = $.map(arr, function(file) {
+  /*
+   * load all files from list filenames relative to basePath
+  */
+  function getFiles (filenames, basePath) {
+    var l_arr = $.map(filenames, function(file) {
         return getFile( (file.endsWith(".js")?'script':'css'), (basePath||"") + file );
-//        return $.getScript( (path||"") + scr );
     });
         
     l_arr.push($.Deferred(function( deferred ){
@@ -1453,8 +1726,12 @@ function getFile(type, src) {
     }));
         
     return $.when.apply($, l_arr);
-}
+  }
 
+  /*
+   * build a list of all missing files required by used wigets/items like richtxt-editor, ... 
+   * Lod the files via ajax
+  */
   async function loadRequiredFiles() {
       // get used itemtypes
     apex.debug.trace(">>jsonRegion.getFiles");
@@ -1495,25 +1772,9 @@ function getFile(type, src) {
     return getFiles( l_scripts, apex.env.APEX_FILES);
   }
 
-
-  function loadIncludes(){
-    let l_html='';
-
-    let l_itemtypes = null;
-    l_itemtypes = getItemtypes(pOptions.schema, l_itemtypes);
-
-    if(apex.env.APEX_VERSION <'22.2' && (l_itemtypes.format.date || l_itemtypes.format["date-time"])){  //HACK for APEX <22.2, here and old datepicker is used
-      l_html += '<link rel="stylesheet" href="' + apex.env.APEX_FILES + 'libraries/oraclejet/' + apex.libVersions.oraclejet +  '/css/libs/oj/v' + apex.libVersions.oraclejet +  '/redwood/oj-redwood-notag-min.css" type="text/css"/>';
-    }
-    
-    if(apex.env.APEX_VERSION >='23.2'){  // new Featurs for 23.2
-      if(l_itemtypes.itemtype.richtext){  // richtext is used, so load files for rich-text-editor
-        l_html += '<link rel="stylesheet" href="' + apex.env.APEX_FILES + 'libraries/tinymce/' + apex.libVersions.tinymce + '/skins/ui/oxide/skin.css" type="text/css"/>';
-      }
-    }
-    return l_html;
-  }
-
+  /*
+   * show all in-/output-items for the JSON-region
+  */
   function showFields(){
     apex.debug.trace(">>jsonRegion.showFields");
     let l_html =  ''; //loadIncludes();
@@ -1530,21 +1791,27 @@ function getFile(type, src) {
     apex.debug.trace("<<jsonRegion.showFields");
   }
 
+
+  /*
+   * refresh the JSON-region
+  */
   async function refresh(newItem) {
     apex.debug.trace(">>jsonRegion.refresh");
-    apex.debug.info('jsonRegion.refresh', 'data', gData);
+    apex.debug.trace('jsonRegion.refresh', 'data', newItem, gData);
 
     showFields();
     await richtextHack();
 
 
-        // attach the fields to the generated UI
-    attachObject(pOptions.dataitem, '', pOptions.schema, pOptions.readonly, gData, !(gData && (Object.keys(gData).length>0)));
+//        // attach the fields to the generated UI
+    attachObject(pOptions.dataitem, '', pOptions.schema, pOptions.readonly, gData, newItem);
     apexHacks();
     apex.debug.trace("<<jsonRegion.refresh");
   }
 
-    // Remove all properties with value NULL to compact the generated JSON
+  /*
+   * Remove all properties with value NULL to compact the generated JSON
+  */
   function removeNulls(data, search){
     if(data) {
       if(Array.isArray(data)){
@@ -1565,9 +1832,11 @@ function getFile(type, src) {
     return(data);
   }
 
-    // bring different formats of data formats in a single one
+  /*
+   * convert different data formats in the JSON-data into single formats
+  */
   function reformatValues(schema, data, read){
-    apex.debug.trace(">>reformatValues", schema, data, read); 
+    apex.debug.trace(">>reformatValues", schema); 
     if(schema && data){
       switch(schema.type){
       case "object":
@@ -1610,7 +1879,9 @@ function getFile(type, src) {
     return(data);
   }
 
-  // create the region and attach default handlers
+  /*
+   * create the region and attach default handlers
+  */
   function createRegion(){
     apex.debug.trace(">>createRegion");
     // if reagion already exists destroy it first
@@ -1674,6 +1945,7 @@ function getFile(type, src) {
             { pageItems: pOptions.queryitems}, 
             { success: async function( data ) {
                 // for some reason the $defs property is returned as "$defs"
+                let l_newitem =!(gData && (Object.keys(gData).length>0));
                 data["$defs"]=data['"$defs"'];
                 apex.debug.trace('WORARROUND $defs');
                 pOptions.schema = data;
@@ -1685,8 +1957,9 @@ function getFile(type, src) {
                 apex.debug.trace(pOptions);
                 showFields();
                 await richtextHack();
-                attachObject(pOptions.dataitem, '', pOptions.schema, pOptions.readonly, gData, !(gData && (Object.keys(gData).length>0)));
+                attachObject(pOptions.dataitem, '', pOptions.schema, pOptions.readonly, gData, l_newitem);
                 apexHacks();
+                setObjectValues(pOptions.dataitem, '', pOptions.schema, pOptions.readonly, gData)
                 createRegion();
               }
             }  
@@ -1719,7 +1992,8 @@ function getFile(type, src) {
         $('#' + pRegionId + ' input').removeAttr('name');
         $('#' + pRegionId + ' textarea').removeAttr('name');
         $('#' + pRegionId + ' select').removeAttr('name');  
-        $('#' + pRegionId + ' a-combobox').removeAttr('name');        
+        $('#' + pRegionId + ' a-combobox').removeAttr('name');
+        $('#' + pRegionId + ' a-rich-text-editor').removeAttr('name');      
         apex.debug.trace("<<jsonRegion.submit");
       }
   };
@@ -1730,11 +2004,24 @@ function getFile(type, src) {
   apex.jQuery( apex.gPageContext$ ).on( "apexpagesubmit", function() {
     callbacks.submit();
   });
-  apex.jQuery( "body" ).on( "apexbeforerefresh", function() {
-    console.error('apexbeforerefresh');
+  apex.jQuery( window ).on( "apexbeforerefresh", function() {
+    apex.debug.trace('EVENT:', 'apexbeforerefresh');
   });
-  apex.jQuery( "body" ).on( "apexafterrefresh", function() {
-    console.error('apexafterrefresh');
+  apex.jQuery( window ).on( "apexafterrefresh", function() {
+    apex.debug.trace('EVENT:', 'apexafterrefresh');
+  });
+
+  apex.jQuery( window ).on( "apexreadyend", function( e ) {
+    apex.debug.trace('EVENT:', 'apexreadyend');
+  });
+
+  apex.jQuery( window ).on( "apexwindowresized", function( event ) {
+    apex.debug.trace('EVENT:', 'apexwindowresized');
+  });
+
+  $('#' + pRegionId).ready(function() {
+    apex.debug.trace('EVENT:', 'JQuery ready');
+    setObjectValues(pOptions.dataitem, '', pOptions.schema, pOptions.readonly, gData);
   });
 
   createRegion();

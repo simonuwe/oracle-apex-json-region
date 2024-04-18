@@ -1,0 +1,120 @@
+{
+  "openapi": "3.0.0", 
+  "info": {
+    "title": "openapi demo",
+    "version": "0.0.1"
+  }, 
+  "paths": {
+    "/hotel": {
+      "get": {
+        "responses": {
+          "200": {         
+            "description": "get data of a hotel.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/hotel"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/hotel"
+                }
+              }
+            }            
+          }
+        },
+        "responses": {
+          "200": {         
+            "description": "update data of a hotel.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/hotel"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "description": "ID of hotel",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          },
+          "style": "simple"
+        }
+      ]
+    }
+  },
+  "components": {
+    "schemas": {
+      "hotel": {
+        "type": "object",
+        "required": ["name", "continent", "country", "city"],
+        "properties": {
+          "name":      { "type": "string"},
+          "continent": { "type": "string",
+            "enum": ["Europe", "Africa", "America", "Antarctica", "Asia", "Australia"]
+          },
+          "country":   { "type": "string"},
+          "city":      { "type": "string"},
+          "stars": {
+            "type": "integer", "maximum": 5
+          },
+          "allinclusive": {
+            "type": "boolean"
+          },
+          "breakfastincluded": {
+            "type": "boolean"
+          },
+          "roomrates": {
+            "type": "object",
+            "properties": {
+              "from": {"$ref": "#/components/schemas/price"},
+              "to": {"$ref": "#/components/schemas/price"}
+            }
+          },
+          "updated": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "features":  {
+            "type": "array",
+            "items": { 
+              "type": "string", 
+              "enum": ["Pool", "Bar", "Restaurant", "Carpark"]
+            } 
+          },
+          "comment": {
+            "type": "string", "maxLength": 4000
+          }
+        }
+      },
+      "price": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1000
+     }
+    }
+  }
+}
