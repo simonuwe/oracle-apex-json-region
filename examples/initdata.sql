@@ -194,7 +194,536 @@ INSERT INTO object_type(object_type_name, object_schema) VALUES ('Person', q'[{
       "cardid": {"type": "string", "pattern": "[0-9]{4}( [0-9]{4}){3}"}
    }
 }]');
+
+Insert into OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('test-array-1',q'[{
+  "type": "object",
+  "properties": {
+    "checkbox": { "type": "array",
+                  "items": {
+                    "type": "string",
+                    "enum": ["val1", "val2", "val3"]
+                  }
+    },
+    "checkbox_hor": { "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": ["val1", "val2", "val3"],
+                        "apex": {
+                          "enum": {"val1": "disp1", "val2": "disp2", "va]l3": "disp3"}
+                        }
+                      },
+                      "apex": {
+                        "direction": "horizontal"
+                      }
+    },
+    "combo": { "type": "array",
+               "items": {
+                 "type": "string",
+                 "enum": ["val1", "val2", "val3"]
+               },
+               "apex": {"itemtype": "combobox"}
+    }
+  }
+}]');
+Insert into OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('test-boolean-1',q'[{
+  "type": "object",
+  "required": ["checkbox", "bool_switch", "bool_radio", "radio", "select"],
+  "properties": {
+    "checkbox": { "type": "boolean"},
+    "checkbox_optional": { "type": "boolean"},
+    "bool_switch": {
+      "type": "boolean", 
+      "apex":{"itemtype": "switch"}
+    },
+    "bool_radio": {
+      "type": "boolean", 
+      "apex": {"itemtype": "radio"}
+    },
+    "bool_radio_hor": {
+      "type": "boolean", 
+      "apex":{"itemtype": "radio", "direction": "horizontal"}
+    },
+    "select": { "type": "boolean",
+                "apex": {"itemtype": "select"}
+    }
+  }
+}]');
+Insert into OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('test-default-1',q'[{
+  "type": "object",
+  "properties": {
+    "string": {"type": "string", "default": "string"},
+    "date": {"type": "string", "format": "date", "default": "NOW"},
+    "datetime": {"type": "string", "format": "date-time", "default": "NOW"},
+    "long_string": {"type": "string", "maxLength": 1000, "default": "long\nstring"},
+    "boolean": {
+      "type": "boolean", "default": true
+    },
+    "switch": {
+      "type": "boolean", "default": true,
+      "apex": {"itemtype": "switch"}
+    },
+    "radio": {
+      "type": "boolean", "default": true,
+      "apex": {"itemtype": "radio"}
+    },
+    "integer": {"type": "integer", "default": 4711},
+    "number":  {"type": "number", "default": 8.15},
+    "money":        {
+      "type": "integer", "default": 4711,
+      "apex": {"format": "currency"}
+    },
+    "money_cent":   {
+      "type": "number", "default": 8.15,
+      "apex": {"format": "currency"}
+    },
+    "starrating": {
+      "type": "integer", "maximum": 5, "default": 3,
+      "apex": {"itemtype": "starrating"}
+    },
+    "editor_string": {
+      "type": "string", "maxLength": 1000, "default": "editor\n**string**",
+      "apex": {"itemtype": "richtext", "colSpan":12}
+    }
+  }
+}]');
+Insert into OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('test-dependent-1',q'[{
+  "type": "object",
+  "required": ["lastname"],
+  "dependentRequired":{
+    "zip": ["city"],
+    "city":   ["zip"]
+  },
+  "properties": {
+    "lastname":  {"type": "string"},
+    "firstname": {"type": "string"},
+    "zip":       {"type": "string"},
+    "city":      {"type": "string"},
+    "payment":   {"type": "string", "enum":["Visa", "Mastercard", "Amex", "Diners"]},
+    "creditcard":{"$ref": "#/$defs/cardid"}
+  },
+  "dependentSchemas": {
+    "payment": {
+     "type": "object",
+      "properties": {
+        "creditcard":    {"$ref": "#/$defs/creditcard"}
+      }
+    }
+  },
+  "$defs":{
+    "creditcard": { 
+      "type": "object",
+      "required": ["number", "validity", "securitycode"],
+      "properties": {
+        "number":       { "type": "string", "pattern": "[0-9]{4}( [0-9]{4}){3}"},
+        "validity":     { "type": "string", "pattern": "[0-9]{2}/[0-9]{2}"},
+        "securitycode": { "type": "integer", "maximum": 999}
+      }
+    }
+  }
+}]');
+Insert into OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('test-enum-1','{
+  "type": "object",
+  "properties": {
+    "select": { "type": "string", "enum": ["val1", "val2", "val3"]},
+    "radio_hor": { 
+      "type": "string",
+      "enum": ["val1", "val2"],
+      "apex": {"itemtype": "radio", "direction": "horizontal", "enum": {"val1": "disp1", "val2": "disp2"}}
+    },
+    "radio_ver": { 
+      "type": "string",
+      "enum": ["val1", "val2"],
+      "apex": {"itemtype": "radio", "direction": "vertical", "enum": {"val1": "disp1", "val2": "disp2"}}
+    }
+  }
+}');
+Insert into OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('test-format-1',q'[{
+  "type": "object",
+  "required": ["date", "date_time", "time", "email", "uri"],
+  "properties": {
+    "date":         { 
+     "type": "string", 
+     "format": "date",
+     "default": "NOW"
+    },
+    "date_time":    { 
+      "type": "string", 
+      "format": "date-time",
+      "default": "NOW"
+    },
+    "time": {
+      "type": "string",
+      "format": "time",
+      "default": "now"
+    },
+    "date_past":         { 
+     "type": "string", 
+     "format": "date",
+     "default": "NOW",
+     "maximum": "NOW"
+    },    "date_future":         { 
+     "type": "string", 
+     "format": "date",
+     "default": "NOW",
+     "minimum": "NOW"
+    },
+    "email":        { "type": "string", "format": "email", "apex": {"newRow": true}},
+    "uri":          { "type": "string", "format": "uri"}
+  }
+}]');
+Insert into OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('test-if-1',q'[{
+  "type": "object",
+  "required": ["lastname"],
+  "additionalProperties": false,
+  "properties": {
+    "lastname":  {"type": "string", "maxLength": 30},
+    "firstname": {"type": "string", "maxLength": 30},
+    "office_address":     {"$ref": "#/$defs/address"},
+    "deliverytohome":     { "type": "boolean", "apex": {"type": "switch", "label": "Delivery to homeoffice"}}
+  },
+  "if": {
+      "properties": {
+        "deliverytohome": { "const": true}
+      }
+  },
+  "then": {
+     "properties": {
+       "home_address":     {"$ref": "#/$defs/address"}
+     }
+  },
+  "else": {
+     "properties": {
+       "delivery_info":     {"type": "string"}
+     }
+  },
+  "$defs":{
+      "name": {"type": "string", "maxLength": 30},
+      "address": {
+        "type": "object",
+        "required": ["zipcode", "city"],
+        "properties": {
+           "country": {"type": "string"},
+           "state":   {"type": "string"},
+           "zipcode": {"type": "string"},
+           "city":    {"type": "string"},
+           "street":  {"type": "string"}
+         }
+       }
+   }
+}]');
+Insert into OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('test-if-2',q'[{
+  "type": "object",
+  "required": ["lastname"],
+  "additionalProperties": false,
+  "properties": {
+    "lastname":  {"type": "string", "maxLength": 30},
+    "firstname": {"type": "string", "maxLength": 30},
+    "office_address":     {"$ref": "#/$defs/address"},
+    "invoice_address":    { "type": "boolean"},
+    "deliverytohome":     { "type": "boolean", "apex": {"type": "switch", "label": "Delivery to homeoffice"}}
+  },
+  "if": {
+    "allOf": [
+      {
+        "properties": {
+          "anyOf": [
+            {"deliverytohome":  { "const": true}},
+            {"not": {"invoice_address": { "const": true}}}
+          ]
+        } 
+      },
+      { "required": ["lastname", "firstname"]}
+    ]
+  },
+  "then": {
+     "properties": {
+       "home_address":     {"$ref": "#/$defs/address"}
+     }
+  },
+  "else": {
+     "properties": {
+       "delivery_info":     {"type": "string"}
+     }
+  },
+  "$defs":{
+      "name": {"type": "string", "maxLength": 30},
+      "address": {
+        "type": "object",
+        "required": ["zipcode", "city"],
+        "properties": {
+           "country": {"type": "string"},
+           "state":   {"type": "string"},
+           "zipcode": {"type": "string"},
+           "city":    {"type": "string"},
+           "street":  {"type": "string"}
+         }
+       }
+   }
+}]');
+Insert into OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('test-image-1','{
+  "type": "object",
+  "required": [],
+  "properties": {
+    "image": {
+      "type": "string",
+      "contentEncoding": "base64",
+      "contentMediaType": "image/png"
+    },
+    "qrcode": { 
+      "type": "string",
+      "apex": {"itemtype": "qrcode"}
+    }
+  }
+}');
+Insert into OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('test-numeric-1',q'[{
+  "type": "object",
+  "required": ["int", "number"],
+  "properties": {
+    "int":          { "type": "integer", "minimum": 10, "maximum": 99 },
+    "number":       { "type": "number" },
+    "money_cent":   { "type": "number", "apex": {"format": "currency"}},
+    "money":        { "type": "integer", "apex": {"format": "currency"}},
+    "num_sel":      { "type": "number", "enum": [0, 0.5, 1, 1.5, 2]},
+    "starrating": {
+      "type": "integer", "maximum": 5,
+      "apex": {"itemtype": "starrating"}
+    }
+  }
+}]');
+Insert into OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('test-object-1',q'[{
+  "type": "object",
+  "required": ["lastname"],
+  "properties": {
+    "lastname":  {"type": "string"},
+    "firstname": {"type": "string"},
+    "business":  {"$ref": "#/$defs/address", "apex": {"label": "Business address"}},
+    "home":      {"$ref": "#/$defs/address"}
+  },
+  "$defs":{
+      "name": {"type": "string", "maxLength": 30},
+      "address": {
+        "type": "object",
+        "required": ["zipcode", "city"],
+        "properties": {
+           "country": {"type": "string"},
+           "state":   {"type": "string"},
+           "zipcode": {"type": "string"},
+           "city":    {"type": "string"},
+           "street":  {"type": "string"}
+         }
+       }, 
+      "cardid": {"type": "string", "pattern": "[0-9]{4}( [0-9]{4}){3}"}
+   }
+}]');
+Insert into OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('test-poll-1',q'[{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["rating"],
+  "properties":{
+    "rating": { "type": "integer", "maximum": 5, "apex": {"itemtype": "starrating", "label": "Overall rating"}},
+    "question1": { "$ref": "#/$defs/question", "apex": {"label": "How did you like the hotel?"}},
+    "question2": { "$ref": "#/$defs/question", "apex": {"label": "How did you like the room?"}},
+    "question3": { "$ref": "#/$defs/question", "apex": {"label": "Hod did you like the restaurant?"}},
+    "question4": { "$ref": "#/$defs/question", "apex": {"label": "How id you like the service?"}},
+    "comment": {
+      "type": "string", "maxLength": 1000,
+      "apex": {"label": "General Comments", "textBefore": "Others"}
+    }
+  },
+  "$defs": {
+    "question": {
+      "type": "object",
+      "required": ["vote"],
+      "properties":{
+        "vote": { 
+          "type": "string", 
+          "enum": ["1","2","3","4","5","not used" ],
+          "apex": {"itemtype": "radio", "direction": "horizontal", "colSpan": 6}
+        }
+      },
+      "if": {
+        "properties": {
+          "vote": { "enum": ["1", "2", "3"]}
+        }
+      },
+      "then": {
+      "required": ["comment"],
+        "properties": {
+          "comment":     {
+            "type": "string", "maxLength": 1000,
+            "apex": {"colSpan": 6, "label": "why did you rate 1, 2, 3"} 
+          }
+        }
+      }
+    }
+  }
+}]');
+Insert into OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('test-properties-1',q'[{
+  "type": "object",
+  "additionalProperties": true,
+  "properties":{
+    "input": {"type": "string"}
+  }
+}]');
+Insert into OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('test-readonly-1',q'[{
+  "type": "object",
+  "required": ["input"],
+  "properties": {
+    "input":   { "type": "string"},
+    "display": { "type": "string", "apex": {"readonly": true}},
+    "display_only": {
+      "type": "object",
+      "apex": { "readonly": true},
+      "properties": {
+          "string":      { "type": "string"},
+          "date":        { "type": "string", "format": "date"},
+          "datetime":    { "type": "string", "format": "date-time"},
+          "long_string": { "type": "string", "maxLength": 1000},
+          "boolean": {
+            "type": "boolean"
+          },
+          "switch": {
+            "type": "boolean",
+            "apex": { "itemtype": "switch"}
+          },
+          "integer": { "type": "integer"},
+          "number":  { "type": "number"},
+          "money_cent":   {
+            "type": "number", 
+            "apex": { "format": "currency"}
+          },
+          "money":        {
+            "type": "integer", 
+            "apex": { "format": "currency"}
+          },
+          "starrating": {
+            "type": "integer", "maximum": 5,
+            "apex": { "itemtype": "starrating"}
+          },
+          "pct": {
+            "type": "integer",
+            "apex": { "itemtype": "pctgraph", "newRow": true}
+          },
+          "image": {
+            "type": "string",
+            "contentEncoding": "base64",
+            "contentMediaType": "image/png"
+          },
+          "qrcode": { 
+            "type": "string",
+            "apex": {"itemtype": "qrcode"}
+          },
+          "editor_string": {
+            "type": "string", "maxLength": 1000, 
+            "apex": { "itemtype": "richtext", "colSpan":12}
+          }
+        }
+      }
+  }
+}]');
+Insert into OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('test-string-1',q'[{
+  "type": "object",
+  "required": ["string", "radio", "combo", "long_string", "editor_string", "password"],
+  "properties": {
+    "string": { "type": "string"},
+    "pattern": { 
+      "type": "string", 
+      "pattern": "[0-9]{4}( [0-9]{4}){3}",
+      "apex": {"label": "CC pattern"}
+    },
+    "long_string": { "type": "string", "maxLength":400},
+    "length": { "type": "string", "minLength": 3, "maxLength":10},
+    "password":  {"type": "string", "minLength": 8, "maxLength": 16, "writeOnly": true, "apex": {"itemtype": "password"}},
+    "select": { "type": "string", "enum": ["val1", "val2", "val3"]},
+    "radio": { 
+      "type": "string",
+      "enum": ["val1", "val2"],
+      "apex": {"itemtype": "radio", "direction": "horizontal", "enum": {"val1": "disp1", "val2": "disp2"}}
+    },
+    "editor_string": { 
+      "type": "string", 
+      "maxLength":400,
+      "apex": {"itemtype": "richtext", "newRow": true, "colSpan": 12}
+    }
+  }
+}]');
+Insert into OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('test-validate-1',q'[{
+  "type":"object",
+  "properties": {
+    "boolean": {
+      "type": "object",
+      "required": ["checkbox", "switch", "radio", "select", "switch"],
+      "properties": {
+        "checkbox": {"type": "boolean"},
+        "radio":    {"type": "boolean", "apex":{"itemtype": "radio"}},
+        "select":   {"type": "boolean", "apex":{"itemtype": "select"}},
+        "switch":   {"type": "boolean", "apex":{"itemtype": "switch"}}
+      }
+    },
+    "numeric": {
+      "type": "object",
+      "required": ["integer", "number", "money", "money_full", "starrating"],
+      "properties": {
+        "integer":      {"type": "integer", "minimum": 1,    "maximum": 99},
+        "number":       {"type": "number",  "minimum": 0.01, "maximum":99.99},
+        "money":        {"type": "integer", "minimum": 1,    "maximum":99, "apex": {"format": "currency"}},
+        "money_full":   {"type": "number",  "minimum": 0.01, "maximum":99.99, "apex": {"format": "currency"}},
+        "starrating":   { "type": "integer", "minimum": 1, "maximum": 5, "apex": {"itemtype": "starrating"}}
+      }
+    },
+    "string": {
+      "type": "object",
+      "required": ["string", "pattern", "password", "long_string", "editor_string"],
+      "properties": {
+        "string":        {"type": "string"},
+        "pattern": { 
+          "type": "string", 
+          "pattern": "[0-9]{4}( [0-9]{4}){3}",
+          "apex": {"label": "CC pattern"}
+        },
+        "password":  {
+          "type": "string", "minLength": 8, "maxLength": 16, 
+          "apex": {"itemtype": "password"}
+        },
+        "long_string":   {"type": "string", "maxLength": 400},
+        "editor_string": {"type": "string", "maxLength": 400, "apex": {"itemtype": "richtext", "colSpan": 12}}
+      }
+    },
+    "date": {
+      "type": "object",
+      "required": ["date", "datetime", "time"],
+      "properties": {
+        "date":     {"type": "string", "format": "date",      "minimum": "2024-01-01T:00:00:00", "maximum": "now"},
+        "datetime": {"type": "string", "format": "date-time", "minimum": "NOW", "maximum": "2024-12-31T23:59:00"},
+        "time":     { "type": "string", "format": "time", "minimum": "09:00", "maximum": "16:59" }
+      }
+    },
+
+    "array": {
+      "type": "object",
+      "required": ["checkbox", "combo"],
+      "properties": {
+        "checkbox": { "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": ["val1", "val2", "val3"]
+                      }
+        },
+        "combo": { "type": "array",
+                   "items": {
+                     "type": "string",
+                     "enum": ["val1", "val2", "val3"]
+                   },
+                   "apex": {"itemtype": "combobox"}
+        }
+      }
+    }
+  }
+}]');
+
 COMMIT;
+
+
 
 -- relation types
 INSERT INTO relation_type (relation_type_NAME,from_object_type_id,from_cardinality_id,to_object_type_id,to_cardinality_id,relation_schema) 
