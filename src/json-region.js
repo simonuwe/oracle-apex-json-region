@@ -571,7 +571,7 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
     $('#' + l_item ).after(l_generated.html);
     attachObject(dataitem + '_' + l_id, '', schema.items, false, {}, true);
     apex.item.attach($('#' + pRegionId));
-    // apexHacks();
+    apexHacks();
     apex.debug.trace("<<jsonRegion.addArrayRow");
   }
   /*
