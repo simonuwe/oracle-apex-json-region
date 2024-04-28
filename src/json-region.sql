@@ -1,4 +1,4 @@
-*
+/*
  * JSON-region-plugin
  * (c) Uwe Simon 2023,2024
  * Apache License Version 2.0
@@ -71,8 +71,10 @@ FUNCTION render_region(p_region              IN apex_plugin.t_region,
                        p_is_printer_friendly IN BOOLEAN)
   RETURN apex_plugin.t_region_render_result IS
   -- plugin attributes
-  l_result      apex_plugin.t_region_render_result;
-  l_dataitem            p_region.source%TYPE := UPPER(NVL(p_region.attribute_10, p_region.source));
+  l_result              apex_plugin.t_region_render_result;
+  l_name                p_region.name%TYPE         := p_region.name;
+  l_dataitem            p_region.source%TYPE       := UPPER(NVL(p_region.attribute_10, p_region.source));
+  l_source              p_region.attribute_02%TYPE := p_region.attribute_02;                            -- source the for JSON-Schema (0: generate, 1: static, others SQL-query)
   l_schema              p_region.attribute_03%TYPE := p_region.attribute_03;                            -- The fixed JSON-schema
   l_query               p_region.attribute_04%TYPE := p_region.attribute_04;                            -- The SQL-query to retrieve the JSON-schema
   l_colwidth            p_region.attribute_05%TYPE := p_region.attribute_05;                            -- The column width for the field items in universal theme 1,2,3,4,6,12
@@ -111,7 +113,7 @@ BEGIN
   l_schema:=NVL(l_schema, '{"type": "object", "properties": {}}');
   -- escape input
   l_dataitem  := NVL(apex_escape.html(l_dataitem), '{}');
-  l_schema    := apex_escape.json(l_schema);
+  --l_schema    := apex_escape.json(l_schema);
   l_readonly  := APEX_REGION.IS_READ_ONLY;
 
 --  APEX_JAVASCRIPT.ADD_ONLOAD_CODE(
@@ -124,16 +126,18 @@ BEGIN
        apex_javascript.add_value(apex_plugin.get_ajax_identifier) ||       
                                 '{' ||
          apex_javascript.add_attribute('isDynamic', l_query IS NOT NULL AND LENGTH(l_query)>0) ||                                
-         apex_javascript.add_attribute('queryitems', l_queryitems) ||
-         apex_javascript.add_attribute('dataitem', l_dataitem) ||
-         apex_javascript.add_attribute('colwidth', l_colwidth) ||
-         apex_javascript.add_attribute('readonly', l_readonly) ||
-         apex_javascript.add_attribute('textareawidth', l_textareawidth) ||
+         apex_javascript.add_attribute('generateSchema', (l_source = '0'))||                                
+         apex_javascript.add_attribute('queryitems',     l_queryitems) ||
+         apex_javascript.add_attribute('dataitem',       l_dataitem) ||
+         apex_javascript.add_attribute('name',           l_name) ||
+         apex_javascript.add_attribute('colwidth',       l_colwidth) ||
+         apex_javascript.add_attribute('readonly',       l_readonly) ||
+         apex_javascript.add_attribute('textareawidth',  l_textareawidth) ||
          apex_javascript.add_attribute('keepAttributes', l_keepattributes!='N') ||
-         apex_javascript.add_attribute('headers', l_headers!='N') ||
-         apex_javascript.add_attribute('hide', l_hide) || 
-         apex_javascript.add_attribute('removeNulls', l_removenulls) || 
-         apex_javascript.add_attribute('schema', l_schema, false,false) ||
+         apex_javascript.add_attribute('headers',        l_headers!='N') ||
+         apex_javascript.add_attribute('hide',           l_hide) || 
+         apex_javascript.add_attribute('removeNulls',    l_removenulls) || 
+         apex_javascript.add_attribute('schema',         l_schema, false,false) ||
                                 '});'
   );                                 
   RETURN l_result;

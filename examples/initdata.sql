@@ -225,6 +225,35 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('test-array-1',
     }
   }
 }]');
+
+
+Insert into OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('test-array-2',q'[{
+  "type": "object",
+  "properties": {
+    "lastname":  {"type": "string", "maxLength": 30},
+    "firstname": {"type": "string", "maxLength": 30},
+    "email":     {"type": "string", "format": "email"},
+    "addresses": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/address"}
+    } 
+  },
+  "$defs":{
+    "name": {"type": "string", "maxLength": 30},
+    "address": {
+      "type": "object",
+      "required": ["zipcode", "city"],
+      "properties": {
+        "country": {"type": "string"},
+        "zipcode": {"type": "string"},
+        "city":    {"type": "string"},
+        "street":  {"type": "string"}
+      }
+    }
+  }
+}
+]');
+
 Insert into OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('test-boolean-1',q'[{
   "type": "object",
   "required": ["checkbox", "bool_switch", "bool_radio", "radio", "select"],

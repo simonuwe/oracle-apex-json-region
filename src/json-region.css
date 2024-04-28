@@ -3,18 +3,28 @@
 }
 
 .jsonregion .t-Form-itemWrapper img {
-  height: 100%
+  height: 100%;
 }
 
 .jsonregion .t-Form-itemWrapper svg {
-  height: 100%
+  height: 100%;
 }
 
-.jsonregion .t-Form-itemWrapper input[type=time]::-webkit-calendar-picker-indicator {
+.jsonregion .t-Region-header {
+  margin-top: 8px;
+  margin-bottom: 4px;
+}
+
+.jsonregion .t-Form-itemWrapper input[type=time]::-webkit-calendar-picker-indicator,
+.jsonregion .t-Form-itemWrapper input[type=date]::-webkit-calendar-picker-indicator,
+.jsonregion .t-Form-itemWrapper input[type=datetime-local]::-webkit-calendar-picker-indicator
+ {
   position: relative;
   top: -10px;
 }
 
-.jsonregion .t-Form-itemWrapper input[type=time]{
+.jsonregion .t-Form-itemWrapper input[type=time],
+.jsonregion .t-Form-itemWrapper input[type=date],
+.jsonregion .t-Form-itemWrapper input[type=datetime-local]{
   height: 3rem;
 }

@@ -122,12 +122,12 @@ Currently supported are
     "prop2": {
       "type": "integer", 
       "maximum": 5,
-      "apex": {"itemtype": "starrating", "label": "your label"}
+      "apex": {"itemtype": "starrating", "label": "your label", "align": "right"}
     },
     "prop3": {
       "type": "number", 
       "maximum": 5,
-      "apex": {"itemtype": "starrating", "label": "your label"}
+      "apex": {"itemtype": "starrating", "label": "your label", "align": "right"}
     },
     "prop4": {
       "type": "string",
@@ -194,6 +194,7 @@ The **type** **array** is supported for multiselect checkbox-groups, the checkbo
 
 Optional configurations for the UI could be done with the **"apex": {...}**. The supported  properties are
 - **label** could be used in any **type**, it is used to set a specific label for the input-item.
+- **align** positions the text **left**, **center**, **right** in the input-item.
 - **newRow** starts a new row, so the current filed will be the first i this row.
 - **textBefore** defines text with is shown in a row above the current field. This can be used for logically grouping properties. This will always start a **newRow** 
 - **lines** defines for long strings the rows used for the textarea.
@@ -210,7 +211,7 @@ For example JSON-data has **"enum": ["a", "b", "c"]**, so the **"apex": {"enum":
   - **radio** use a radio group for the values of an **enum** (default is a selectlist).
   - **combobox** to support a combobox with **chips** for an **array** of **string** with an **enum** (for APEX >=23.2)
   - **richtext** to support a textarea with a richtext-editor (for APEX >=23.2). Use **collspan the use expand the columns, so that the iconbar of the richtext-editor fits  
-  - **qrcode** will display (the item will be readonly) a **string** as qrcode.
+  - **qrcode** will display (the item will be readonly) a **string** as qrcode (for APEX >= 23.2).
 
 For a better support of questionnaires, the output direction for itemtypes **radio** and **checkbox**  could be specified with **"direction": "horizontal"** (place the radiobutton or checkbox in a line), default is **vertical** (place in a column)
 
@@ -248,8 +249,10 @@ To use the json-region-plugin in the APEX-page-designer create a region on your 
 In **Source** enter the name for the hidden JSON-item which is used in the form
 
 The plugin provides in the configuration view input for configuring
-- A **static JSON-schema** used in the form. Starting with **Oracle 23c** a **JSON-schema** for **column-validation** is stored in the **datadictionary**. The Plugin tries to use this when the static **schema** is left empty. This keeps the schema of the JSON-column an the UI for this column in sync.  
-- A **dynamic JSON-schema** retrieved by a SQL-query. Make sure that the query returns a single row, disable the item when no row could be returned.
+- The **Source** for the JSON-schema
+  - There is **no fixed schema**. The JSON-schema is always generated based on the JSON-data. This uses "default" UI-items and will only generate UI-items for the existing properties in the JSON-data. There will not be **required** properties.
+  - A **static JSON-schema** used in the form. Starting with **Oracle 23c** a **JSON-schema** for **column-validation** is stored in the **datadictionary**. The Plugin tries to use this when the static **schema** is left empty. This keeps the schema of the JSON-column an the UI for this column in sync.  
+  - A **dynamic JSON-schema** retrieved by a SQL-query. Make sure that the query returns a single row, disable the item when no row could be returned.
 - the **Column width** is used in the form for the width of the input items (values are 1-12)
 - When the **maxLength** of an item is above the **Textarealimit** a **textarea** is used for then string-item instead of the **text-field**.
 - If **Headers** is set, the plugin will generate additional headers for nested objects.
@@ -274,6 +277,21 @@ Configuration of the **JSON-region**
 
 ![region-config-1](region-config-1.png)
 ![region-config-2](region-config-2.png)
+
+### Generated JSON-schema as a base for a fixed JSON-schema
+
+With **No fixed schema** the JSON-schema will be generated based on the JSON-data. This could be used as a base for further improvements (adding other items, change the itemtype for properties, ...). This JSON-schema could be extracted from the Browser-console.
+
+![region-config-4](region-config-4.png)
+
+In **browser** activate APEX-debug at least with level **info**
+
+![region-config-5](region-config-5.png)
+
+In **browser-console** search for **+++JSON-schema+++**.  
+
+![region-config-6](region-config-6.png)
+
 
 ### Extending with Javascript/JQuery
 
