@@ -28,7 +28,7 @@ prompt APPLICATION 100 - json-region-demo
 -- Application Export:
 --   Application:     100
 --   Name:            json-region-demo
---   Date and Time:   14:01 Monday April 29, 2024
+--   Date and Time:   16:22 Monday April 29, 2024
 --   Exported By:     ADMIN
 --   Flashback:       0
 --   Export Type:     Component Export
@@ -246,7 +246,8 @@ wwv_flow_imp_shared.create_plugin(
 ,p_ajax_function=>'ajax_region'
 ,p_substitute_attributes=>true
 ,p_subscribe_plugin_settings=>true
-,p_version_identifier=>'0.8.9'
+,p_version_identifier=>'0.9.0'
+,p_about_url=>'https://github.com/simonuwe/oracle-apex-json-region'
 ,p_files_version=>501
 );
 wwv_flow_imp_shared.create_plugin_attribute(
