@@ -1885,9 +1885,6 @@ console.log('getData duality HACK', dataitem, name);
           if(inArray && !schema.readOnly){
             l_generated.html += generateArrayDeleteButton(genItemname(prefix, name));
           }
-          l_generated.html += `
-</div>
-`;
         break;
         case C_JSON_STRING:
           l_generated = generateForString(schema, data, prefix, name, startend, newItem);
@@ -1975,9 +1972,22 @@ console.log('getData duality HACK', dataitem, name);
       }
 
       apex.debug.trace("<<jsonRegion.generateForObject", l_generated);
-    return(l_generated);
+      return(l_generated);
   }
 
+  /*
+   *
+  */
+  function generateRegion(schema, data, prefix, name, startend, inArray, newItem){
+    apex.debug.trace(">>jsonRegion.generateRegion", schema, data, prefix, name, startend, inArray, newItem);
+    let l_generated = generateForObject(schema, data, prefix, name, startend, inArray, newItem);
+    l_generated.html = `
+<div class="row jsonregion">
+` + l_generated.html + `
+</div>`;
+    apex.debug.trace("<<jsonRegion.generateRegion", l_generated);
+    return(l_generated);
+  }
   /*
    * get a file with an AJAX-request return a promise
   */
@@ -2071,7 +2081,7 @@ console.log('getData duality HACK', dataitem, name);
   */
   function showFields(){
     apex.debug.trace(">>jsonRegion.showFields");
-    let l_generated = generateForObject(pOptions.schema, gData, null, pOptions.dataitem, 0, false, true);
+    let l_generated = generateRegion(pOptions.schema, gData, null, pOptions.dataitem, 0, false, true);
         // attach HTML to region
     $("#"+pRegionId).html(l_generated.html);
     apex.debug.trace("<<jsonRegion.showFields");

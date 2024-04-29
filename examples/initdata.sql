@@ -504,6 +504,102 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('test-image-1',
     }
   }
 }');
+
+
+Insert into OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('invoice',q'[
+{ 
+  "type":"object",
+  "properties": {
+    "customer": {"$ref": "#/$defs/customer"},
+    "invoice":  {"$ref": "#/$defs/invoice"},
+    "items": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/item"}
+    },
+    "total":    {"$ref": "#/$defs/total"},
+    "payment":  {"$ref": "#/$defs/payment"},
+    "comments": {"type": "string", "maxLength": 1000}
+  },
+  "$defs": {
+    "invoice": {
+      "type": "object",
+      "required": ["nr", "date", "status"],
+      "properties": {
+        "nr": {"type": "integer"},
+        "date": {"type": "string", "format": "date", "maximum": "now"},
+        "status": {"type": "string", "default": "new", "enum": ["new", "open", "paid", "rejected"]}
+      }
+    },
+    "sepa": {
+      "type": "object",
+      "required": ["iban"],
+      "properties": {
+        "iban": {"type": "string", "pattern": "[A-Z]{2}[0-9]{2}[0-9]{12,30}"},
+        "bic":  {"type": "string", "pattern": "[A-Z0-9]{11}", "apex": {"colSpan": 3}}
+      }
+    },
+    "creditcard": {
+      "type": "object",
+      "required": ["number", "validity", "securitycode"],
+      "properties":{
+        "number":       { "type": "string", "pattern": "[0-9]{4}( [0-9]{4}){3}"},
+        "validity":     { "type": "string", "pattern": "[0-9]{2}/[0-9]{2}", "apex": {"colSpan": 2}},
+        "securitycode": { "type": "string", "pattern": "[0-9]{3}", "maxLength": 3, "apex": {"colSpan": 2, "itemtype": "password"}}
+      }
+    },
+    "payment": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {"type": "string", "enum": ["SEPA", "VISA", "Mastercard", "Amex", "Diners"], "apex": {"colSpan": 2}}
+      },
+      "if": {"type": {"const": "SEPA"}},
+      "then": {
+        "properties": {
+          "sepa": {"$ref": "#/$defs/sepa"}
+        }
+      },
+      "else": {
+        "properties": {
+          "creditcard": {"$ref": "#/$defs/creditcard"}
+        }
+      }
+    },
+    "customer": {
+      "type": "object",
+      "required": ["name", "zipcode", "city"],
+      "properties": {
+        "name":    { "type": "string"},
+        "zipcode": { "type": "string"},
+        "city":    { "type": "string"},
+        "street":  { "type": "string"}
+      }
+    },
+    "item": {
+      "type": "object",
+      "required": ["description", "quantity", "unit", "price_per_unit"],
+      "properties": {
+        "description":    { "type": "string", "apex": {"colSpan": 3}},
+        "quantity":       {"type": "integer", "apex": {"colSpan": 2, "align": "right"}},
+        "unit":           {"type": "string", "enum": ["hour", "day", "pcs", "l", "m","km", "m²", "m³"], "apex": {"colSpan": 2}},
+        "price_per_unit": {"type": "number", "apex": {"colSpan": 2, "format": "currency", "align": "right"}},
+        "total":          {"type": "number", "apex": {"colSpan": 2, "format": "currency", "align": "right"}}
+     }
+    },
+    "total": {
+      "type": "object",
+      "required": ["description", "units", "price_per_unit"],
+      "properties": {
+        "total": {"type": "number", "apex": {"colSpan": 11, "format": "currency", "align": "right"}},
+        "vat": {"type": "number", "apex": {"colSpan": 11, "format": "currency", "align": "right", "label": "VAT 10%"}},
+        "grand total": {"type": "number", "apex": {"colSpan": 11, "format": "currency", "align": "right"}}
+     }
+    }
+
+  }
+}
+]');
+
 Insert into OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('test-numeric-1',q'[{
   "type": "object",
   "required": ["int", "number"],
