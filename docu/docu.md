@@ -35,6 +35,8 @@ In addition the keyword **const** for a constant value is accepted.
       "prop5":  { "type": "string", "enum": ["val1", "val2", ..] },
       "prop7":  { "type": "string", "format": "date"},
       "prop8":  { "type": "string", "format": "date-time"},
+      "prop8":  { "type": "string", "format": "time"},
+      "image":  { "type": "string", "contentEncoding": "base64", "contentMediaType": "image/png"},
       "prop9":  { "$ref": "#/$defs/id"},
       "prop10": { "$ref": "#/$defs/address"},
       "prop11": { "type": "null"},
@@ -68,15 +70,26 @@ The attribute **required** contains all required properties (NOT NULL).
 
 The **type** attribute is mandatory, all others are optional.
 Types are
-- **object** is an object with properties, for each property UI-widgets are created
-- **array** is only supported as a "simple array" which generates a multiselection checkbox-group with a **checkbox per enum value**. The array stores the checked items.
+- **object** is an object with **properties**, for each property UI-widgets are created
+- **array** is an array of **items**. It is only supported as a "simple array" (string, integer, number) which generates a multiselection checkbox-group with a **checkbox per enum value**. The array stores the checked items.
 - **string** could have an additional attribute **format** 
   - **date** displayed as a date-picker
   - **date-time** displayed as a date-picker
+  - **time** displays an hour and a minute spinner (in Chrome an additional icon button for a select popup).
   - **email** a valid email-address
   - **uri** a valid url
+  
+  The type **string** supports **base64** encoded binary data **contentEncoding** 
+  for displaying **images** via **contentMediaType** in formats **png**, **jpg** or **gif** (This item will be **readonly**). 
+```
+  { 
+    "type": "string", 
+    "contentEncoding": "base64", 
+    "contentMediaType": "image/png"
+  }
+```
 
-  The **string** supports the optional "integer" attributes **minLength** and **maxLength**, a string attribute **pattern** which is a regular-expression (like **'[0-9A-F]*'** for an optional HEX-string and an array) **enum**, which contains a list a valid values. The enum will be shown as a pulldownlist.
+  The type **string** supports the optional "integer" attributes **minLength** and **maxLength**, a string attribute **pattern** which is a regular-expression (like **'[0-9A-F]*'** for an optional HEX-string and an array) **enum**, which contains a list a valid values. The enum will be shown as a pulldownlist.
 - **integer** with values like 1, 2, 100, ...
 - **number** with values like 1.5, 100.50, ...
 - **boolean** with values true and false.
@@ -86,11 +99,11 @@ The **default** attribute can be added to each property. It must have the same t
 
 The **readOnly** sets a single object/property to readonly, so it can not be changed in the APEX-UI.
 
-For properties with format **date** and **date-time** the **default** could be **NOW** or **now**, which means the current date for a **date** and the current date-time for **date-time**.
+For properties with format **date**, **date-time** and **time** the **default** could be **NOW** or **now**, which means the current date for a **date**, the current date-time for **date-time** and the current time for **time**.
 
-The optional **additionalProperties** defines whether the object is allowed to have properties not defined in then JSON-schema. This additional properties are kept when updating the data.
+The optional **additionalProperties** defines whether the object is allowed to have properties not defined in then JSON-schema. This additional properties are kept when updating the data. This should be set to **false** when conditional schemas are used, otherwise all items will be stored in the JSON-data and not only the "visible" once.
 
-The **const** attribute identifies a constant value of types **string**, **number**, **integer**, boolean.
+The **const** attribute identifies a constant value of types **string**, **number**, **integer** or **boolean**.
 
 The Oracle23-JSON-schema-extension **extendedType** is supported too. Because **date** always produces a **date-time** a format could be specified to force a **date**
 
@@ -109,12 +122,12 @@ Currently supported are
     "prop2": {
       "type": "integer", 
       "maximum": 5,
-      "apex": {"itemtype": "starrating", "label": "your label"}
+      "apex": {"itemtype": "starrating", "label": "your label", "align": "right"}
     },
     "prop3": {
       "type": "number", 
       "maximum": 5,
-      "apex": {"itemtype": "starrating", "label": "your label"}
+      "apex": {"itemtype": "starrating", "label": "your label", "align": "right"}
     },
     "prop4": {
       "type": "string",
@@ -135,6 +148,7 @@ Currently supported are
     },
     "prop6": {"type": null},
     "prop7": ["const": "const string"],
+    "prop8": {"type": "string", "apex": {"itemtype": "qrcode"}}
   ...
   },
   "required": ["prop1", "pro2", ...]
@@ -151,9 +165,15 @@ Currently supported are
      }
   },
   "if": {
-    "properties": {
-      "prop1": { "const": true }
-    }
+    "anyOf": [
+      "not": { "required": ["prop3"]},
+      "properties": {
+        "allOf": [
+          { "prop1": { "const": true }},
+          { "prop2": { "enum: ["val1", "val2"] }}
+        ]
+      }
+    ]
   },
   "then": {
     "properties": {
@@ -174,13 +194,14 @@ The **type** **array** is supported for multiselect checkbox-groups, the checkbo
 
 Optional configurations for the UI could be done with the **"apex": {...}**. The supported  properties are
 - **label** could be used in any **type**, it is used to set a specific label for the input-item.
+- **align** positions the text **left**, **center**, **right** in the input-item.
 - **newRow** starts a new row, so the current filed will be the first i this row.
 - **textBefore** defines text with is shown in a row above the current field. This can be used for logically grouping properties. This will always start a **newRow** 
 - **lines** defines for long strings the rows used for the textarea.
 - **colSpan** defines the width of the item, values are 1 (small)  to 12 (full width)
 - **enum** is used for mapping the JSON-values to display-values.
 For example JSON-data has **"enum": ["a", "b", "c"]**, so the **"apex": {"enum": {"a": "dispA", "b": "dispB", "c": "dispC"}}** will map a->dispA, ... in the APEX-UI.
-- **format** is used for changing the display format of a JSON-value. Currently **format** supportes only **currency** which will show **integer** and **number** values with a currency symbol and **number** with 2 decimal places and **integoer** without an decimal places.
+- **format** is used for changing the display format of a JSON-value. Currently **format** supportes only **currency** which will show **integer** and **number** values with a currency symbol and **number** with 2 decimal places and **integer** without an decimal places.
 
 - **itemtype** defines which UI-item is used in the APEX-UI
   - **password** the text is not shown but a * for each character.  
@@ -190,7 +211,7 @@ For example JSON-data has **"enum": ["a", "b", "c"]**, so the **"apex": {"enum":
   - **radio** use a radio group for the values of an **enum** (default is a selectlist).
   - **combobox** to support a combobox with **chips** for an **array** of **string** with an **enum** (for APEX >=23.2)
   - **richtext** to support a textarea with a richtext-editor (for APEX >=23.2). Use **collspan the use expand the columns, so that the iconbar of the richtext-editor fits  
-
+  - **qrcode** will display (the item will be readonly) a **string** as qrcode (for APEX >= 23.2).
 
 For a better support of questionnaires, the output direction for itemtypes **radio** and **checkbox**  could be specified with **"direction": "horizontal"** (place the radiobutton or checkbox in a line), default is **vertical** (place in a column)
 
@@ -198,7 +219,9 @@ For a better support of questionnaires, the output direction for itemtypes **rad
 
   - With **dependentRequired** fielditems could be set to **required** depending on a **not empty** fielditem.
   - With **dependentSchemas** the fielditems could be shown depending on an **not empty** fielditem, currently only one dependent schema is supported.
-  - The 3 properties **if**, **then**, **else** support conditional "UI-parts". For example in case the boolean **differentBillingAddress** is true additional entry items for a 2nd address are shown.
+  - The 3 properties **if**, **then**, **else** support conditional "UI-parts". Properties could be compared by **==** via ```"prop": {"const": "val"}``` or **in** via (```"prop": {"enum": ["val1", "val2"] }```
+  For example in case the boolean **differentBillingAddress** is true additional entry items for a 2nd address are shown.
+  The keywords **allOf** (AND), **anyOf** (OR), **not** (NOT) and **required** support more complex conditions.
 
 Details could be found in at https://json-schema.org
 
@@ -226,8 +249,10 @@ To use the json-region-plugin in the APEX-page-designer create a region on your 
 In **Source** enter the name for the hidden JSON-item which is used in the form
 
 The plugin provides in the configuration view input for configuring
-- A **static JSON-schema** used in the form. Starting with **Oracle 23c** a **JSON-schema** for **column-validation** is stored in the **datadictionary**. The Plugin tries to use this when the static **schema** is left empty. This keeps the schema of the JSON-column an the UI for this column in sync.  
-- A **dynamic JSON-schema** retrieved by a SQL-query. Make sure that the query returns a single row, disable the item when no row could be returned.
+- The **Source** for the JSON-schema
+  - There is **no fixed schema**. The JSON-schema is always generated based on the JSON-data. This uses "default" UI-items and will only generate UI-items for the existing properties in the JSON-data. There will not be **required** properties.
+  - A **static JSON-schema** used in the form. Starting with **Oracle 23c** a **JSON-schema** for **column-validation** is stored in the **datadictionary**. The Plugin tries to use this when the static **schema** is left empty. This keeps the schema of the JSON-column an the UI for this column in sync.  
+  - A **dynamic JSON-schema** retrieved by a SQL-query. Make sure that the query returns a single row, disable the item when no row could be returned.
 - the **Column width** is used in the form for the width of the input items (values are 1-12)
 - When the **maxLength** of an item is above the **Textarealimit** a **textarea** is used for then string-item instead of the **text-field**.
 - If **Headers** is set, the plugin will generate additional headers for nested objects.
@@ -252,6 +277,21 @@ Configuration of the **JSON-region**
 
 ![region-config-1](region-config-1.png)
 ![region-config-2](region-config-2.png)
+
+### Generated JSON-schema as a base for a fixed JSON-schema
+
+With **No fixed schema** the JSON-schema will be generated based on the JSON-data. This could be used as a base for further improvements (adding other items, change the itemtype for properties, ...). This JSON-schema could be extracted from the Browser-console.
+
+![region-config-4](region-config-4.png)
+
+In **browser** activate APEX-debug at least with level **info**
+
+![region-config-5](region-config-5.png)
+
+In **browser-console** search for **+++JSON-schema+++**.  
+
+![region-config-6](region-config-6.png)
+
 
 ### Extending with Javascript/JQuery
 
@@ -298,7 +338,7 @@ The datatype **DATE** is not native to JSON-schema, where it is documented as
 }
 ```
 For date/time handling JSON-schema knows the formats
-**date** (2023-10-28), **date-time** (2023-10-28T10:15:00), **time** (12:15:10) and **duration** (5H10M for 5:10 hours) which implements the date/timeformats from ISO8601
+**date** (2023-10-28), **date-time** (2023-10-28T10:15:00), **time** (12:15:10.0000) and **duration** (5H10M for 5:10 hours) which implements the date/time-formats from ISO8601
 
 Oracle 23c does not implement it this way.
 As for the native datatye **DATE** the json formats **date** and **date-time** always result in date+time..
@@ -342,9 +382,15 @@ To use the features of APEX23.2, for example the new combobox, don't forget to r
 
 ## Know issues
 
-- In SQL-Workshop in APEX-Oracle-Cloud you can not create JSON-Columns (trying this returns ORA-00002 invalid datatype). Here you have to use CLOB columns. 
+- The JSON-schema **duration** is not supported
+- **allOf**, **anyOf** and **not** are only supported for **if**
+- Because the default validation of Oracle-APEX is used, the UI-item in the Plugin has the same "misbehaviour" the APEX-UI-items.
+  - **YES/NO** radio-buttons for boolean: required is ignored
+  - **switch** for Booleans: required is ignored (checkbox works)
+  - **star rating** for integer/number: required is ignored (0 used)
+- In SQL-Workshop in APEX-Oracle-Cloud (Oracle19c) you can not create JSON-Columns (trying this returns ORA-00002 invalid datatype). Here you have to use CLOB columns. 
 - When using a CLOB for the JSONs use check constraint **IS JSON(STRICT)** to enforce that the JSON is returned wth **"** enclosed keys..
-- In APEX 22.1 there is aa general issue (with plugin and without) with "**Modal Dialog** with template **Drawer**", this causes a jquery-error (looks like a datepicker issue). Without "Drawer" all work fine. 
+- In APEX 22.1 there is a general issue (with plugin and without) with "**Modal Dialog** with template **Drawer**", this causes a jquery-error (looks like a datepicker issue). Without "Drawer" all work fine. 
 
 ## Next steps
 

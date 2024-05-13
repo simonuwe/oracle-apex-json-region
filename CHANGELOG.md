@@ -1,3 +1,28 @@
+# 0.9.0 2024-04-29
+
+## New Features:
+- On the fly generation of JSON-schema based on JSON-data, so no JSON-schema required
+- Support of Oracle23c JSON-duality-views
+- **array** of **object** with add and delete of rows.
+- Support of UI-items QR-Code, PCT-Graph, Image
+- **if** with **allOf**, **anyOf** and **not**
+- Align of input-fields
+
+## Issues
+- #80 Use the schema of Oracle23c-JSON-relational-duality view (enhancement)
+- #2 array of properties (enhancement)
+- #102 password item with pattern (enhancement) 
+- #101 Generate JSON-schema on the fly (enhancement)
+- #74  Support of attributes "contentEncoding" and "contentMediaType" (enhancement)
+- #100 Support of {"type": "string", "format": "time"} (enhancement)
+- #92  Advanced support for "if": {...} (enhancement)
+- #91  support of "writeOnly": true (enhancement)
+- #87  Support of QRcode item (enhancement)
+- #98  Support of Percent Graph (enhancement)
+- #86  Key/Value-Pairs for enum (enhancement)
+- #83  "required" not working for "enum" with "radiobutton" (bug)
+
+
 # 0.8.1 2024-04-11
 - #88 readonly on property level not 100% working bug
 - #89 enum for "type": "integer or "number" does not work bug
