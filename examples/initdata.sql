@@ -209,7 +209,7 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('test-array-1',
                         "type": "string",
                         "enum": ["val1", "val2", "val3"],
                         "apex": {
-                          "enum": {"val1": "disp1", "val2": "disp2", "va]l3": "disp3"}
+                          "enum": {"val1": "disp1", "val2": "disp2", "val3": "disp3"}
                         }
                       },
                       "apex": {
@@ -327,8 +327,7 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('test-dependent
     "firstname": {"type": "string"},
     "zip":       {"type": "string"},
     "city":      {"type": "string"},
-    "payment":   {"type": "string", "enum":["Visa", "Mastercard", "Amex", "Diners"]},
-    "creditcard":{"$ref": "#/$defs/cardid"}
+    "payment":   {"type": "string", "enum":["Visa", "Mastercard", "Amex", "Diners"]}
   },
   "dependentSchemas": {
     "payment": {
@@ -506,7 +505,7 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('test-image-1',
 }');
 
 
-Insert into OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('invoice',q'[
+Insert into OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('Invoice',q'[
 { 
   "type":"object",
   "properties": {
@@ -542,8 +541,8 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('invoice',q'[
       "type": "object",
       "required": ["number", "validity", "securitycode"],
       "properties":{
-        "number":       { "type": "string", "pattern": "[0-9]{4}( [0-9]{4}){3}"},
-        "validity":     { "type": "string", "pattern": "[0-9]{2}/[0-9]{2}", "apex": {"colSpan": 2}},
+        "number":       { "type": "string", "pattern": "[0-9]{4}( [0-9]{4}){3}",  "apex": {"placeholder": "1234 1234 1234 1234"}},
+        "validity":     { "type": "string", "pattern": "[0-9]{2}/[0-9]{2}", "apex": {"placeholder": "00/00", "colSpan": 2}},
         "securitycode": { "type": "string", "pattern": "[0-9]{3}", "maxLength": 3, "apex": {"colSpan": 2, "itemtype": "password"}}
       }
     },
@@ -597,8 +596,7 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('invoice',q'[
     }
 
   }
-}
-]');
+}]');
 
 Insert into OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('test-numeric-1',q'[{
   "type": "object",
@@ -845,6 +843,59 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('test-validate-
     }
   }
 }]');
+
+Insert into OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('test-placeholder-1', q'[{ 
+  "type":"object",
+  "properties": {
+    "string":    {"type": "string", "apex": {"placeholder": "string input"}},
+    "credit_card":    {"type": "string", "pattern": "[0-9]{4}( [0-9]{4}){3}", "apex": {"placeholder": "1234 1234 1234 1234"}},
+    "integer":   {"type": "integer", "apex": {"placeholder": "integer input"}},
+    "number":    {"type": "number", "apex": {"placeholder": "number input"}},
+    "date":      {"type": "string", "format": "date", "apex": {"placeholder": "date input"}},
+    "date_time": {"type": "string", "format": "date-time", "apex": {"placeholder": "date-time input"}}
+  } 
+}]');
+
+Insert into OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('test-template-1', q'[{
+  "type": "object",
+  "required": ["floating_req", "above_req", "left_req", "hidden_req"],
+  "properties": {
+    "floating_req": {
+      "type": "string",
+      "apex": {"template": "floating"}
+    },
+    "floating_opt": {
+      "type": "string",
+      "apex": {"template": "floating"}
+    },
+    "above_req": {
+      "type": "string",
+      "apex": {"template": "above", "newRow": true}
+    },
+    "above_opt": {
+      "type": "string",
+      "apex": {"template": "above"}
+    },
+    "left_req": {
+      "type": "string",
+      "apex": {"template": "left", "newRow": true}
+    },
+    "left_opt": {
+      "type": "string",
+      "apex": {"template": "left"}
+    },
+    "hidden_req": {
+      "type": "string",
+      "apex": {"template": "hidden", "newRow": true}
+    },
+    "hidden_opt": {
+      "type": "string",
+      "apex": {"template": "hidden"}
+    }
+  },
+  "apex": {"template": "above"}
+}]');
+
 
 COMMIT;
 

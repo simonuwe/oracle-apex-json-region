@@ -194,7 +194,7 @@ The **type** **array** is supported for multiselect checkbox-groups, the checkbo
 
 Optional configurations for the UI could be done with the **"apex": {...}**. The supported  properties are
 - **label** could be used in any **type**, it is used to set a specific label for the input-item.
-- **align** positions the text **left**, **center**, **right** in the input-item.
+- **align** positions integer/number **left**, **center**, **right** in the input-item.
 - **newRow** starts a new row, so the current filed will be the first i this row.
 - **textBefore** defines text with is shown in a row above the current field. This can be used for logically grouping properties. This will always start a **newRow** 
 - **lines** defines for long strings the rows used for the textarea.
@@ -202,7 +202,8 @@ Optional configurations for the UI could be done with the **"apex": {...}**. The
 - **enum** is used for mapping the JSON-values to display-values.
 For example JSON-data has **"enum": ["a", "b", "c"]**, so the **"apex": {"enum": {"a": "dispA", "b": "dispB", "c": "dispC"}}** will map a->dispA, ... in the APEX-UI.
 - **format** is used for changing the display format of a JSON-value. Currently **format** supportes only **currency** which will show **integer** and **number** values with a currency symbol and **number** with 2 decimal places and **integer** without an decimal places.
-
+- **placeholder** defines the placeholder shown wwhilehen field is empty.
+- **template** used for the input item values are **floating** (default), **left**, **above** and **hidden**
 - **itemtype** defines which UI-item is used in the APEX-UI
   - **password** the text is not shown but a * for each character.  
   - **switch** changes the display for a **boolean** to a switch, the default is a single checkbox.
@@ -224,6 +225,81 @@ For a better support of questionnaires, the output direction for itemtypes **rad
   The keywords **allOf** (AND), **anyOf** (OR), **not** (NOT) and **required** support more complex conditions.
 
 Details could be found in at https://json-schema.org
+
+### Mapping APEX-item config to JSON-Schema
+
+The table shows the mapping of the configuration of an item **field1** to the **JSON-schema**
+
+The supported Identification types
+
+| APEX-Item Identification Type | JSON-Schema | Comment |
+|-------------------------------|-------------|---------|
+| Checkbox | {"field1": {"type": "boolean"} }| |
+| Checkbox Group | {"field1": "type": "array", "items": {"type": "string", "enum": ["val1", "val2", ...]}} |
+| Color Picker | --- |
+| Combobox | {"field1": "type": "array", "apex": {"itemtype": "combobox"}, "items": {"type": "string", "enum": ["val1", "val2", ...]}} |
+| Datepicker: Settings: Show Time: false| {"field1": {"type": "string", "format": "date"} |
+| Datepicker: Settings:  Show Time: true| {"field1": {"type": "string", "format": "date-time"} |
+| Display Image | {"field1": { "type": "string", "contentEncoding": "base64", "contentMediaType": "imagetype"}} | imagetypes: jpg, png, gif |
+| Display Map | --- |
+| Display Only: Format Pain text | {"field1": "type": "...", "readOnly": true} |
+| Hidden | --- |
+| File Upload | --- |
+| Geocoded Address | --- |
+| Hidden | --- |
+| Image Upload | --- |
+| List Manager | --- |
+| Markdown Editor | --- |
+| Number Field | {"field1": {"type": "number"}} |
+| Password | {"field1": { "type": "string", "writeOnly": true", "apex": {"itemtype": "password"}}} | "writeOnly": true forces new password input when mandatory |
+| Percent Graph | {"field1": {"type": "number", "apex"{"itemtype": "pctgraph"}}} | Supported types "number" and integer" |
+| Popop LOV | --- |
+| QR-code: Data Type: Plain Text, Size: Default| {"field1": {"type": "string", "apex": {"itemtype": "qrcode"}}} | Support for types "string", "integer", "number" |
+| Radio Group | {"field1": {"type" "string", "enum": ["val1", "val2"], "apex": {"itemtype": "radio"}} |
+| Rich Text Editor | {"field1": {"type": "string", "apex": {"itemtype": "richtext"}}} | Format Markdown only |
+| Select List: List of Values: Type: Static Values | {"field1": {"type": "string", "enum": ["val1", "val2", ...]}} | Support for types "string", "integer", "number" |
+| Shuffle | --- | |
+| Star Rating | {"field1": {"type": "integer", "maxValue": 5, "apex": {"itemtype": "starrating"}}} | Supported types "integer" and "number" |
+| Switch | {"field1": {"type": "boolean", "apex": {"itemtype": "switch"}} |
+| Text Field | {"field1": {"type": "string"}} |
+| Text Field with Autocomplete | --- |
+| Textarea | {"field1": {"type": "string"}, "apex": {"itemtype": "textarea"}} |
+
+Appearance 
+
+| Template            | JSON-Schema | Comment |
+|---------------------|-------------|---------|
+| Hidden              | --- |  |
+| Optional            | --- |  |
+| Optional - Above    | --- |  |
+| Optional - Floting  |     | Depends on "required" |
+| Required            | --- |  | 
+| Required - Above    | --- |  |
+| Required - Floating |     | Depends on "required" |
+
+Other supported configurations.
+
+| APEX-item-config  | JSON-Schema | Comment |
+|-------------------|-------------|---------|
+| Name              | {"field1": {"type": "...", "apex": {"label": "Label1"}}} | use "Label1" instead of default (separate workds, 1st case upper case rest lower) |
+| Value Required    | {"type": "object", "required": ["field1", ...]} |
+| Maximum Length    | {"field1": {"type": "...", "maxLength": "---"}} |
+| Format Mask       | {"field1": {"type": "...", "format": "format1"}}   |
+| Value Placeholder | {"field1": {"type": "...", "apex": {"placeholder": "placeholder"}}} |
+| Start New Row     | {"field1": {"type": "...", "apex": {"newRow": true}}} |
+| Column            | {"field1": {"type": "...", "apex": {"colSpan": "3"}}} | spans 1 .. 12 |
+| New Column        | --- | always true |
+| Default: Type: Static | {"field1": {²type": "...", "default": "value1"}} | For "type": date, date-time, time: "now" is current date, current timstamp or current time |
+| Read Only: Type: Always | {"field1": {"type": "...", "readOnly":"true}} |
+| Settings: Minimum Value | {"field1": {"type": integer", "maximum": 123}} | Supported Types "integer", "number", "date", "date-time", "time" |
+| Settings: Maximum Value | {"field1": {"type": integer", "minimum": 123}} | Supported Types "integer", "number", "date", "date-time", "time" |
+| Settings: Number Alignment | {"field1": {"type": integer", "apex": {"align": "right"}|  Supported are alignements left, center right|
+
+Settings for the whole region
+
+| APEX-item-config | JSON-Schema |
+|------------------|-------------|
+| Read Only Type: Always | {"type": "object", "readOnly": true, ...} |
 
 ### Input validation
 
@@ -256,6 +332,7 @@ The plugin provides in the configuration view input for configuring
 - the **Column width** is used in the form for the width of the input items (values are 1-12)
 - When the **maxLength** of an item is above the **Textarealimit** a **textarea** is used for then string-item instead of the **text-field**.
 - If **Headers** is set, the plugin will generate additional headers for nested objects.
+- **template** defines the default template for all items. This is similar to the item-template configuration, except that the optional/require templates depend on the **required** of the JSON-schema. Default is **Label Floating**.
 - If **Hide JSON** is unset, the Item with the JSON data is shown on the form, otherwqise it will be hidden
 - If **Keep additional attributes** is set, the plugin will keep for updating the data all attributes not mentioned in the JSON-schema.
 - If **Remove NULLs from JSON** is set, all attributes with value **null** will be remove make the generated JSON more compact.

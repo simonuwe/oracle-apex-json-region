@@ -39,24 +39,29 @@ FUNCTION readschemafromdictionary(pItem IN VARCHAR2)
 BEGIN
   $IF DBMS_DB_VERSION.VERSION>=23
   $THEN
-    APEX_DEBUG.INFO('readschemafromdictionary for database version %d', DBMS_DB_VERSION.VERSION);
-    SELECT table_name, item_source
-    INTO l_table_name, l_column_name
-    FROM apex_application_page_items i 
-    JOIN apex_application_page_regions r ON (r.region_id=i.region_id)
-    WHERE i.application_id=NV('APP_ID') AND item_name=pItem;
+    BEGIN
+      APEX_DEBUG.INFO('readschemafromdictionary for database version %d', DBMS_DB_VERSION.VERSION);
+      SELECT table_name, item_source
+      INTO l_table_name, l_column_name
+      FROM apex_application_page_items i 
+      JOIN apex_application_page_regions r ON (r.region_id=i.region_id)
+      WHERE i.application_id=NV('APP_ID') AND item_name=pItem;
 
-    APEX_DEBUG.INFO('readschemafromdictionary: %s %s %s', l_owner, l_table_name, l_column_name);
+      APEX_DEBUG.INFO('readschemafromdictionary: %s %s %s', l_owner, l_table_name, l_column_name);
 
-    SELECT REGEXP_SUBSTR(text, '({.+})',1,1,'n',1) AS json_schema
-    INTO l_json
-    FROM (
-      SELECT table_name, constraint_name,
-        SYS_DBURIGEN(table_name, constraint_name, search_condition, 'text()').getclob() as text 
-      FROM user_constraints WHERE UPPER(search_condition_vc) like '%IS JSON%' AND constraint_type='C'
-    ) c 
-    JOIN user_cons_columns cc ON(c.table_name=cc.table_name AND c.constraint_name=cc.constraint_name)
-    WHERE c.table_name=l_table_name AND column_name=l_column_name;
+      SELECT REGEXP_SUBSTR(text, '({.+})',1,1,'n',1) AS json_schema
+      INTO l_json
+      FROM (
+        SELECT table_name, constraint_name,
+          SYS_DBURIGEN(table_name, constraint_name, search_condition, 'text()').getclob() as text 
+        FROM user_constraints WHERE UPPER(search_condition_vc) like '%IS JSON%' AND constraint_type='C'
+      ) c 
+      JOIN user_cons_columns cc ON(c.table_name=cc.table_name AND c.constraint_name=cc.constraint_name)
+      WHERE c.table_name=l_table_name AND column_name=l_column_name;
+    EXCEPTION WHEN NO_DATA_FOUND THEN
+    SELECT json_serialize(DBMS_JSON_SCHEMA.describe(l_table_name, l_owner))
+      INTO l_json;
+    END;
     APEX_DEBUG.INFO('JSON %s', substr(l_json,1,1000));
   $ELSE
     APEX_DEBUG.ERROR('readschemafromdictionary not supported for database version %d', DBMS_DB_VERSION.VERSION);
@@ -78,6 +83,7 @@ FUNCTION render_region(p_region              IN apex_plugin.t_region,
   l_schema              p_region.attribute_03%TYPE := p_region.attribute_03;                            -- The fixed JSON-schema
   l_query               p_region.attribute_04%TYPE := p_region.attribute_04;                            -- The SQL-query to retrieve the JSON-schema
   l_colwidth            p_region.attribute_05%TYPE := p_region.attribute_05;                            -- The column width for the field items in universal theme 1,2,3,4,6,12
+  l_template            p_region.attribute_11%TYPE :=  NVL(p_region.attribute_11, 'floating');          -- Template used for input items        
   l_textareawidth       p_region.attribute_01%TYPE :=  NVL(p_region.attribute_01, 250);                 -- The limit when textarea is used for long tex inputs
   l_keepattributes      p_region.attribute_06%TYPE :=  NVL(p_region.attribute_06, 'N');                 -- keep additional attributes not mentioned in JSON-schema
   l_headers             p_region.attribute_07%TYPE :=  NVL(p_region.attribute_07, 'N');                 -- Show headers when sub-objects are in the JSON-schema
@@ -137,6 +143,7 @@ BEGIN
          apex_javascript.add_attribute('headers',        l_headers!='N') ||
          apex_javascript.add_attribute('hide',           l_hide) || 
          apex_javascript.add_attribute('removeNulls',    l_removenulls) || 
+         apex_javascript.add_attribute('template',       l_template) || 
          apex_javascript.add_attribute('schema',         l_schema, false,false) ||
                                 '});'
   );                                 

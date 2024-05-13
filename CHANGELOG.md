@@ -1,6 +1,7 @@
-# 0.9.0 2024-04-29
+# 0.9.0 2024-05-13
 
 ## New Features:
+- Support of templates for inout-items (floating, above/left, hidden)
 - On the fly generation of JSON-schema based on JSON-data, so no JSON-schema required
 - Support of Oracle23c JSON-duality-views
 - **array** of **object** with add and delete of rows.
@@ -9,6 +10,9 @@
 - Align of input-fields
 
 ## Issues
+
+
+- #106 Support of more item configurations (enhancement)
 - #80 Use the schema of Oracle23c-JSON-relational-duality view (enhancement)
 - #2 array of properties (enhancement)
 - #102 password item with pattern (enhancement) 

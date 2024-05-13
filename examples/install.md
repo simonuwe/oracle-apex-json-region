@@ -41,12 +41,18 @@ Via **object_type** it is possible to configure object_type dependend JSON-schem
 
 While creating a new object in **objects** the matching input fields will be displays after selecting an **Object Type**.
 
-## Example for Oracle 23c
+## Examples for Oracle 23ai
 
-The script install23.sql installs a JSON-schema validation .
+The script validate23ai.sql installs a JSON-schema validation .
 
 ```
-sqlplus  username@db @validate23.sql
+sqlplus  username@db @validate23ai.sql
 ```
 
 You can try modifying the validation of the JSON-column and see how the UI is changing.
+
+The script duality23ai.sql installs a simple relational-duality-view based on the racing example.
+
+```
+sqlplus  username@db @duality23ai.sql
+```
