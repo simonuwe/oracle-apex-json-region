@@ -156,6 +156,12 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
   const C_APEX_LEFT         = 'left';
   const C_APEX_CENTER       = 'center';
   const C_APEX_RIGHT        = 'right';
+
+  const C_APEX_TEMPLATE_LABEL_HIDDEN   = 'hidden';
+  const C_APEX_TEMPLATE_LABEL_LEFT     = 'left';
+  const C_APEX_TEMPLATE_LABEL_ABOVE    = 'above';
+  const C_APEX_TEMPLATE_LABEL_FLOATING = 'floating';
+
                                                    // Extended Oracle types 
   const C_ORACLE_TIMESTAMP  = 'timestamp';      
 
@@ -592,7 +598,6 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
     } else {
       data = data || [];
       if(Array.isArray(data)){
-        console.log('CREATE:', dataitem + '_CREATE');
         $('#' + dataitem + '_CREATE').on('click', function(ev){ addArrayRow(dataitem, schema);});
         for(const i in data){
           attachObject(dataitem + C_DELIMITER + i , previtem, item, readonly, data[i], newItem) 
@@ -928,7 +933,6 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
           let l_rows = $("#" + pRegionId + ' [id^="' + dataitem + '_"].row');
           for(const l_row of l_rows){
             const l_id = $(l_row)[0].id.replace(/_CONTAINER$/,'');
-console.log('GET ARRAY ID:', l_id);
             const l_data = getData(l_id, '', schema.items, {});
             if(!isObjectEmpty(l_data)){  // don't add empty rows
               l_json.push(l_data);
@@ -949,7 +953,6 @@ console.log('GET ARRAY ID:', l_id);
           l_json = null;
         }
 // ---- HACK  -------
-console.log('getData duality HACK', dataitem, name);
         if((''+name).startsWith('_')){
           l_json = oldJson; 
         }
@@ -1123,6 +1126,11 @@ console.log('getData duality HACK', dataitem, name);
       schema.type = C_JSON_STRING;
     }
 
+    // Oracle specific SCHEMA extensions
+    if(schema.properties && schema.properties.dbPrimaryKey){  // remove dbPrimaryKey, it's a property and would so be handled as en input item
+      delete schema.properties.dbPrimaryKey;
+    }
+
     if(schema.extendedType) {   // Oracle specific datatype
       if(Array.isArray(schema.extendedType)){    // for nullable  properties it is ["type", null]
         if(schema.extendedType.includes(null)){  // 
@@ -1286,7 +1294,7 @@ console.log('getData duality HACK', dataitem, name);
 
     l_generated.html += apex.util.applyTemplate(`
       <li class="a-Chip a-Chip--input is-empty">
-        <input type="text" class="apex-item-text" aria-labelledby="#ID#_LABEL" value="#VALUES#" maxlength="100" role="combobox" aria-expanded="false" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" aria-autocomplete="list" aria-describedby="#ID#_desc" aria-busy="false">
+        <input type="text" class="apex-item-text" aria-labelledby="#ID#_LABEL" value="#VALUES#" #PLACEHOLDER# maxlength="100" role="combobox" aria-expanded="false" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" aria-autocomplete="list" aria-describedby="#ID#_desc" aria-busy="false">
         <span class="a-Chip-clear js-clearInput"><span class="a-Icon icon-multi-remove" aria-hidden="true"></span></span>
       </li>
     </ul>
@@ -1364,7 +1372,7 @@ console.log('getData duality HACK', dataitem, name);
       for(const l_value of schema.enum){
         l_generated.html += apex.util.applyTemplate(`
   <div class="apex-item-option" #DIR#>
-    <input type="#TYPE#" id="#ID#_#NR#" name="#ID#" data-display="#VALUE#" value="#VALUE#" #REQUIRED# aria-label="#VALUE#" class="">
+    <input type="#TYPE#" id="#ID#_#NR#" name="#ID#" data-display="#VALUE#" value="#VALUE#" #PLACEHOLDER# #REQUIRED# aria-label="#VALUE#" class="">
     <label class="u-#TYPE#" for="#ID#_#NR#" aria-hidden="true">#DISPLAYVALUE#</label>
   </div>
 `,
@@ -1450,7 +1458,7 @@ console.log('getData duality HACK', dataitem, name);
             items: 1,
             wrappertype: 'apex-item-wrapper--text-field',
             html: `
-<input type="email" id="#ID#" name="#ID#" #REQUIRED# #PATTERN# class="#ALIGN# text_field apex-item-text" size="32" #MINLENGTH# #MAXLENGTH# data-trim-spaces="#TRIMSPACES#" aria-describedby="#ID#_error">
+<input type="email" id="#ID#" name="#ID#" #REQUIRED# #PLACEHOLDER# #PATTERN# class="#ALIGN# text_field apex-item-text" size="32" #MINLENGTH# #MAXLENGTH# data-trim-spaces="#TRIMSPACES#" aria-describedby="#ID#_error">
 `};
         break;
         case C_JSON_FORMAT_URI:
@@ -1458,7 +1466,7 @@ console.log('getData duality HACK', dataitem, name);
             items: 1,
             wrappertype: 'apex-item-wrapper--text-field',
             html: `
-<input type="url" id="#ID#" name="#ID#" #REQUIRED# #PATTERN# class="#ALIGN# text_field apex-item-text" size="32" #MINLENGTH# #MAXLENGTH# data-trim-spaces="#TRIMSPACES#" aria-describedby="#ID#_error">
+<input type="url" id="#ID#" name="#ID#" #REQUIRED# #PLACEHOLDER# #PATTERN# class="#ALIGN# text_field apex-item-text" size="32" #MINLENGTH# #MAXLENGTH# data-trim-spaces="#TRIMSPACES#" aria-describedby="#ID#_error">
 `};
         break;
         case C_JSON_FORMAT_DATE:
@@ -1468,7 +1476,7 @@ console.log('getData duality HACK', dataitem, name);
               wrappertype: 'apex-item-wrapper--date-picker-apex apex-item-wrapper--date-picker-apex-popup',
               html: `
 <a-date-picker id="#ID#" #REQUIRED# change-month="true" change-year="true" display-as="popup" display-weeks="number"  #MIN# #MAX# previous-next-distance="one-month" show-days-outside-month="visible" show-on="focus" today-button="true" format="#FORMAT#" valid-example="#EXAMPLE#" year-selection-range="5" class="apex-item-datepicker--popup">
-  <input aria-haspopup="dialog" class=" apex-item-text apex-item-datepicker" name="#ID#" size="20" maxlength="20" type="text" id="#ID#_input" required="" aria-labelledby="#ID#_LABEL" maxlength="255" value="#VALUE#">
+  <input aria-haspopup="dialog" class=" apex-item-text apex-item-datepicker" name="#ID#" size="20" maxlength="20" #PLACEHOLDER# type="text" id="#ID#_input" required="" aria-labelledby="#ID#_LABEL" maxlength="255" value="#VALUE#">
   <button aria-haspopup="dialog" aria-label="#INFO#" class="a-Button a-Button--calendar" tabindex="-1" type="button" aria-describedby="#ID#_LABEL" aria-controls="#ID#_input">
     <span class="a-Icon icon-calendar">
     </span>
@@ -1492,7 +1500,7 @@ console.log('getData duality HACK', dataitem, name);
               wrappertype: 'apex-item-wrapper--date-picker-apex apex-item-wrapper--date-picker-apex-popup',
               html: `
 <a-date-picker id="#ID#" #REQUIRED# change-month="true" change-year="true" display-as="popup" display-weeks="number" #MIN# #MAX# previous-next-distance="one-month" show-days-outside-month="visible" show-on="focus" show-time="true" time-increment-minute="15" today-button="true" format="#FORMAT#" valid-example="#EXAMPLE#" year-selection-range="5" class="apex-item-datepicker--popup">
-  <input aria-haspopup="dialog" class=" apex-item-text apex-item-datepicker" name="#ID#" size="30" maxlength="30" type="text" id="#ID#_input" required="" aria-labelledby="#ID#_LABEL" maxlength="255" value="#VALUE#">
+  <input aria-haspopup="dialog" class=" apex-item-text apex-item-datepicker" name="#ID#" size="30" maxlength="30" #PLACEHOLDER# type="text" id="#ID#_input" required="" aria-labelledby="#ID#_LABEL" maxlength="255" value="#VALUE#">
   <button aria-haspopup="dialog" aria-label="#INFO#" class="a-Button a-Button--calendar" tabindex="-1" type="button" aria-describedby="#ID#_LABEL" aria-controls="#ID#_input">
     <span class="a-Icon icon-calendar-time">
     </span>
@@ -1514,7 +1522,7 @@ console.log('getData duality HACK', dataitem, name);
             items: 1,
             wrappertype: 'apex-item-wrapper--text-field',
             html: `
-<input type="time" id="#ID#" name="#ID#" #REQUIRED# #MIN# #MAX# class="text_field apex-item-text"  size="5" data-trim-spaces="#TRIMSPACES#" aria-describedby="#ID#_error"/>
+<input type="time" id="#ID#" name="#ID#" #REQUIRED# #MIN# #MAX# class="text_field apex-item-text"  #PLACEHOLDER# size="5" data-trim-spaces="#TRIMSPACES#" aria-describedby="#ID#_error"/>
 `};
         break;
         default:
@@ -1522,7 +1530,7 @@ console.log('getData duality HACK', dataitem, name);
            items: 1,
            wrappertype: 'apex-item-wrapper--text-field',
            html: `
-<input type="text" id="#ID#" name="#ID#" #REQUIRED# #MINLENGTH# #MAXLENGTH# #PATTERN# class="#ALIGN# text_field apex-item-text" size="32" data-trim-spaces="#TRIMSPACES#" aria-describedby="#ID#_error">
+<input type="text" id="#ID#" name="#ID#" #REQUIRED# #MINLENGTH# #MAXLENGTH# #PLACEHOLDER# #PATTERN# class="#ALIGN# text_field apex-item-text" size="32" data-trim-spaces="#TRIMSPACES#" aria-describedby="#ID#_error">
 `};
           switch (schema.apex.itemtype){
           case C_APEX_PASSWORD:
@@ -1602,7 +1610,7 @@ console.log('getData duality HACK', dataitem, name);
                 items: 1,
                 wrappertype: 'apex-item-wrapper--number-field',
                 html: `
-<input type="text" id="#ID#" name="#ID#" #REQUIRED# class="#ALIGN# number_field apex-item-text apex-item-number" size="30" #MIN# #MAX# data-format="#FORMAT#" inputmode="decimal" style="text-align:start">
+<input type="text" id="#ID#" name="#ID#" #REQUIRED# #PLACEHOLDER# class="#ALIGN# number_field apex-item-text apex-item-number" size="30" #MIN# #MAX# data-format="#FORMAT#" inputmode="decimal" style="text-align:start">
 `};
           }
         }
@@ -1844,7 +1852,53 @@ console.log('getData duality HACK', dataitem, name);
     return l_html;
   }
 
+  /*
+   * generate for a taemplate the classes for stackled, floating, rel-col, hidden
+   * Returns :{container: 'aaa', label: 'bbb', input: 'ccc'}
+   * The classes for the item container, for label and input
+  */
+  function genTemplate(template, colwidth, schema){
+    apex.debug.trace(">>jsonRegion.genTemplate", template, colwidth, schema); 
+    let l_ret = {};
+    switch(schema.apex.template||template){
+    case C_APEX_TEMPLATE_LABEL_HIDDEN:
+      l_ret = {
+                container: 't-Form-fieldContainer--hiddenLabel rel-col',
+                label: 't-Form-fieldContainer--hiddenLabel col col-2',
+                input: 'col col-' + Math.max(1, colwidth-2),
+                hidden: 'u-VisuallyHidden'
+              };  
+    break; 
+    case C_APEX_TEMPLATE_LABEL_LEFT: 
+      l_ret = {
+                container: 'rel-col',
+                label: 'col col-2',
+                input: 'col col-' + Math.max(1, colwidth-2),
+                hidden: ''
+              };
+    break;
+    case C_APEX_TEMPLATE_LABEL_ABOVE: 
+      l_ret = {
+                container: 't-Form-fieldContainer--stacked',
+                label: '',
+                input: '',
+                hidden: ''
+              };
+    break;
+    case C_APEX_TEMPLATE_LABEL_FLOATING: 
+    default: 
+      l_ret = {
+                container: 't-Form-fieldContainer--floatingLabel',
+                label: '',
+                input: '',
+                hidden: ''
+              };;
+    break;
+    }
 
+    apex.debug.trace("<<jsonRegion.genTemplate", l_ret); 
+    return l_ret;
+  }
   /*
    * generate UI for an object schema, follow nested schemas 
    * returns {items:0, wrappertype: "xxx", html: "xxx"}
@@ -1911,6 +1965,7 @@ console.log('getData duality HACK', dataitem, name);
 
       if(l_generated.wrappertype){ // input items is generated
         let label = generateLabel(name, schema);
+        const l_template = genTemplate(pOptions.template, pOptions.colwidth, schema);
         // console.log(data, schema)
         l_generated = {
           items:       l_generated.items,
@@ -1918,11 +1973,11 @@ console.log('getData duality HACK', dataitem, name);
           html:        apex.util.applyTemplate(
 `
   <div class="col col-#COLWIDTH# apex-col-auto #COLSTARTEND#">
-    <div  id="#ID#_CONTAINER" class="t-Form-fieldContainer t-Form-fieldContainer--floatingLabel #ISREQUIRED# i_112918109_0 apex-item-wrapper #WRAPPERTYPE#" >
-      <div class="t-Form-labelContainer">
-        <label for="#ID#" id="#ID#_LABEL" class="t-Form-label">#TOPLABEL#</label>
+    <div  id="#ID#_CONTAINER" class="t-Form-fieldContainer #FIELDTEMPLATE# #ISREQUIRED# i_112918109_0 apex-item-wrapper #WRAPPERTYPE#" >
+      <div class="t-Form-labelContainer #LABELTEMPLATE#">
+        <label for="#ID#" id="#ID#_LABEL" class="t-Form-label #LABELHIDDEN#">#TOPLABEL#</label>
       </div>
-      <div class="t-Form-inputContainer">
+      <div class="t-Form-inputContainer #INPUTTEMPLATE#">
         <div class="t-Form-itemRequired-marker" aria-hidden="true"></div>
         <div class="t-Form-itemWrapper">
 ` +  l_generated.html +
@@ -1943,11 +1998,16 @@ console.log('getData duality HACK', dataitem, name);
                                                      "ID":           genItemname(prefix, name), 
                                                      "NAME":         genItemname(prefix, name),
                                                      "LABEL":        label,
-                                                     "ALIGN":        cAlign[schema.apex.align],
+                                                     "FIELDTEMPLATE": l_template.container,
+                                                     "LABELTEMPLATE": l_template.label,
+                                                     "LABELHIDDEN":   l_template.hidden,
+                                                     "INPUTTEMPLATE": l_template.input,
+                                                     "ALIGN":        cAlign[schema.apex.align]||'',
                                                      "READONLY":     schema.readonly?"true":"false",
                                                      "TRIMSPACES":   'BOTH',
                                                      "AJAXIDENTIFIER": pAjaxIdentifier,
                                                      "DATATEMPLATE": pOptions.datatemplateET,
+                                                     "PLACEHOLDER":  schema.apex.placeholder?'placeholder="'+schema.apex.placeholder+'"':'',
                                                      "FORMAT":       schema.apex.format||'',
                                                      "EXAMPLE":      ([C_JSON_FORMAT_DATE, C_JSON_FORMAT_DATETIME, C_JSON_FORMAT_TIME].includes(schema.format)?jsonValue2Item(schema, apex.date.toISOString(new Date()), newItem):''), 
                                                      "MINLENGTH":    schema.minLength?'minlength=' + schema.minLength:'',

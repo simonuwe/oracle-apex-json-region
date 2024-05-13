@@ -1,7 +1,11 @@
 .jsonregion {
-  margin: -0.5rem;
+  margin-left: -0.5rem;
+  margin-right: -0.5rem;
 }
 
+.jsonregion .t-Region-header {
+  border-block-end-style: none;
+}
 .jsonregion .t-Form-itemWrapper img {
   height: 100%;
 }
@@ -11,7 +15,7 @@
 }
 
 .jsonregion .t-Region-header {
-  margin-top:    8px;
+  margin-top: 8px;
   margin-bottom: 4px;
 }
 
