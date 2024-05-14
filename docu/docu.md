@@ -3,7 +3,7 @@
 An Oracle-APEX-plugin that provides dynamic input items for an easy way to display and edit **JSON-data** in an APEX-application. 
 The field-items are dynamically generate based on a JSON-schema. The JSON-schema could be fixed for a page or dynamically based on a JSON-schema found by a SQL_query.
 
-Starting with **Oracle 23c** a **JSON-schema** could be used for the valition of a column with datatype **JSON**.
+Starting with **Oracle 23ai** a **JSON-schema** could be used for the valition of a column with datatype **JSON**.
 So this plugin could also use the JSON-schema of the JSON-validation to **dynamically generate items** to display and/or edit **JSON-data**. 
 In this way the field-items of an application always match with the format of your JSON-column.
 
@@ -81,7 +81,7 @@ Types are
   
   The type **string** supports **base64** encoded binary data **contentEncoding** 
   for displaying **images** via **contentMediaType** in formats **png**, **jpg** or **gif** (This item will be **readonly**). 
-```
+```JSON
   { 
     "type": "string", 
     "contentEncoding": "base64", 
@@ -112,7 +112,7 @@ The Oracle23-JSON-schema-extension **extendedType** is supported too. Because **
 The json-region-plugin uses an optional extension item **"apex"** in the JSON-schema. Here APEX-specific information are specified. To get more flexible UIs the properties **"dependentRequired"**, **"dependentSchema"**, **"if"**, **"then"** and **"else"** are supported too.
 
 Currently supported are
-```
+```JSON
 { "type": "object"
   "properties": {
     "prop1": {
@@ -327,7 +327,7 @@ In **Source** enter the name for the hidden JSON-item which is used in the form
 The plugin provides in the configuration view input for configuring
 - The **Source** for the JSON-schema
   - There is **no fixed schema**. The JSON-schema is always generated based on the JSON-data. This uses "default" UI-items and will only generate UI-items for the existing properties in the JSON-data. There will not be **required** properties.
-  - A **static JSON-schema** used in the form. Starting with **Oracle 23c** a **JSON-schema** for **column-validation** is stored in the **datadictionary**. The Plugin tries to use this when the static **schema** is left empty. This keeps the schema of the JSON-column an the UI for this column in sync.  
+  - A **static JSON-schema** used in the form. Starting with **Oracle 23ai** a **JSON-schema** for **column-validation** is stored in the **datadictionary**. The Plugin tries to use this when the static **schema** is left empty. This keeps the schema of the JSON-column an the UI for this column in sync.  
   - A **dynamic JSON-schema** retrieved by a SQL-query. Make sure that the query returns a single row, disable the item when no row could be returned.
 - the **Column width** is used in the form for the width of the input items (values are 1-12)
 - When the **maxLength** of an item is above the **Textarealimit** a **textarea** is used for then string-item instead of the **text-field**.
@@ -388,26 +388,12 @@ The plugin could be found in subdirectory **plug-in** file
 **region_type_plugin_json_region_uwesimon_selfhost_eu.sql**
 Import this SQL-file in your application in the **shared-components->plugins** dialog.
 
-### Support for Oracle 23c
+### Support for Oracle 23ai
 
-Starting Oracle 23c a validation of a JSON-column with a JSON-schema via **VALIDATE '...'**  is supported. 
-When you want your APEX-application to reference this setting, you can use in the json-region-setup the query 
-
-```
-SELECT REGEXP_SUBSTR(text, '({.+})',1,1,'n',1) AS json_schema
-FROM (
-  SELECT table_name, constraint_name,
-    SYS_DBURIGEN(table_name, constraint_name, search_condition, 'text()').getclob() as text 
-  FROM user_constraints WHERE UPPER(search_condition_vc) like '%IS JSON%' AND constraint_type='C'
-) c 
-JOIN user_cons_columns cc ON(c.table_name=cc.table_name AND c.constraint_name=cc.constraint_name)
-WHERE c.table_name='TAB' AND column_name='JSON_DATA'
-```
-
-This retrievs the JSON-schema for column **TAB.JSON_DATA** from the data dictionary, as long as the constraint-text is less than 4000 char long (the full text isin a LONG-column, which is not easy to process). So changing this VALIDATE setting will automatically adopt the layout of the json-region in your APEX-UI.
+When the JSON-region is configured with "static JSON-schema" and no schema is defined the plugin tries to retrieve the JSON-schema from the JSON-VALIDATE-constraint or the a relations-duality-view.
 
 The datatype **DATE** is not native to JSON-schema, where it is documented as
-``` 
+```JSON
 {
   "type": "string",
   "format": "date",
@@ -417,11 +403,11 @@ The datatype **DATE** is not native to JSON-schema, where it is documented as
 For date/time handling JSON-schema knows the formats
 **date** (2023-10-28), **date-time** (2023-10-28T10:15:00), **time** (12:15:10.0000) and **duration** (5H10M for 5:10 hours) which implements the date/time-formats from ISO8601
 
-Oracle 23c does not implement it this way.
+Oracle 23ai does not implement it this way.
 As for the native datatye **DATE** the json formats **date** and **date-time** always result in date+time..
 Also Oracle introduced a new keyword **extendedType** for defining date/
 
-```
+```JSON
 {
   "extendedType": "date",
   ...
@@ -451,7 +437,126 @@ to the json-column, but when reading it back you will get
   ...
 } 
 ```
-This could cause some trouble when comparing "old" and "new" values.
+This could cause some trouble when comparing "old" and "new" values during saving the data.
+
+#### JSON-Validate-Constraint
+Starting Oracle 23ai a validation of a JSON-column with a JSON-schema via **VALIDATE '...'**  is supported. 
+When you want your APEX-application to reference this setting, you can use in the json-region-setup the query 
+
+```sql
+SELECT REGEXP_SUBSTR(text, '({.+})',1,1,'n',1) AS json_schema
+FROM (
+  SELECT table_name, constraint_name,
+    SYS_DBURIGEN(table_name, constraint_name, search_condition, 'text()').getclob() as text 
+  FROM user_constraints WHERE UPPER(search_condition_vc) like '%IS JSON%' AND constraint_type='C'
+) c 
+JOIN user_cons_columns cc ON(c.table_name=cc.table_name AND c.constraint_name=cc.constraint_name)
+WHERE c.table_name='TAB' AND column_name='JSON_DATA'
+```
+
+This retrievs the JSON-schema for column **TAB.JSON_DATA** from the data dictionary, as long as the constraint-text is less than 4000 char long (the full text isin a LONG-column, which is not easy to process). So changing this VALIDATE setting will automatically adopt the layout of the json-region in your APEX-UI.
+
+#### Relational-Duality-views
+
+The JSON returned from a relational-duality view contains the Oracle-specific property "_metadata", which is be ignored and not displayed by the plugin.
+
+```JSON
+{
+  "_id": 302,
+  "_metadata": {
+    "etag": "C5DD30F04DA1A6A390BFAB12B7D4F700",
+    "asof": "000000000041E32E"
+  },
+  "name":   "Ferrari",
+  "points": 43,
+  "driver": [
+    {
+      "_id":    103,
+      "name":   "Charles Leclerc",
+      "points": 25
+    },
+    {
+      "_id":    104,
+      "name":   "Carlos Sainz Jr",
+      "points": 18
+    }
+  ]
+}
+```
+The JSON-schema of a relations-duality-view could be retrievd by the query
+```sql
+      SELECT json_serialize(DBMS_JSON_SCHEMA.describe('TABLE', 'OWNER'))
+```
+The result contains some Oracle-specific extensions of a JSON-schema.
+```JSON
+{
+  "title" : "JSON23AI",
+  "dbObject" : "UWE.JSON23AI",
+  "dbObjectType" : "dualityView",
+  "dbObjectProperties" : [ "insert", "update", "delete", "check" ],
+  "type" : "object",
+  "properties" : {
+    "_id" : {
+      "extendedType" : "number",
+      "sqlScale" : 0,
+      "generated" : true,
+      "dbFieldProperties" : [ "check" ]
+    },
+    "_metadata" : {
+      "etag" : {
+        "extendedType" : "string",
+        "maxLength" : 200
+      },
+      "asof" : {
+        "extendedType" : "string",
+        "maxLength" : 20
+      }
+    },
+    "dbPrimaryKey" : [ "_id" ],
+    "name" : {
+      "extendedType" : "string",
+      "maxLength" : 255,
+      "dbFieldProperties" : [ "update", "check" ]
+    },
+    "points" : {
+      "extendedType" : "number",
+      "sqlScale" : 0,
+      "dbFieldProperties" : [ "update", "check" ]
+    },
+    "driver" : {
+      "type" : "array",
+      "items" : {
+        "type" : "object",
+        "properties" : {
+          "_id" : {
+            "extendedType" : "number",
+            "sqlScale" : 0,
+            "generated" : true,
+            "dbFieldProperties" : [ "check" ]
+          },
+          "dbPrimaryKey" : [ "_id" ],
+          "name" : {
+            "extendedType" : "string",
+            "maxLength" : 255,
+            "dbFieldProperties" : [ "update", "check" ]
+          },
+          "points" : {
+            "extendedType" : "number",
+            "sqlScale" : 0,
+            "dbFieldProperties" : [ "update" ]
+          }
+        },
+        "required" : [ "name", "points", "_id" ],
+        "additionalProperties" : false
+      }
+    }
+  },
+  "required" : [ "name", "points", "_id" ],
+  "additionalProperties" : false
+}
+```
+When generating the UI the Oracle-specific attributes with names starting with "_" are ignored. The property "dbPrimaryKey" is ignored which is unfortunately part of "properties": {...}.
+
 
 ### Import to a APEX23.2
 
