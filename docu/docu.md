@@ -204,6 +204,7 @@ For example JSON-data has **"enum": ["a", "b", "c"]**, so the **"apex": {"enum":
 - **format** is used for changing the display format of a JSON-value. Currently **format** supportes only **currency** which will show **integer** and **number** values with a currency symbol and **number** with 2 decimal places and **integer** without an decimal places.
 - **placeholder** defines the placeholder shown wwhilehen field is empty.
 - **template** used for the input item values are **floating** (default), **left**, **above** and **hidden**
+- **css** defines the CSS-classes added to the form-field of the UI-item
 - **itemtype** defines which UI-item is used in the APEX-UI
   - **password** the text is not shown but a * for each character.  
   - **switch** changes the display for a **boolean** to a switch, the default is a single checkbox.
@@ -284,6 +285,7 @@ Other supported configurations.
 | Name              | {"field1": {"type": "...", "apex": {"label": "Label1"}}} | use "Label1" instead of default (separate workds, 1st case upper case rest lower) |
 | Value Required    | {"type": "object", "required": ["field1", ...]} |
 | Maximum Length    | {"field1": {"type": "...", "maxLength": "---"}} |
+| CSS Classes       | {"field1": {"type": "...", "apex": {"css": "class1 class2"}}} | |
 | Format Mask       | {"field1": {"type": "...", "format": "format1"}}   |
 | Value Placeholder | {"field1": {"type": "...", "apex": {"placeholder": "placeholder"}}} |
 | Start New Row     | {"field1": {"type": "...", "apex": {"newRow": true}}} |
@@ -556,6 +558,9 @@ The result contains some Oracle-specific extensions of a JSON-schema.
 }
 ```
 When generating the UI the Oracle-specific attributes with names starting with "_" are ignored. The property "dbPrimaryKey" is ignored which is unfortunately part of "properties": {...}.
+
+The "Lost Update Detection" of APEX does not work with the relational-duality-views. This is caused by the property **_metadata.asof**, which changes on each select (it's the current SCN of the database), so the checksum of the data changes per select.
+The Workarround: **switch off "Prevent Lost Updates"**
 
 
 ### Import to a APEX23.2

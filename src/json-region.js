@@ -10,9 +10,12 @@
 /*
  * initialize the JSON-region plugin, call form inside PL/SQL when plugin ist initialized
 */
-async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
+// async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
+function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
         // get the datat-template-id for inline errors from another input field
 // console.error(JSON.stringify(pOptions));
+  let   gData = {};  // holds the JSON-data as an object hierarchie
+
   pOptions.datatemplateET = $($('.a-Form-error[data-template-id]')[0]).attr('data-template-id') || 'xx_ET';
 
   /*
@@ -74,7 +77,7 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
   function isObjectEmpty(data){
     let l_empty = true;
     apex.debug.trace('>>jsonRegion.isObjectEmpty', data);
-    if(typeof data == 'object'){
+    if(data && typeof data == 'object'){
       for(const [l_key, l_data] of Object.entries(data)){
         if(l_data){
           l_empty = false;
@@ -176,9 +179,6 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
       center: "u-textCenter",
       right: "u-textEnd"
   }
-
-  let   gData = {};  // holds the JSON-data as an object hierarchie
-
 
   /*
    *  generate a JSON-schema from JSON-data
@@ -589,7 +589,7 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
     schema = schema||{};
     schema.apex = schema.apex || {};
     let item = schema.items||{};
-    if([C_JSON_STRING, C_JSON_INTEGER, C_JSON_NUMBER].includes(item.type)){
+    if(Array.isArray(item.enum)){  //[C_JSON_STRING, C_JSON_INTEGER, C_JSON_NUMBER].includes(item.type)){
       if(apex.env.APEX_VERSION >='23.2.0' && (schema.apex.itemtype == C_APEX_COMBO || (item.apex && item.apex.itemtype == C_APEX_COMBO))){
         apex.item.create(dataitem, {item_type: 'combobox'});
       } else {
@@ -605,8 +605,6 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
             // Delete buttons for every row
         $('[id^="' + dataitem + '_"] button').on('click', function(ev){ delArrayRow($(this)[0].id); });
       }
-
-      apex.debug.info('Support for simple string/integer/number array only', item?item.type:'???')
     }
     if(readonly) {
       apex.item(dataitem).disable(); 
@@ -1821,14 +1819,15 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
 
     l_html += `
 </div>
-<div id="#ID#_CONTAINER" class="row jsonregion">
+<div id="#ID#_CONTAINER" class="row jsonregion #CSS#">
  `;
 
     l_html = apex.util.applyTemplate(l_html, 
                                       { 
                                         placeholders: {
                                           "LABEL": label,
-                                          "ID":    id
+                                          "ID":    id,
+                                          "CSS":   (schema.type==C_JSON_OBJECT)?(schema.apex.css||''):''
                                         }
                                       });
 
@@ -1899,22 +1898,23 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
     apex.debug.trace("<<jsonRegion.genTemplate", l_ret); 
     return l_ret;
   }
+
   /*
    * generate UI for an object schema, follow nested schemas 
    * returns {items:0, wrappertype: "xxx", html: "xxx"}
   */
   function generateForObject(schema, data, prefix, name, startend, inArray, newItem){
-      schema.apex = schema.apex ||{};
-      let l_generated = {items: 0, wrappertype: null, html: ''};
+    schema.apex = schema.apex ||{};
+    let l_generated = {items: 0, wrappertype: null, html: ''};
 
-      apex.debug.trace(">>jsonRegion.generateForObject", schema, data, prefix, name, startend, inArray, newItem);
+    apex.debug.trace(">>jsonRegion.generateForObject", schema, data, prefix, name, startend, inArray, newItem);
 
-      if((''+name).startsWith('_')){   // ignore properties having names starting with "_"
+    if((''+name).startsWith('_')){   // ignore properties having names starting with "_"
         apex.debug.trace("<<jsonRegion.generateForObject", l_generated);
         return l_generated;
-      }
+    }
 
-      switch(schema.type){
+    switch(schema.type){
         case "array":
           l_generated = generateForArray(schema, data, (prefix?prefix+C_DELIMITER:'')+name, name, startend, true, newItem);
         break;
@@ -1973,7 +1973,7 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
           html:        apex.util.applyTemplate(
 `
   <div class="col col-#COLWIDTH# apex-col-auto #COLSTARTEND#">
-    <div  id="#ID#_CONTAINER" class="t-Form-fieldContainer #FIELDTEMPLATE# #ISREQUIRED# i_112918109_0 apex-item-wrapper #WRAPPERTYPE#" >
+    <div  id="#ID#_CONTAINER" class="t-Form-fieldContainer #FIELDTEMPLATE# #ISREQUIRED# #CSS# i_112918109_0 apex-item-wrapper #WRAPPERTYPE#" >
       <div class="t-Form-labelContainer #LABELTEMPLATE#">
         <label for="#ID#" id="#ID#_LABEL" class="t-Form-label #LABELHIDDEN#">#TOPLABEL#</label>
       </div>
@@ -2002,6 +2002,7 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
                                                      "LABELTEMPLATE": l_template.label,
                                                      "LABELHIDDEN":   l_template.hidden,
                                                      "INPUTTEMPLATE": l_template.input,
+                                                     "CSS":           schema.apex.css||'',
                                                      "ALIGN":        cAlign[schema.apex.align]||'',
                                                      "READONLY":     schema.readonly?"true":"false",
                                                      "TRIMSPACES":   'BOTH',
@@ -2025,14 +2026,28 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
                                                     }
                                     })
         };
-      }
+    }
 
-      if((schema.apex.textBefore || schema.apex.newRow)) { // current field should start at a new row
-        l_generated.html = generateSeparator(schema, schema.apex.textBefore, prefix + '_OBJ', inArray, null) + l_generated.html;
-      }
+    if((schema.apex.textBefore || schema.apex.newRow)) { // current field should start at a new row
+      l_generated.html = generateSeparator(schema, schema.apex.textBefore, prefix + '_OBJ', inArray, null) + l_generated.html;
+    }
 
-      apex.debug.trace("<<jsonRegion.generateForObject", l_generated);
-      return(l_generated);
+    if(inArray && l_generated.items==1){ // this object is generated inside an array, so add onbject related html arround}
+      if(pOptions.headers){
+        l_generated.html = generateSeparator(schema, generateLabel(name, schema), genItemname(prefix, name), inArray, null) + l_generated.html;
+      }
+      if(!schema.readOnly){
+        l_generated.html += generateArrayDeleteButton(genItemname(prefix, name));
+      }
+    }
+/*
+          if(l_gen.items == 1) { // a simple array, so add deletebutton, for objects its already generated
+            l_generated.html += generateSeparator(schema, generateLabel(name, schema), prefix + C_DELIMITER + i, true, null) + l_gen.html;
+            l_generated.html += generateArrayDeleteButton(prefix + C_DELIMITER + i);
+          } else {
+*/
+    apex.debug.trace("<<jsonRegion.generateForObject", l_generated);
+    return(l_generated);
   }
 
   /*
@@ -2093,34 +2108,39 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
     return $.when.apply($, l_arr);
   }
 
+  // load the oraclejet for date-picker for APEX <=22.1
+  function loadRequiredFiles221(itemtypes){
+    let l_html ='';
+    apex.debug.trace('>>jsonRegion.loadRequiredFiles221', itemtypes);
+    if(itemtypes.format.date || itemtypes.format["date-time"]){  //HACK for APEX <22.2, here and old datepicker is used
+      l_html += '<link rel="stylesheet" href="' + apex.env.APEX_FILES + 'libraries/oraclejet/' + apex.libVersions.oraclejet +  '/css/libs/oj/v' + apex.libVersions.oraclejet +  '/redwood/oj-redwood-notag-min.css" type="text/css"/>';
+      l_html += '<script src="' + apex.env.APEX_FILES + 'libraries/oraclejet/' + apex.libVersions.oraclejet +  '/js/libs/require/require.js"></script>';
+      l_html += '<script src="' + apex.env.APEX_FILES + 'libraries/apex/minified/requirejs.jetConfig.min.js"></script>';
+      l_html += '<script src="' + apex.env.APEX_FILES + 'libraries/apex/minified/jetCommonBundle.min.js"></script>';
+      l_html += '<script src="' + apex.env.APEX_FILES + 'libraries/apex/minified/jetDatePickerBundle.min.js"></script>';
+    }
+    apex.debug.trace('<<jsonRegion.loadRequiredFiles221', l_html);
+    return l_html;
+  }
+
   /*
    * build a list of all missing files required by used wigets/items like richtxt-editor, ... 
    * Lod the files via ajax
   */
-  async function loadRequiredFiles() {
+  async function loadRequiredFiles(itemtypes) {
       // get used itemtypes
-    apex.debug.trace(">>jsonRegion.getFiles");
-    let l_itemtypes = null;
-    l_itemtypes = getItemtypes(pOptions.schema, l_itemtypes);
+    apex.debug.trace(">>jsonRegion.loadRequiredFiles", itemtypes);
     let l_scripts = [];
 
-    if(apex.env.APEX_VERSION <'22.2' && (l_itemtypes.format.date || l_itemtypes.format["date-time"])){  //HACK for APEX <22.2, here and old datepicker is used
-      l_scripts.push('libraries/oraclejet/' + apex.libVersions.oraclejet +  '/css/libs/oj/v' + apex.libVersions.oraclejet +  '/redwood/oj-redwood-notag-min.css');
-      l_scripts.push('libraries/oraclejet/' + apex.libVersions.oraclejet +  '/js/libs/require/require.js');
-      l_scripts.push('libraries/apex/minified/requirejs.jetConfig.min.js');
-      l_scripts.push('libraries/apex/minified/jetCommonBundle.min.js');
-      l_scripts.push('libraries/apex/minified/jetDatePickerBundle.min.js');
-    }
-
-  if(apex.env.APEX_VERSION >='23.2'){  // new Featurs for 23.2
-      if(!customElements.get('a-combobox')  && l_itemtypes.itemtype.combobox){ // combobox is used, so load files for new combobox
+    if(apex.env.APEX_VERSION >='23.2'){  // new Featurs for 23.2
+      if(!customElements.get('a-combobox')  && itemtypes.itemtype.combobox){ // combobox is used, so load files for new combobox
         l_scripts.push('libraries/apex/minified/item.Combobox.min.js');
       }
-      if(!customElements.get('a-qrcode')  && l_itemtypes.itemtype.qrcode){ // combobox is used, so load files for new combobox
+      if(!customElements.get('a-qrcode')  && itemtypes.itemtype.qrcode){ // combobox is used, so load files for new combobox
         l_scripts.push('libraries/apex/minified/item.QRcode.min.js');
       }
 
-      if(l_itemtypes.itemtype.richtext){  // richtext is used, so load files for rich-text-editor
+      if(itemtypes.itemtype.richtext){  // richtext is used, so load files for rich-text-editor
         if(!customElements.get('a-rich-text-editor')){  // Custom Element is not in use, load it
           l_scripts.push('libraries/tinymce/' + apex.libVersions.tinymce + '/skins/ui/oxide/skin.css');
           l_scripts.push('libraries/tinymce/' + apex.libVersions.tinymce + '/tinymce.min.js');
@@ -2132,18 +2152,22 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
         }
       }
     }
-    apex.debug.trace("<<jsonRegion.getFiles");
+    apex.debug.trace("<<jsonRegion.loadRequiredFiles");
     return getFiles( l_scripts, apex.env.APEX_FILES);
   }
 
   /*
    * show all in-/output-items for the JSON-region
   */
-  function showFields(){
+  function showFields(itemtypes){
     apex.debug.trace(">>jsonRegion.showFields");
     let l_generated = generateRegion(pOptions.schema, gData, null, pOptions.dataitem, 0, false, true);
+    let l_html = l_generated.html;
+    if(apex.env.APEX_VERSION <'22.2'){
+      l_html += loadRequiredFiles221(itemtypes);
+    }
         // attach HTML to region
-    $("#"+pRegionId).html(l_generated.html);
+    $("#"+pRegionId).html(l_html);
     apex.debug.trace("<<jsonRegion.showFields");
   }
 
@@ -2155,9 +2179,7 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
     apex.debug.trace(">>jsonRegion.refresh");
     apex.debug.trace('jsonRegion.refresh', 'data', newItem, gData);
 
-    showFields();
     await richtextHack();
-
 
 //        // attach the fields to the generated UI
     attachObject(pOptions.dataitem, '', pOptions.schema, pOptions.readonly, gData, newItem);
@@ -2236,21 +2258,6 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
   }
 
   /*
-   * create the region and attach default handlers
-  */
-  function createRegion(){
-    apex.debug.trace(">>createRegion");
-    // if reagion already exists destroy it first
-    if(apex.region.isRegion(pRegionId)) {
-      apex.debug.trace('DESTROY REGION', pRegionId);
-      apex.region.destroy(pRegionId);
-    }
-    apex.region.create( pRegionId, callbacks);
-    apex.item.attach($('#' + pRegionId));
-    apex.debug.trace("<<createRegion");   
-  }
-
-  /*
    * adjust the schema
   */
   function adjustOptions(options){
@@ -2303,15 +2310,36 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
     // adjust differences in 
   gData = reformatValues(pOptions.schema, gData, true);
 
+    // show the UI-fields
 
-  await loadRequiredFiles();
-  apex.debug.trace('required files are loaded');
+  let l_itemtypes = null;
+  l_itemtypes = getItemtypes(pOptions.schema, l_itemtypes);
 
-  await refresh(newItem);
+  showFields(l_itemtypes); 
+  
+    // start here all stuff wihich runs async
+  (async function(){
+  /*
+   * create the region and attach default handlers
+  */
+    function createRegion(){
+      apex.debug.trace(">>createRegion");
+      // if reagion already exists destroy it first
+      if(apex.region.isRegion(pRegionId)) {
+        apex.debug.trace('DESTROY REGION', pRegionId);
+        apex.region.destroy(pRegionId);
+      }
+      apex.region.create( pRegionId, callbacks);
+      apex.item.attach($('#' + pRegionId));
+      apex.debug.trace("<<createRegion");   
+    }
 
-  apex.debug.info('json-region', pRegionId, pName, pOptions, gData);
- 
-  const callbacks = {
+    apex.debug.trace('required files loding...');
+    await loadRequiredFiles(l_itemtypes);
+    apex.debug.trace('required files loaded');
+    await refresh(newItem);
+
+    const callbacks = {
         // Callback for refreshing of the JSON-region, is called by APEX-refresh
       refresh: function() {
         apex.debug.trace('>>callback.refresh: ', pRegionId, pAjaxIdentifier, pOptions, gData);
@@ -2328,9 +2356,11 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
                 pOptions = adjustOptions(pOptions);
                 pOptions.schema = propagateRefs(pOptions.schema);
                 propagateProperties(pOptions.schema, 0, pOptions.readonly, false, pOptions.keepAttributes, false);
-                await loadRequiredFiles();
-                apex.debug.trace(pOptions);
-                showFields();
+                let l_itemtypes = null;
+                l_itemtypes = getItemtypes(pOptions.schema, l_itemtypes);
+                apex.debug.trace('pOptions:', pOptions);
+                showFields(l_itemtypes);
+                await loadRequiredFiles(l_itemtypes);
                 await richtextHack();
                 attachObject(pOptions.dataitem, '', pOptions.schema, pOptions.readonly, gData, l_newitem);
                 apexHacks();
@@ -2370,34 +2400,35 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
         $('#' + pRegionId + ' a-rich-text-editor').removeAttr('name');      
         apex.debug.trace("<<jsonRegion.submit");
       }
-  };
+    };
 
-  apex.jQuery(apex.gPageContext$).bind( "apexbeforepagesubmit", function() {
-    callbacks.beforeSubmit();
-  });
-  apex.jQuery( apex.gPageContext$ ).on( "apexpagesubmit", function() {
-    callbacks.submit();
-  });
-  apex.jQuery( window ).on( "apexbeforerefresh", function() {
-    apex.debug.trace('EVENT:', 'apexbeforerefresh');
-  });
-  apex.jQuery( window ).on( "apexafterrefresh", function() {
-    apex.debug.trace('EVENT:', 'apexafterrefresh');
-  });
+    apex.jQuery(apex.gPageContext$).bind( "apexbeforepagesubmit", function() {
+      callbacks.beforeSubmit();
+    });
+    apex.jQuery( apex.gPageContext$ ).on( "apexpagesubmit", function() {
+      callbacks.submit();
+    });
+    apex.jQuery( window ).on( "apexbeforerefresh", function() {
+      apex.debug.trace('EVENT:', 'apexbeforerefresh');
+    });
+    apex.jQuery( window ).on( "apexafterrefresh", function() {
+      apex.debug.trace('EVENT:', 'apexafterrefresh');
+    });
 
-  apex.jQuery( window ).on( "apexreadyend", function( e ) {
-    apex.debug.trace('EVENT:', 'apexreadyend');
-  });
+    apex.jQuery( window ).on( "apexreadyend", function( e ) {
+      apex.debug.trace('EVENT:', 'apexreadyend');
+    });
 
-  apex.jQuery( window ).on( "apexwindowresized", function( event ) {
-    apex.debug.trace('EVENT:', 'apexwindowresized');
-  });
+    apex.jQuery( window ).on( "apexwindowresized", function( event ) {
+      apex.debug.trace('EVENT:', 'apexwindowresized');
+    });
 
-  $('#' + pRegionId).ready(function() {
-    apex.debug.trace('EVENT:', 'JQuery ready');
-    setObjectValues(pOptions.dataitem, '', pOptions.schema, pOptions.readonly, gData);
-  });
+    $('#' + pRegionId).ready(function() {
+      apex.debug.trace('EVENT:', 'JQuery ready');
+      setObjectValues(pOptions.dataitem, '', pOptions.schema, pOptions.readonly, gData);
+    });
+    createRegion();
+  })();
 
-  createRegion();
   apex.debug.trace("<<initJsonRegion");  
 }
