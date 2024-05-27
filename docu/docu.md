@@ -36,6 +36,8 @@ In addition the keyword **const** for a constant value is accepted.
       "prop7":  { "type": "string", "format": "date"},
       "prop8":  { "type": "string", "format": "date-time"},
       "prop8":  { "type": "string", "format": "time"},
+      "email":  { "type": "string", "format": "email"},
+      "uri":    { "type": "string", "format": "uri"},
       "image":  { "type": "string", "contentEncoding": "base64", "contentMediaType": "image/png"},
       "prop9":  { "$ref": "#/$defs/id"},
       "prop10": { "$ref": "#/$defs/address"},
@@ -134,21 +136,26 @@ Currently supported are
       "default": "abc", 
       "apex": {"newRow": true, "colSpan": 3, "lines": 5, "label": "your label"}
     },
-    "prop4": {
+    "image": {
+      "type":   "string",
+      "format": "uri", 
+      "apex": {"itemtype": "image"}
+    },
+    "prop5": {
       "type": "string",
       "readOnly": true,  
       "enum": ["val1", "val2", ...], 
       "apex": {"itemtype": "radio", "enum": {"val1": "disp1", "val2": "disp2",...}, "direction": "horizontal"}
     },
-    "prop5": {
+    "prop6": {
       "type": "array",
       "items": {"type": "string", 
                 "enum": ["val1", "val2", ...]},
       "apex":  {"itemtype": "combobox"} 
     },
-    "prop6": {"type": null},
-    "prop7": ["const": "const string"],
-    "prop8": {"type": "string", "apex": {"itemtype": "qrcode"}}
+    "prop7": {"type": null},
+    "prop8": ["const": "const string"],
+    "prop9": {"type": "string", "apex": {"itemtype": "qrcode"}}
   ...
   },
   "required": ["prop1", "pro2", ...]
@@ -211,6 +218,7 @@ For example JSON-data has **"enum": ["a", "b", "c"]**, so the **"apex": {"enum":
   - **starrating** uses for the numeric types **integer** and **number** stars to enter the value. The property **maximum** (which also defines in JSON-schema the max value for the item) is used for the number of displayed stars.
   - **checkbox** use checkboxes for the values of an **array** of **string** with an **enum**. 
   - **radio** use a radio group for the values of an **enum** (default is a selectlist).
+  - **image** use the string as an URL for an image (**format** must be **uri** too).
   - **combobox** to support a combobox with **chips** for an **array** of **string** with an **enum** (for APEX >=23.2)
   - **richtext** to support a textarea with a richtext-editor (for APEX >=23.2). Use **collspan the use expand the columns, so that the iconbar of the richtext-editor fits  
   - **qrcode** will display (the item will be readonly) a **string** as qrcode (for APEX >= 23.2).

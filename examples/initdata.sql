@@ -510,6 +510,11 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('test-image-1',
       "contentEncoding": "base64",
       "contentMediaType": "image/png"
     },
+    "image_url": {
+      "type": "string",
+      "format": "uri",
+      "apex": {"itemtype": "image"}
+    },
     "qrcode": { 
       "type": "string",
       "apex": {"itemtype": "qrcode"}
@@ -744,6 +749,11 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('test-readonly-
             "type": "string",
             "contentEncoding": "base64",
             "contentMediaType": "image/png"
+          },
+          "image_url": {
+            "type": "string",
+            "format": "uri",
+            "apex": {"itemtype": "image"}
           },
           "qrcode": { 
             "type": "string",
