@@ -76,6 +76,7 @@ FUNCTION render_region(p_region              IN apex_plugin.t_region,
                        p_is_printer_friendly IN BOOLEAN)
   RETURN apex_plugin.t_region_render_result IS
   -- plugin attributes
+  l_apex_version        apex_release.version_no%TYPE;
   l_result              apex_plugin.t_region_render_result;
   l_name                p_region.name%TYPE         := p_region.name;
   l_dataitem            p_region.source%TYPE       := UPPER(NVL(p_region.attribute_10, p_region.source));
@@ -96,6 +97,7 @@ FUNCTION render_region(p_region              IN apex_plugin.t_region,
   l_readonly    BOOLEAN;
 BEGIN
   apex_plugin_util.debug_region(p_plugin => p_plugin, p_region => p_region, p_is_printer_friendly =>true);
+  SELECT VERSION_NO INTO l_apex_version FROM APEX_RELEASE;
   BEGIN
     IF(l_query IS NOT NULL) THEN -- dynamic json-schema from configured query
       l_schema:=readSchema(l_query);  
@@ -145,7 +147,9 @@ BEGIN
          apex_javascript.add_attribute('hide',           l_hide) || 
          apex_javascript.add_attribute('removeNulls',    l_removenulls) || 
          apex_javascript.add_attribute('template',       l_template) || 
-         apex_javascript.add_attribute('schema',         l_schema, false,false) ||
+         apex_javascript.add_attribute('schema',         l_schema) ||
+         apex_javascript.add_attribute('apex_files',     '#APEX_FILES#') ||
+         apex_javascript.add_attribute('apex_version',   l_apex_version, false,false) ||
                                 '});'
   );                                 
   RETURN l_result;

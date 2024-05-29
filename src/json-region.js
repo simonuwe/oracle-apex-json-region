@@ -5,8 +5,7 @@
 */
 
 // for Oracle < 21.1
-apex.env             = apex.env             || { APEX_FILES: '/i/', APEX_VERSION: '21.1.0'};
-apex.libVersions     = apex.libVersions     || {oraclejet: '9.1.0'};
+// apex.env does not not exists, apex.locale only partially
 apex.locale.toNumber = apex.locale.toNumber || function(pValue, pFormat) { 
   pValue = ('' + pValue).replace(apex.locale.getCurrency(), '');  // remove currency $€...
   pValue = ('' + pValue).replace(apex.locale.getISOCurrency(), ''); // remove EUR/USD/...
@@ -186,12 +185,18 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
   const C_APEX_TEMPLATE_LABEL_ABOVE    = 'above';
   const C_APEX_TEMPLATE_LABEL_FLOATING = 'floating';
 
+  const C_APEX_VERSION_2002 = "20.2"
+  const C_APEX_VERSION_2102 = "21.2"
+  const C_APEX_VERSION_2201 = "22.1"
+  const C_APEX_VERSION_2202 = "22.2"
+  const C_APEX_VERSION_2302 = "23.2"
+
                                                    // Extended Oracle types 
   const C_ORACLE_TIMESTAMP  = 'timestamp';      
 
     // mapping from file-extionsions like .js to html-tags required to opad the file
   const cMapType = {
-    "script": {tag: "script", rel: null,         attr: "src",  prefix: "?v=" + apex.env.APEX_VERSION, type: "text/javascript"},
+    "script": {tag: "script", rel: null,         attr: "src",  prefix: "?v=" + pOptions.apex_version, type: "text/javascript"},
     "css":    {tag: "link",   rel: "stylesheet", attr: "href", prefix: "",                            type: "text/css"}
   };
 
@@ -529,17 +534,17 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
           case C_JSON_STRING:
             switch(schema.format){
               case C_JSON_FORMAT_DATE:
-                if(apex.env.APEX_VERSION>='22.2.0'){
+                if(pOptions.apex_version>=C_APEX_VERSION_2202){
                   l_value = apex.date.format(apex.date.parse(value,'YYYY-MM-DD'), gDateFormat);
                 }
               break;
               case C_JSON_FORMAT_DATETIME:
-                if(apex.env.APEX_VERSION<'22.1.0'){
+                if(pOptions.apex_version<C_APEX_VERSION_2201){
                   value = value.replace('T', ' '); // except datetime with " " or "T" between date and time, APEX<22.1 " " delimiter
                 } else {
                   value = value.replace(' ', 'T'); // except datetime with " " or "T" between date and time  APEX> =22.1.0 "T" delimiter
                 }
-                if(apex.env.APEX_VERSION>='22.2.0'){
+                if(pOptions.apex_version>=C_APEX_VERSION_2202){
                   l_value = apex.date.format(apex.date.parse(value,'YYYY-MM-DDTHH24:MI'), gDateFormat + ' ' + gTimeFormat);
                 } else {
                   l_value = value;
@@ -612,7 +617,7 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
     schema.apex = schema.apex || {};
     let item = schema.items||{};
     if(Array.isArray(item.enum)){  //[C_JSON_STRING, C_JSON_INTEGER, C_JSON_NUMBER].includes(item.type)){
-      if(apex.env.APEX_VERSION >='23.2.0' && (schema.apex.itemtype == C_APEX_COMBO || (item.apex && item.apex.itemtype == C_APEX_COMBO))){
+      if(pOptions.apex_version >=C_APEX_VERSION_2302 && (schema.apex.itemtype == C_APEX_COMBO || (item.apex && item.apex.itemtype == C_APEX_COMBO))){
         apex.item.create(dataitem, {item_type: 'combobox'});
       } else {
         apex.widget.checkboxAndRadio('#'+ dataitem,'checkbox');
@@ -721,7 +726,7 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
         }
       }
       if(!schema.readOnly || [C_APEX_QRCODE].includes(schema.apex.itemtype)){
-        if(apex.env.APEX_VERSION>='22.2.0' || ( 
+        if(pOptions.apex_version>=C_APEX_VERSION_2202 || ( 
              ![C_JSON_FORMAT_DATETIME, C_JSON_FORMAT_DATE].includes(schema.format) &&
              ![C_APEX_STARRATING].includes(schema.apex.itemtype)
            )
@@ -1296,9 +1301,9 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
     }
 
         // set apex.formats
-    if(apex.env.APEX_VERSION <'23.2'){ // check for new itemtype in old releases, remove them and log error
+    if(pOptions.apex_version <C_APEX_VERSION_2302){ // check for new itemtype in old releases, remove them and log error
       if([C_APEX_QRCODE, C_APEX_RICHTEXT, C_APEX_COMBO, ].includes(schema.apex.itemtype)){
-        logSchemaError('itemtype not supported in APEX-version', schema.apex.itemtype, apex.env.APEX_VERSION);
+        logSchemaError('itemtype not supported in APEX-version', schema.apex.itemtype, pOptions.apex_version);
         if(schema.apex.itemtype == C_APEX_RICHTEXT){  // use textarea
           schema.apex.itemtype = C_APEX_TEXTAREA;
         } else {
@@ -1553,7 +1558,7 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
 `};
         break;
         case C_JSON_FORMAT_DATE:
-          if(apex.env.APEX_VERSION >='22.2.0'){
+          if(pOptions.apex_version >=C_APEX_VERSION_2202){
             l_generated = {
               items: 1,
               wrappertype: 'apex-item-wrapper--date-picker-apex apex-item-wrapper--date-picker-apex-popup',
@@ -1566,7 +1571,7 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
   </button>
 </a-date-picker>
 `};
-          } else if(apex.env.APEX_VERSION >='21.2'){
+          } else if(pOptions.apex_version >=C_APEX_VERSION_2102){
             l_generated = {
               itmes: 1,
               wrappertype: 'apex-item-wrapper apex-item-wrapper--date-picker-jet',
@@ -1585,7 +1590,7 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
           }
         break;
         case C_JSON_FORMAT_DATETIME:
-          if(apex.env.APEX_VERSION >='22.2.0'){
+          if(pOptions.apex_version >=C_APEX_VERSION_2202){
             l_generated = {
               itmes: 1,
               wrappertype: 'apex-item-wrapper--date-picker-apex apex-item-wrapper--date-picker-apex-popup',
@@ -1598,7 +1603,7 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
   </button>
 </a-date-picker>
 `};
-          } else if(apex.env.APEX_VERSION >='21.2'){
+          } else if(pOptions.apex_version >=C_APEX_VERSION_2102){
             l_generated = {
               items: 1,
               wrappertype: 'apex-item-wrapper apex-item-wrapper--date-picker-jet',
@@ -1780,7 +1785,7 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
       if( Array.isArray(item.enum)){  // when there is an enum, this array for a multiselection
         if([C_JSON_STRING, C_JSON_INTEGER, C_JSON_NUMBER].includes(item.type)){
           l_generated.items =1;
-          if(apex.env.APEX_VERSION >='23.2.0' && (schema.apex.itemtype==C_APEX_COMBO || (item.apex && item.apex.itemtype==C_APEX_COMBO))){
+          if(pOptions.apex_version >=C_APEX_VERSION_2302 && (schema.apex.itemtype==C_APEX_COMBO || (item.apex && item.apex.itemtype==C_APEX_COMBO))){
             l_generated = generateForCombo(item, data, prefix, name, startend, newItem);
           } else {
             l_generated =  generateForSelect(item, data, prefix, name, startend, C_APEX_CHECKBOX, schema.apex);
@@ -2068,7 +2073,7 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
       if(l_generated.wrappertype){ // input items is generated
         let label = generateLabel(name, schema);
         let l_error = '';
-        if(apex.env.APEX_VERSION>='22.1.0') { 
+        if(pOptions.apex_version>=C_APEX_VERSION_2201) { 
           l_error = `
 <div class="t-Form-itemAssistance">
   <span id="#ID#_error_placeholder" class="a-Form-error u-visible" data-template-id="#DATATEMPLATE#"></span>
@@ -2226,12 +2231,9 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
     let l_html ='';
     apex.debug.trace('>>jsonRegion.loadRequiredFiles221', itemtypes);
     if(itemtypes.format.date || itemtypes.format["date-time"]){  //HACK for APEX <22.2, here an old datepicker is used
-//      l_html += '<link rel="stylesheet" href="' + apex.env.APEX_FILES + 'libraries/oraclejet/' + apex.libVersions.oraclejet +  '/css/libs/oj/v' + apex.libVersions.oraclejet +  '/redwood/oj-redwood-notag-min.css" type="text/css"/>';
-//      l_html += '<script src="' + apex.env.APEX_FILES + 'libraries/oraclejet/' + apex.libVersions.oraclejet +  '/js/libs/require/require.js"></script>';
-//      l_html += '<script src="' + apex.env.APEX_FILES + 'libraries/apex/minified/requirejs.jetConfig.min.js"></script>';
-      l_html += '<script src="' + apex.env.APEX_FILES + 'libraries/apex/minified/jetCommonBundle.min.js"></script>';
-      if(apex.env.APEX_VERSION>='22.1'){ // apex <22.1 has even older datepicker
-        l_html += '<script src="' + apex.env.APEX_FILES + 'libraries/apex/minified/jetDatePickerBundle.min.js"></script>';
+      l_html += '<script src="' + pOptions.apex_files + 'libraries/apex/minified/jetCommonBundle.min.js"></script>';
+      if(pOptions.apex_version>=C_APEX_VERSION_2201){ // apex <22.1 has even older datepicker
+        l_html += '<script src="' + pOptions.apex_files + 'libraries/apex/minified/jetDatePickerBundle.min.js"></script>';
       }
     }
     apex.debug.trace('<<jsonRegion.loadRequiredFiles221', l_html);
@@ -2247,7 +2249,7 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
     apex.debug.trace(">>jsonRegion.loadRequiredFiles", itemtypes);
     let l_scripts = [];
 
-    if(apex.env.APEX_VERSION >='23.2'){  // new Featurs for 23.2
+    if(pOptions.apex_version >=C_APEX_VERSION_2302){  // new Featurs for 23.2
       if(!customElements.get('a-combobox')  && itemtypes.itemtype.combobox){ // combobox is used, so load files for new combobox
         l_scripts.push('libraries/apex/minified/item.Combobox.min.js');
       }
@@ -2269,7 +2271,7 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
     }
 
     apex.debug.trace("<<jsonRegion.loadRequiredFiles");
-    return getFiles( l_scripts, apex.env.APEX_FILES);
+    return getFiles( l_scripts, pOptions.apex_files);
   }
 
   /*
@@ -2279,13 +2281,13 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
     apex.debug.trace(">>jsonRegion.showFields");
     let l_generated = generateRegion(pOptions.schema, gData, null, pOptions.dataitem, 0, false, true);
     let l_html = l_generated.html;
-    if(apex.env.APEX_VERSION <'22.2'){
+    if(pOptions.apex_version <C_APEX_VERSION_2202){
       l_html += loadRequiredFiles221(itemtypes);
     }
 
 /*
-    if(apex.env.APEX_VERSION >='23.2'){
-      l_html += '<script src="' + apex.env.APEX_FILES + 'libraries/markedjs/' + apex.libVersions.markedJs + '/marked.min.js"></script>';
+    if(pOptions.apex_version >=C_APEX_VERSION_2302){
+      l_html += '<script src="' + pOptions.apex_files + 'libraries/markedjs/' + apex.libVersions.markedJs + '/marked.min.js"></script>';
     }
 */
         // attach HTML to region
