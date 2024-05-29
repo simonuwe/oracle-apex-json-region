@@ -247,7 +247,7 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
            break;
            default:
              if(data){  // null is OK
-               logSchemaError('unknown datatype %s: %s', typeof data, data);
+               logSchemaError('unknown datatype', typeof data, data);
              }
              l_type = C_JSON_STRING;  // continue as a string
         }
@@ -674,7 +674,7 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
     switch(schema.type){
     case null:
     case undefined:
-      logSchemaError('missing "type" at "%s"', dataitem);
+      logSchemaError('missing "type" at', dataitem);
     break;
     case C_JSON_OBJECT:
       if(typeof schema.properties == 'object'){
@@ -794,7 +794,7 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
     switch(schema.type){
     case null:
     case undefined:
-      logSchemaError('missing "type" at "%s"', dataitem);
+      logSchemaError('missing "type" at ', dataitem);
     break;
     case C_JSON_OBJECT:
       if(typeof schema.properties == 'object'){
@@ -816,21 +816,21 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
         switch (schema.format){
         case C_JSON_FORMAT_DATE:
         case C_JSON_FORMAT_DATETIME:
-          if(apex.env.APEX_VERSION<'22.1.0'){
+          if(apex.widget.datepicker){
             apex.widget.datepicker('#'+ dataitem, { 
                                                   "buttonImageOnly":false,
                                                   "buttonText":"\u003Cspan class=\u0022a-Icon icon-calendar\u0022\u003E\u003C\u002Fspan\u003E\u003Cspan class=\u0022u-VisuallyHidden\u0022\u003EPopup Calendar: Created At\u003Cspan\u003E",
-                                                  "showTime":  schema.format== C_JSON_FORMAT_DATETIME,
-                                                  "time24h": true,
-                                                  "defaultDate":new Date(),
+                                                  "showTime":        schema.format== C_JSON_FORMAT_DATETIME,
+                                                  "time24h":         true,
+                                                  "defaultDate":     new Date(),
                                                   "showOn":"button",
-                                                  "showOtherMonths":false,
-                                                  "changeMonth":false,
-                                                  "changeYear":false,
+                                                  "showOtherMonths": true,
+                                                  "changeMonth":     true,
+                                                  "changeYear":      true,
                                                   "minDate": schema.minimum?new Date(schema.minimum):null,
                                                   "maxDate": schema.maximum?new Date(schema.maximum):null
                                                 },
-                                                schema.apex.format, // + ( schema.format== C_JSON_FORMAT_DATETIME?" HH:ii": ""),
+                                                schema.apex.format,
                                                 apex.locale.getLanguage());
             apex.jQuery('#'+ dataitem,).next('button').addClass('a-Button a-Button--calendar');
           }
@@ -1277,10 +1277,10 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
         } else {  // plain string, check formats
           switch(schema.format){
            case C_JSON_FORMAT_DATE:
-             schema.apex.format = (schema.apex.format?schema.apex.format:gDateFormat);
+             schema.apex.format = schema.apex.format || gDateFormat;
            break;
            case C_JSON_FORMAT_DATETIME:
-             schema.apex.format = (schema.apex.format?schema.apex.format:(gDateFormat + ' ' + gTimeFormat));
+             schema.apex.format = schema.apex.format || (gDateFormat + ' ' + gTimeFormat);
            break;
            case C_JSON_FORMAT_TIME:
              schema.apex.format = gTimeFormat;
@@ -1298,7 +1298,7 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
         // set apex.formats
     if(apex.env.APEX_VERSION <'23.2'){ // check for new itemtype in old releases, remove them and log error
       if([C_APEX_QRCODE, C_APEX_RICHTEXT, C_APEX_COMBO, ].includes(schema.apex.itemtype)){
-        logSchemaError('itemtype "%s" not supported in "%s"', schema.apex.itemtype, apex.env.APEX_VERSION);
+        logSchemaError('itemtype not supported in APEX-version', schema.apex.itemtype, apex.env.APEX_VERSION);
         if(schema.apex.itemtype == C_APEX_RICHTEXT){  // use textarea
           schema.apex.itemtype = C_APEX_TEXTAREA;
         } else {
@@ -1532,7 +1532,7 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
         if([C_APEX_SELECT, C_APEX_RADIO].includes(schema.apex.itemtype)){
           l_generated = generateForSelect(schema, data, prefix, name, startend, schema.apex.itemtype, schema.apex);
         } else {
-          logSchemaError('enum not supported for %s', schema.apex.itemtype);  
+          logSchemaError('enum not supported for', schema.apex.itemtype);  
         }
       } else {
         switch(schema.format){
@@ -1571,7 +1571,7 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
               itmes: 1,
               wrappertype: 'apex-item-wrapper apex-item-wrapper--date-picker-jet',
               html: `
-<oj-input-date id="#ID#" #REQUIRED# class="apex-jet-component apex-item-datepicker-jet oj-inputdatetime-date-only oj-component oj-inputdatetime oj-form-control oj-text-field"  #MIN# #MAX# data-format="#FORMAT#" data-maxlength="255" data-name="#ID#" data-oracle-date-value="#VALUE#" data-size="32" data-valid-example="#EXAMPLE#" date-picker.change-month="select" date-picker.change-year="select" date-picker.days-outside-month="visible" date-picker.show-on="focus" date-picker.week-display="none" display-options.converter-hint="none" display-options.messages="none" display-options.validator-hint="none" time-picker.time-increment="00:15:00:00" translations.next-text="Next" translations.prev-text="Previous" value="#VALUE#">
+<oj-input-date id="#ID#" #REQUIRED# class="apex-jet-component apex-item-datepicker-jet oj-inputdatetime-date-only oj-component oj-inputdatetime oj-form-control oj-text-field"  #MIN# #MAX# data-format="#FORMAT#"  data-jet-pattern="#FORMAT#" data-maxlength="255" data-name="#ID#" data-oracle-date-value="#VALUE#" data-size="32" data-valid-example="#EXAMPLE#" date-picker.change-month="select" date-picker.change-year="select" date-picker.days-outside-month="visible" date-picker.show-on="focus" date-picker.week-display="none" display-options.converter-hint="none" display-options.messages="none" display-options.validator-hint="none" time-picker.time-increment="00:15:00:00" translations.next-text="Next" translations.prev-text="Previous" value="#VALUE#">
 </oj-input-date>
 `};
           } else {
@@ -1603,7 +1603,7 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
               items: 1,
               wrappertype: 'apex-item-wrapper apex-item-wrapper--date-picker-jet',
               html: `
-<oj-input-date-time id="#ID#" #REQUIRED# class="apex-jet-component apex-item-datepicker-jet oj-inputdatetime-date-time oj-component oj-inputdatetime oj-form-control oj-text-field" #MIN# #MAX# data-format="#FORMAT#" data-maxlength="255" data-name="#ID#" data-oracle-date-value="#VALUE#" data-size="32" data-valid-example="#EXAMPLE#" date-picker.change-month="select" date-picker.change-year="select" date-picker.days-outside-month="visible" date-picker.show-on="focus" date-picker.week-display="none" display-options.converter-hint="none" display-options.messages="none" display-options.validator-hint="none" translations.next-text="Next" translations.prev-text="Previous" value="#VALUE#">
+<oj-input-date-time id="#ID#" #REQUIRED# class="apex-jet-component apex-item-datepicker-jet oj-inputdatetime-date-time oj-component oj-inputdatetime oj-form-control oj-text-field" #MIN# #MAX# data-format="#FORMAT#"  data-jet-pattern="#FORMAT#" data-maxlength="255" data-name="#ID#" data-oracle-date-value="#VALUE#" data-size="32" data-valid-example="#EXAMPLE#" date-picker.change-month="select" date-picker.change-year="select" date-picker.days-outside-month="visible" date-picker.show-on="focus" date-picker.week-display="none" display-options.converter-hint="none" display-options.messages="none" display-options.validator-hint="none" translations.next-text="Next" translations.prev-text="Previous" value="#VALUE#">
 </oj-input-date-time>
 `};
           } else {
@@ -2061,14 +2061,14 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
         case 'null':
         break;    
         default:
-          logSchemaError('"type": "%s" not implemented', schema.type);
+          logSchemaError('"type": not implemented', schema.type);
         break;
       }
 
       if(l_generated.wrappertype){ // input items is generated
         let label = generateLabel(name, schema);
         let l_error = '';
-        if(apex.env.APEX_VERSION>='21.2.0') { 
+        if(apex.env.APEX_VERSION>='22.1.0') { 
           l_error = `
 <div class="t-Form-itemAssistance">
   <span id="#ID#_error_placeholder" class="a-Form-error u-visible" data-template-id="#DATATEMPLATE#"></span>
@@ -2225,12 +2225,12 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
   function loadRequiredFiles221(itemtypes){
     let l_html ='';
     apex.debug.trace('>>jsonRegion.loadRequiredFiles221', itemtypes);
-    if(itemtypes.format.date || itemtypes.format["date-time"]){  //HACK for APEX <22.2, here and old datepicker is used
-      l_html += '<link rel="stylesheet" href="' + apex.env.APEX_FILES + 'libraries/oraclejet/' + apex.libVersions.oraclejet +  '/css/libs/oj/v' + apex.libVersions.oraclejet +  '/redwood/oj-redwood-notag-min.css" type="text/css"/>';
-      l_html += '<script src="' + apex.env.APEX_FILES + 'libraries/oraclejet/' + apex.libVersions.oraclejet +  '/js/libs/require/require.js"></script>';
-      l_html += '<script src="' + apex.env.APEX_FILES + 'libraries/apex/minified/requirejs.jetConfig.min.js"></script>';
+    if(itemtypes.format.date || itemtypes.format["date-time"]){  //HACK for APEX <22.2, here an old datepicker is used
+//      l_html += '<link rel="stylesheet" href="' + apex.env.APEX_FILES + 'libraries/oraclejet/' + apex.libVersions.oraclejet +  '/css/libs/oj/v' + apex.libVersions.oraclejet +  '/redwood/oj-redwood-notag-min.css" type="text/css"/>';
+//      l_html += '<script src="' + apex.env.APEX_FILES + 'libraries/oraclejet/' + apex.libVersions.oraclejet +  '/js/libs/require/require.js"></script>';
+//      l_html += '<script src="' + apex.env.APEX_FILES + 'libraries/apex/minified/requirejs.jetConfig.min.js"></script>';
       l_html += '<script src="' + apex.env.APEX_FILES + 'libraries/apex/minified/jetCommonBundle.min.js"></script>';
-      if(apex.env.APEX_VERSION>='21.2'){ // apex <21.2 has even older datepicker
+      if(apex.env.APEX_VERSION>='22.1'){ // apex <22.1 has even older datepicker
         l_html += '<script src="' + apex.env.APEX_FILES + 'libraries/apex/minified/jetDatePickerBundle.min.js"></script>';
       }
     }

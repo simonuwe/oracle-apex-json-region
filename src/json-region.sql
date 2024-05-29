@@ -122,6 +122,7 @@ BEGIN
   --l_schema    := apex_escape.json(l_schema);
   l_readonly  := APEX_REGION.IS_READ_ONLY;
 
+  APEX_JAVASCRIPT.ADD_REQUIREJS();
 --  APEX_JAVASCRIPT.ADD_ONLOAD_CODE(
     -- execute the code directly not via add_onload_code. Hack to enable the handlers for text-/number-items
   APEX_JAVASCRIPT.ADD_INLINE_CODE (
