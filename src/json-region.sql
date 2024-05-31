@@ -149,6 +149,7 @@ BEGIN
          apex_javascript.add_attribute('template',       l_template) || 
          apex_javascript.add_attribute('schema',         l_schema) ||
          apex_javascript.add_attribute('apex_files',     '#APEX_FILES#') ||
+         apex_javascript.add_attribute('nls_date_format',V('APP_NLS_DATE_FORMAT')) ||
          apex_javascript.add_attribute('apex_version',   l_apex_version, false,false) ||
                                 '});'
   );                                 

@@ -15,15 +15,34 @@ apex.locale.toNumber = apex.locale.toNumber || function(pValue, pFormat) {
 }; 
 apex.date = apex.date||{
   parse: function(pDate, pFormat) {
-    return(pDate.replace('T', ' '));
+    let l_ret =null;
+    if(pDate.includes(' ')){  // contains time
+      pDate = pDate.replace('T', ' '); // except datetime with " " or "T" between date and time, APEX<22.1 " " delimiter
+      l_ret = $.datepicker.parseDate('dd.mm.yy', pDate);
+      l_ret = new Date(l_ret.getTime() - l_ret.getTimezoneOffset()*60000);
+      l_ret = new Date(l_ret.toISOString().substring(0,10) + ' ' + pDate.match(/[\d]{2}:[\d]{2}(:[\d]{2})?/g)[0] + 'Z');
+    } else { // date only
+      l_ret = $.datepicker.parseDate(pFormat, pDate);
+      l_ret = new Date(l_ret.getTime() - l_ret.getTimezoneOffset()*60000);
+    }
+    return(l_ret);
+    // (pDate.replace('T', ' '));
   },
   toISOString: function(pDate) { 
-    return (pDate.replace(' ', 'T'));
+    return (new Date(pDate).toISOString().substring(0,19));
   }
 };
 
 "use strict";
 
+
+/*
+    if(!name.match(/^[A-Za-z_0-9]+$/g)){ // contains some special characters and enclosed by ", replace by _
+      const l_name = name;
+      name = name.replace(/"/g,'').replace(/[^A-Za-z_0-9]/g, '_');  
+      apex.debug.error('invalid property key', l_name, 'replaced by', name);
+    }
+*/
 
 /*
  * initialize the JSON-region plugin, call form inside PL/SQL when plugin ist initialized
@@ -33,11 +52,12 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
         // get the datat-template-id for inline errors from another input field
 // console.error(JSON.stringify(pOptions));
   let gData = {};  // holds the JSON-data as an object hierarchie
-  let gDateFormat = apex.locale.getDateFormat?apex.locale.getDateFormat():'yy-mm-dd'; //'YYYY-MM-DD';
+  let gDateFormat = apex.locale.getDateFormat?apex.locale.getDateFormat():pOptions.nls_date_format.toLowerCase().replace(/yy/g,'y');
   let gTimeFormat = apex.locale.getDateFormat?"HH24:MI:SS":"HH:ii";
 
+  pOptions.apex_version = pOptions.apex_version.match(/\d+\.\d+/)[0];  // only first 2 numbers of version
   pOptions.datatemplateET = $($('.a-Form-error[data-template-id]')[0]).attr('data-template-id') || 'xx_ET';
-
+console.log(pOptions);
   /*
    *  set boolean val1 wo val2 when val1 is not set
   */
@@ -343,7 +363,7 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
   }
 
   /*
-   * fill a map thie all itemtypes used in the JSON-Schema
+   * fill a map with all itemtypes used in the JSON-Schema
   */
   function getItemtypes(schema, itemtypes){
     itemtypes = itemtypes || {type: {}, itemtype: {}, format: {}};
@@ -527,7 +547,11 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
               if(schema.apex.format){
                 l_value = apex.locale.formatNumber(l_value, schema.apex.format);
               } else {
-                l_value = apex.locale.formatNumber(l_value);
+                if(pOptions.apex_version<C_APEX_VERSION_2102){  // older than 21.2, than formatNumber does not excange seperators
+                  l_value = (''+l_value).replace('.', apex.locale.getDecimalSeparator());
+                } else {
+                  l_value = apex.locale.formatNumber(l_value);
+                }
               }
             }
           break;
@@ -536,11 +560,14 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
               case C_JSON_FORMAT_DATE:
                 if(pOptions.apex_version>=C_APEX_VERSION_2202){
                   l_value = apex.date.format(apex.date.parse(value,'YYYY-MM-DD'), gDateFormat);
+                } else if(pOptions.apex_version<C_APEX_VERSION_2201){
+                  l_value = $.datepicker.formatDate(gDateFormat, new Date(value));
                 }
               break;
               case C_JSON_FORMAT_DATETIME:
                 if(pOptions.apex_version<C_APEX_VERSION_2201){
                   value = value.replace('T', ' '); // except datetime with " " or "T" between date and time, APEX<22.1 " " delimiter
+                  value = $.datepicker.formatDate(gDateFormat, new Date(value)) + ' ' + value.match(/[\d]{2}:[\d]{2}(:[\d]{2})?/g);
                 } else {
                   value = value.replace(' ', 'T'); // except datetime with " " or "T" between date and time  APEX> =22.1.0 "T" delimiter
                 }
@@ -821,13 +848,13 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
         switch (schema.format){
         case C_JSON_FORMAT_DATE:
         case C_JSON_FORMAT_DATETIME:
-          if(apex.widget.datepicker){
+          if(pOptions.apex_version <C_APEX_VERSION_2202){
             apex.widget.datepicker('#'+ dataitem, { 
                                                   "buttonImageOnly":false,
                                                   "buttonText":"\u003Cspan class=\u0022a-Icon icon-calendar\u0022\u003E\u003C\u002Fspan\u003E\u003Cspan class=\u0022u-VisuallyHidden\u0022\u003EPopup Calendar: Created At\u003Cspan\u003E",
                                                   "showTime":        schema.format== C_JSON_FORMAT_DATETIME,
                                                   "time24h":         true,
-                                                  "defaultDate":     new Date(),
+                                                  "defaultDate":     new Date(data),
                                                   "showOn":"button",
                                                   "showOtherMonths": true,
                                                   "changeMonth":     true,
@@ -1101,7 +1128,7 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
             }
             delete(schema[C_JSON_REF]);
           } catch(e){
-            apex.debug.error('$defs not found: ', jsonpath);
+            logSchemaError('target of $ref not found: ', jsonpath);
           }
         }
       } else {
