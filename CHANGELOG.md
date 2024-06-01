@@ -1,9 +1,10 @@
-# 0.9.1 2024-05-28
+# 0.9.1 2024-05-31
 - #103 Array: add/delete row does not work for simple arrays (bug)
 - #110 APEX-22.1: datepicker broken (bug)
 - #111 configuration of CSS-classes (enhancement)
 - #112 Support of APEX 20.2 (enhancement)
 - #113 Show images for "type": "string", "format": "uri" (enhancement) 
+- #116 wrong time in "default": "NOW" (bug)
 
 ## New Features:
 - images via URL

@@ -49,10 +49,13 @@ apex.date = apex.date||{
 */
 // async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
 function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
+  const C_APEX_VERSION_2001 = "20.1"
   const C_APEX_VERSION_2002 = "20.2"
+  const C_APEX_VERSION_2101 = "21.1"
   const C_APEX_VERSION_2102 = "21.2"
   const C_APEX_VERSION_2201 = "22.1"
   const C_APEX_VERSION_2202 = "22.2"
+  const C_APEX_VERSION_2301 = "23.1"
   const C_APEX_VERSION_2302 = "23.2"
 
 
@@ -517,7 +520,8 @@ console.log(pOptions);
     apex.debug.trace(">>jsonRegion.getConstant", format, str, isDefault);
     let l_value = str;
     if((typeof(str)=='string') && (str.toUpperCase() == 'NOW')){
-      l_now = new Date().toISOString();
+      let l_now = new Date();
+      l_now = new Date(l_now - l_now.getTimezoneOffset()*60000).toISOString();
       switch(format){
       case C_JSON_FORMAT_DATE:
           l_value = l_now.substring(0,10); // apex.date.format(new Date(), 'YYYY-MM-DD');
@@ -579,18 +583,49 @@ console.log(pOptions);
           case C_JSON_STRING:
             switch(schema.format){
               case C_JSON_FORMAT_DATE:
-                if(pOptions.apex_version<C_APEX_VERSION_2201){
-                  if(pOptions.apex_version>=C_APEX_VERSION_2102){
-                    l_value = apex.date.format(apex.date.parse(value,'YYYY-MM-DD'), gDateFormat);
-                  } else if(pOptions.apex_version<C_APEX_VERSION_2201){
-                    l_value = $.datepicker.formatDate(gDateFormat, new Date(value));
-                  }
-                } else {
+                switch(pOptions.apex_version){
+                case C_APEX_VERSION_2001:
+                case C_APEX_VERSION_2002:
+                  l_value = $.datepicker.formatDate(gDateFormat, new Date(value));
+                break;
+                case C_APEX_VERSION_2101:
+                case C_APEX_VERSION_2102:
+                case C_APEX_VERSION_2202:
+                case C_APEX_VERSION_2301:
+                case C_APEX_VERSION_2302:
+                default:
+                  l_value = apex.date.format(apex.date.parse(value,'YYYY-MM-DD'), gDateFormat);
+                break;
+                case C_APEX_VERSION_2201:
+                  // keep the ISO-format
                   l_value = value;
+                break;
                 }
               break;
               case C_JSON_FORMAT_DATETIME:
-                if(pOptions.apex_version<C_APEX_VERSION_2201){                
+                switch(pOptions.apex_version){
+                case C_APEX_VERSION_2001:
+                case C_APEX_VERSION_2002:
+                case C_APEX_VERSION_2101:
+                    value = value.replace('T', ' '); // except datetime with " " or "T" between date and time, APEX<22.1 " " delimiter
+                  l_value = $.datepicker.formatDate(gDateFormat, new Date(value)) + ' ' + value.match(/[\d]{2}:[\d]{2}(:[\d]{2})?/g);
+                break;
+                case C_APEX_VERSION_2102:
+                  l_value = apex.date.format(new Date(value), gDateFormat + ' ' + gTimeFormat.replace('mm','MI').replace('HH24','').replace('HH','HH24'));
+                break;
+                case C_APEX_VERSION_2202:
+                case C_APEX_VERSION_2301:
+                case C_APEX_VERSION_2302:
+                default:
+                  l_value = apex.date.format(new Date(value), gDateFormat + ' ' + gTimeFormat);
+                break;
+                case C_APEX_VERSION_2201:
+                    // keep the ISO-format
+                  l_value = value;
+                break;
+                }
+  /*
+                if(pOptions.apex_version<C_APEX_VERSION_2301){                
                   if(pOptions.apex_version<C_APEX_VERSION_2102){
                     value = value.replace('T', ' '); // except datetime with " " or "T" between date and time, APEX<22.1 " " delimiter
                     value = $.datepicker.formatDate(gDateFormat, new Date(value)) + ' ' + value.match(/[\d]{2}:[\d]{2}(:[\d]{2})?/g);
@@ -606,6 +641,7 @@ console.log(pOptions);
                 } else {
                 l_value = value;
                 }
+*/
               break;
               case C_JSON_FORMAT_TIME:
                 l_value = value.substring(0,5);
@@ -878,7 +914,7 @@ console.log(pOptions);
         switch (schema.format){
         case C_JSON_FORMAT_DATE:
         case C_JSON_FORMAT_DATETIME:
-          if(pOptions.apex_version <C_APEX_VERSION_2201){
+          if(pOptions.apex_version <C_APEX_VERSION_2102){
             apex.widget.datepicker('#'+ dataitem, { 
                                                   "buttonImageOnly":false,
                                                   "buttonText":"\u003Cspan class=\u0022a-Icon icon-calendar\u0022\u003E\u003C\u002Fspan\u003E\u003Cspan class=\u0022u-VisuallyHidden\u0022\u003EPopup Calendar: Created At\u003Cspan\u003E",
@@ -2341,12 +2377,6 @@ console.log(pOptions);
     if(pOptions.apex_version <C_APEX_VERSION_2202){
       l_html += loadRequiredFiles221(itemtypes);
     }
-
-/*
-    if(pOptions.apex_version >=C_APEX_VERSION_2302){
-      l_html += '<script src="' + pOptions.apex_files + 'libraries/markedjs/' + apex.libVersions.markedJs + '/marked.min.js"></script>';
-    }
-*/
         // attach HTML to region
     $("#"+pRegionId).html(l_html);
     apex.debug.trace("<<jsonRegion.showFields");
@@ -2514,7 +2544,7 @@ console.log(pOptions);
       apex.debug.trace("<<createRegion");   
     }
 
-    apex.debug.trace('required files loding...');
+    apex.debug.trace('required files loading...');
     await loadRequiredFiles(l_itemtypes);
     apex.debug.trace('required files loaded');
     await refresh(newItem);

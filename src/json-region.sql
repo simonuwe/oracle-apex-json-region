@@ -124,7 +124,9 @@ BEGIN
   --l_schema    := apex_escape.json(l_schema);
   l_readonly  := APEX_REGION.IS_READ_ONLY;
 
-  APEX_JAVASCRIPT.ADD_REQUIREJS();
+$if wwv_flow_api.c_current<20231031 $then   -- apex_barcode is only available in APEX >=23.2 (20231031), so conditional compile
+    APEX_JAVASCRIPT.ADD_REQUIREJS();
+$end
 --  APEX_JAVASCRIPT.ADD_ONLOAD_CODE(
     -- execute the code directly not via add_onload_code. Hack to enable the handlers for text-/number-items
   APEX_JAVASCRIPT.ADD_INLINE_CODE (
@@ -148,7 +150,7 @@ BEGIN
          apex_javascript.add_attribute('removeNulls',    l_removenulls) || 
          apex_javascript.add_attribute('template',       l_template) || 
          apex_javascript.add_attribute('schema',         l_schema) ||
-         apex_javascript.add_attribute('apex_files',     '#APEX_FILES#') ||
+         apex_javascript.add_attribute('apex_files',     APEX_APPLICATION.G_IMAGE_PREFIX) ||
          apex_javascript.add_attribute('nls_date_format',V('APP_NLS_DATE_FORMAT')) ||
          apex_javascript.add_attribute('apex_version',   l_apex_version, false,false) ||
                                 '});'
