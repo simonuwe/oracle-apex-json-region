@@ -7,4 +7,7 @@ DROP TABLE relation_type;
 DROP TABLE object_type;
 DROP TABLE cardinality;
 
+DROP VIEW object23ai;
+DROP VIEW json23ai;
+
 exit;

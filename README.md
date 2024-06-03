@@ -87,17 +87,16 @@ This retrievs the JSON-schema for column **TAB.JSON_DATA** from the data diction
 
 - In SQL-Workshop in APEX-Oracle-Cloud you can not create JSON-Columns (trying this returns ORA-00002 invalid datatype). Here you have to use CLOB columns. 
 - When using a CLOB for the JSONs use check constraint **IS JSON(STRICT)** to enforce that the JSON is returned wth **"** enclosed keys..
-- In APEX 22.1 there is aa general issue (with plugin and without) with "**Modal Dialog** with template **Drawer**", this causes a jquery-error (looks like a datepicker issue). Without "Drawer" all work fine. 
+- In APEX 22.1 there is a general issue (with plugin and without) with "**Modal Dialog** with template **Drawer**", this causes a jquery-error (looks like a datepicker issue). Without "Drawer" all work fine. 
 
 ## Current status
-- Form only, only **simple** JSON-schema with nested objects
-- limited arrays in JSON-schema
 - only one schema in **dependentSchemas**
 - no schema composition (**AllOf**, **OneOf**, **AnyOf**)
 - only support of standard APEX-field-validation (APEX's date/date-time Javascript-validation has a Bug)
 - If JSON-data is stored in a CLOB-column use check-constraint **IS JSON(STRICT)**
 - Now with PWA support
 - support of arrays (for multiple-choice checkboces)
+- support of arrays (single property and object)
 
 ## Next steps
 - full support of arrays

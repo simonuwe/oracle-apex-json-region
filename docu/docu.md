@@ -3,7 +3,7 @@
 An Oracle-APEX-plugin that provides dynamic input items for an easy way to display and edit **JSON-data** in an APEX-application. 
 The field-items are dynamically generate based on a JSON-schema. The JSON-schema could be fixed for a page or dynamically based on a JSON-schema found by a SQL_query.
 
-Starting with **Oracle 23c** a **JSON-schema** could be used for the valition of a column with datatype **JSON**.
+Starting with **Oracle 23ai** a **JSON-schema** could be used for the valition of a column with datatype **JSON**.
 So this plugin could also use the JSON-schema of the JSON-validation to **dynamically generate items** to display and/or edit **JSON-data**. 
 In this way the field-items of an application always match with the format of your JSON-column.
 
@@ -36,6 +36,8 @@ In addition the keyword **const** for a constant value is accepted.
       "prop7":  { "type": "string", "format": "date"},
       "prop8":  { "type": "string", "format": "date-time"},
       "prop8":  { "type": "string", "format": "time"},
+      "email":  { "type": "string", "format": "email"},
+      "uri":    { "type": "string", "format": "uri"},
       "image":  { "type": "string", "contentEncoding": "base64", "contentMediaType": "image/png"},
       "prop9":  { "$ref": "#/$defs/id"},
       "prop10": { "$ref": "#/$defs/address"},
@@ -81,7 +83,7 @@ Types are
   
   The type **string** supports **base64** encoded binary data **contentEncoding** 
   for displaying **images** via **contentMediaType** in formats **png**, **jpg** or **gif** (This item will be **readonly**). 
-```
+```JSON
   { 
     "type": "string", 
     "contentEncoding": "base64", 
@@ -112,7 +114,7 @@ The Oracle23-JSON-schema-extension **extendedType** is supported too. Because **
 The json-region-plugin uses an optional extension item **"apex"** in the JSON-schema. Here APEX-specific information are specified. To get more flexible UIs the properties **"dependentRequired"**, **"dependentSchema"**, **"if"**, **"then"** and **"else"** are supported too.
 
 Currently supported are
-```
+```JSON
 { "type": "object"
   "properties": {
     "prop1": {
@@ -134,21 +136,26 @@ Currently supported are
       "default": "abc", 
       "apex": {"newRow": true, "colSpan": 3, "lines": 5, "label": "your label"}
     },
-    "prop4": {
+    "image": {
+      "type":   "string",
+      "format": "uri", 
+      "apex": {"itemtype": "image"}
+    },
+    "prop5": {
       "type": "string",
       "readOnly": true,  
       "enum": ["val1", "val2", ...], 
       "apex": {"itemtype": "radio", "enum": {"val1": "disp1", "val2": "disp2",...}, "direction": "horizontal"}
     },
-    "prop5": {
+    "prop6": {
       "type": "array",
       "items": {"type": "string", 
                 "enum": ["val1", "val2", ...]},
       "apex":  {"itemtype": "combobox"} 
     },
-    "prop6": {"type": null},
-    "prop7": ["const": "const string"],
-    "prop8": {"type": "string", "apex": {"itemtype": "qrcode"}}
+    "prop7": {"type": null},
+    "prop8": ["const": "const string"],
+    "prop9": {"type": "string", "apex": {"itemtype": "qrcode"}}
   ...
   },
   "required": ["prop1", "pro2", ...]
@@ -204,12 +211,14 @@ For example JSON-data has **"enum": ["a", "b", "c"]**, so the **"apex": {"enum":
 - **format** is used for changing the display format of a JSON-value. Currently **format** supportes only **currency** which will show **integer** and **number** values with a currency symbol and **number** with 2 decimal places and **integer** without an decimal places.
 - **placeholder** defines the placeholder shown wwhilehen field is empty.
 - **template** used for the input item values are **floating** (default), **left**, **above** and **hidden**
+- **css** defines the CSS-classes added to the form-field of the UI-item
 - **itemtype** defines which UI-item is used in the APEX-UI
   - **password** the text is not shown but a * for each character.  
   - **switch** changes the display for a **boolean** to a switch, the default is a single checkbox.
   - **starrating** uses for the numeric types **integer** and **number** stars to enter the value. The property **maximum** (which also defines in JSON-schema the max value for the item) is used for the number of displayed stars.
   - **checkbox** use checkboxes for the values of an **array** of **string** with an **enum**. 
   - **radio** use a radio group for the values of an **enum** (default is a selectlist).
+  - **image** use the string as an URL for an image (**format** must be **uri** too).
   - **combobox** to support a combobox with **chips** for an **array** of **string** with an **enum** (for APEX >=23.2)
   - **richtext** to support a textarea with a richtext-editor (for APEX >=23.2). Use **collspan the use expand the columns, so that the iconbar of the richtext-editor fits  
   - **qrcode** will display (the item will be readonly) a **string** as qrcode (for APEX >= 23.2).
@@ -284,6 +293,7 @@ Other supported configurations.
 | Name              | {"field1": {"type": "...", "apex": {"label": "Label1"}}} | use "Label1" instead of default (separate workds, 1st case upper case rest lower) |
 | Value Required    | {"type": "object", "required": ["field1", ...]} |
 | Maximum Length    | {"field1": {"type": "...", "maxLength": "---"}} |
+| CSS Classes       | {"field1": {"type": "...", "apex": {"css": "class1 class2"}}} | |
 | Format Mask       | {"field1": {"type": "...", "format": "format1"}}   |
 | Value Placeholder | {"field1": {"type": "...", "apex": {"placeholder": "placeholder"}}} |
 | Start New Row     | {"field1": {"type": "...", "apex": {"newRow": true}}} |
@@ -327,7 +337,7 @@ In **Source** enter the name for the hidden JSON-item which is used in the form
 The plugin provides in the configuration view input for configuring
 - The **Source** for the JSON-schema
   - There is **no fixed schema**. The JSON-schema is always generated based on the JSON-data. This uses "default" UI-items and will only generate UI-items for the existing properties in the JSON-data. There will not be **required** properties.
-  - A **static JSON-schema** used in the form. Starting with **Oracle 23c** a **JSON-schema** for **column-validation** is stored in the **datadictionary**. The Plugin tries to use this when the static **schema** is left empty. This keeps the schema of the JSON-column an the UI for this column in sync.  
+  - A **static JSON-schema** used in the form. Starting with **Oracle 23ai** a **JSON-schema** for **column-validation** is stored in the **datadictionary**. The Plugin tries to use this when the static **schema** is left empty. This keeps the schema of the JSON-column an the UI for this column in sync.  
   - A **dynamic JSON-schema** retrieved by a SQL-query. Make sure that the query returns a single row, disable the item when no row could be returned.
 - the **Column width** is used in the form for the width of the input items (values are 1-12)
 - When the **maxLength** of an item is above the **Textarealimit** a **textarea** is used for then string-item instead of the **text-field**.
@@ -388,26 +398,12 @@ The plugin could be found in subdirectory **plug-in** file
 **region_type_plugin_json_region_uwesimon_selfhost_eu.sql**
 Import this SQL-file in your application in the **shared-components->plugins** dialog.
 
-### Support for Oracle 23c
+### Support for Oracle 23ai
 
-Starting Oracle 23c a validation of a JSON-column with a JSON-schema via **VALIDATE '...'**  is supported. 
-When you want your APEX-application to reference this setting, you can use in the json-region-setup the query 
-
-```
-SELECT REGEXP_SUBSTR(text, '({.+})',1,1,'n',1) AS json_schema
-FROM (
-  SELECT table_name, constraint_name,
-    SYS_DBURIGEN(table_name, constraint_name, search_condition, 'text()').getclob() as text 
-  FROM user_constraints WHERE UPPER(search_condition_vc) like '%IS JSON%' AND constraint_type='C'
-) c 
-JOIN user_cons_columns cc ON(c.table_name=cc.table_name AND c.constraint_name=cc.constraint_name)
-WHERE c.table_name='TAB' AND column_name='JSON_DATA'
-```
-
-This retrievs the JSON-schema for column **TAB.JSON_DATA** from the data dictionary, as long as the constraint-text is less than 4000 char long (the full text isin a LONG-column, which is not easy to process). So changing this VALIDATE setting will automatically adopt the layout of the json-region in your APEX-UI.
+When the JSON-region is configured with "static JSON-schema" and no schema is defined the plugin tries to retrieve the JSON-schema from the JSON-VALIDATE-constraint or the a relations-duality-view.
 
 The datatype **DATE** is not native to JSON-schema, where it is documented as
-``` 
+```JSON
 {
   "type": "string",
   "format": "date",
@@ -417,11 +413,11 @@ The datatype **DATE** is not native to JSON-schema, where it is documented as
 For date/time handling JSON-schema knows the formats
 **date** (2023-10-28), **date-time** (2023-10-28T10:15:00), **time** (12:15:10.0000) and **duration** (5H10M for 5:10 hours) which implements the date/time-formats from ISO8601
 
-Oracle 23c does not implement it this way.
+Oracle 23ai does not implement it this way.
 As for the native datatye **DATE** the json formats **date** and **date-time** always result in date+time..
 Also Oracle introduced a new keyword **extendedType** for defining date/
 
-```
+```JSON
 {
   "extendedType": "date",
   ...
@@ -451,7 +447,129 @@ to the json-column, but when reading it back you will get
   ...
 } 
 ```
-This could cause some trouble when comparing "old" and "new" values.
+This could cause some trouble when comparing "old" and "new" values during saving the data.
+
+#### JSON-Validate-Constraint
+Starting Oracle 23ai a validation of a JSON-column with a JSON-schema via **VALIDATE '...'**  is supported. 
+When you want your APEX-application to reference this setting, you can use in the json-region-setup the query 
+
+```sql
+SELECT REGEXP_SUBSTR(text, '({.+})',1,1,'n',1) AS json_schema
+FROM (
+  SELECT table_name, constraint_name,
+    SYS_DBURIGEN(table_name, constraint_name, search_condition, 'text()').getclob() as text 
+  FROM user_constraints WHERE UPPER(search_condition_vc) like '%IS JSON%' AND constraint_type='C'
+) c 
+JOIN user_cons_columns cc ON(c.table_name=cc.table_name AND c.constraint_name=cc.constraint_name)
+WHERE c.table_name='TAB' AND column_name='JSON_DATA'
+```
+
+This retrievs the JSON-schema for column **TAB.JSON_DATA** from the data dictionary, as long as the constraint-text is less than 4000 char long (the full text isin a LONG-column, which is not easy to process). So changing this VALIDATE setting will automatically adopt the layout of the json-region in your APEX-UI.
+
+#### Relational-Duality-views
+
+The JSON returned from a relational-duality view contains the Oracle-specific property "_metadata", which is be ignored and not displayed by the plugin.
+
+```JSON
+{
+  "_id": 302,
+  "_metadata": {
+    "etag": "C5DD30F04DA1A6A390BFAB12B7D4F700",
+    "asof": "000000000041E32E"
+  },
+  "name":   "Ferrari",
+  "points": 43,
+  "driver": [
+    {
+      "_id":    103,
+      "name":   "Charles Leclerc",
+      "points": 25
+    },
+    {
+      "_id":    104,
+      "name":   "Carlos Sainz Jr",
+      "points": 18
+    }
+  ]
+}
+```
+The JSON-schema of a relations-duality-view could be retrievd by the query
+```sql
+      SELECT json_serialize(DBMS_JSON_SCHEMA.describe('TABLE', 'OWNER'))
+```
+The result contains some Oracle-specific extensions of a JSON-schema.
+```JSON
+{
+  "title" : "JSON23AI",
+  "dbObject" : "UWE.JSON23AI",
+  "dbObjectType" : "dualityView",
+  "dbObjectProperties" : [ "insert", "update", "delete", "check" ],
+  "type" : "object",
+  "properties" : {
+    "_id" : {
+      "extendedType" : "number",
+      "sqlScale" : 0,
+      "generated" : true,
+      "dbFieldProperties" : [ "check" ]
+    },
+    "_metadata" : {
+      "etag" : {
+        "extendedType" : "string",
+        "maxLength" : 200
+      },
+      "asof" : {
+        "extendedType" : "string",
+        "maxLength" : 20
+      }
+    },
+    "dbPrimaryKey" : [ "_id" ],
+    "name" : {
+      "extendedType" : "string",
+      "maxLength" : 255,
+      "dbFieldProperties" : [ "update", "check" ]
+    },
+    "points" : {
+      "extendedType" : "number",
+      "sqlScale" : 0,
+      "dbFieldProperties" : [ "update", "check" ]
+    },
+    "driver" : {
+      "type" : "array",
+      "items" : {
+        "type" : "object",
+        "properties" : {
+          "_id" : {
+            "extendedType" : "number",
+            "sqlScale" : 0,
+            "generated" : true,
+            "dbFieldProperties" : [ "check" ]
+          },
+          "dbPrimaryKey" : [ "_id" ],
+          "name" : {
+            "extendedType" : "string",
+            "maxLength" : 255,
+            "dbFieldProperties" : [ "update", "check" ]
+          },
+          "points" : {
+            "extendedType" : "number",
+            "sqlScale" : 0,
+            "dbFieldProperties" : [ "update" ]
+          }
+        },
+        "required" : [ "name", "points", "_id" ],
+        "additionalProperties" : false
+      }
+    }
+  },
+  "required" : [ "name", "points", "_id" ],
+  "additionalProperties" : false
+}
+```
+When generating the UI the Oracle-specific attributes with names starting with "_" are ignored. The property "dbPrimaryKey" is ignored which is unfortunately part of "properties": {...}.
+
+The "Lost Update Detection" of APEX does not work with the relational-duality-views. This is caused by the property **_metadata.asof**, which changes on each select (it's the current SCN of the database), so the checksum of the data changes per select.
+The Workarround: **switch off "Prevent Lost Updates"**
+
 
 ### Import to a APEX23.2
 

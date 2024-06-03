@@ -56,3 +56,20 @@ The script duality23ai.sql installs a simple relational-duality-view based on th
 ```
 sqlplus  username@db @duality23ai.sql
 ```
+
+## Installatopn of the DEMO-application
+
+### Import the demo application
+
+Import the application from file **json-region-demo.sql**
+
+### Upgrade application to your APEX-version
+
+When the import was successfully completed, with newer versions of APEX a button "Upgrade Application" appears. Upgrade all entries in the upgrade list here.
+Upgrade could be found at **Shared Comonents->Utilities->Upgrade Application too**.
+
+### Upgrading the theme
+
+After the installation has finished, upgrade the theme with **Shared Components->Themes->Universial Theme42->Refresh Theme**.
+Without this, the UI will not always behave/look as expected.
+When you receive an "compatibility mode" error here, upgrade the compatibility mode first, so it matches your APEX-version.  

@@ -254,6 +254,19 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('test-array-2',
 }
 ]');
 
+Insert into OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('test-array-3',q'[{ 
+  "type":"object",
+  "properties": {
+    "name": {"type": "string"},
+    "interests": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}]');
+
 Insert into OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('test-boolean-1',q'[{
   "type": "object",
   "required": ["checkbox", "bool_switch", "bool_radio", "radio", "select"],
@@ -497,6 +510,11 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('test-image-1',
       "contentEncoding": "base64",
       "contentMediaType": "image/png"
     },
+    "image_url": {
+      "type": "string",
+      "format": "uri",
+      "apex": {"itemtype": "image"}
+    },
     "qrcode": { 
       "type": "string",
       "apex": {"itemtype": "qrcode"}
@@ -732,6 +750,11 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('test-readonly-
             "contentEncoding": "base64",
             "contentMediaType": "image/png"
           },
+          "image_url": {
+            "type": "string",
+            "format": "uri",
+            "apex": {"itemtype": "image"}
+          },
           "qrcode": { 
             "type": "string",
             "apex": {"itemtype": "qrcode"}
@@ -894,6 +917,22 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('test-template-
     }
   },
   "apex": {"template": "above"}
+}]');
+
+Insert into OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('test-css-1', q'[{
+  "type":"object",
+  "apex": {"css": "class-object"},
+  "properties":{
+    "lastname": {
+      "type": "string",
+      "apex": { "css": "class-lastname" }
+    },
+    "firstname": {
+      "type": "string",
+      "apex": { "css": "class-firstname" }
+    }
+
+  }
 }]');
 
 
