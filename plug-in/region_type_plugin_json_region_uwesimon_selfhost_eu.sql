@@ -28,7 +28,7 @@ prompt APPLICATION 101 - json-region-demo
 -- Application Export:
 --   Application:     101
 --   Name:            json-region-demo
---   Date and Time:   09:01 Monday June 3, 2024
+--   Date and Time:   16:31 Monday June 3, 2024
 --   Exported By:     UWE
 --   Flashback:       0
 --   Export Type:     Component Export
@@ -307,6 +307,13 @@ wwv_flow_api.create_plugin_attr_value(
 ,p_display_sequence=>20
 ,p_display_value=>'SQL-Query'
 ,p_return_value=>'SQL-Query'
+);
+wwv_flow_api.create_plugin_attr_value(
+ p_id=>wwv_flow_api.id(7923386028854529)
+,p_plugin_attribute_id=>wwv_flow_api.id(44708531858294181)
+,p_display_sequence=>30
+,p_display_value=>'Generate Schema'
+,p_return_value=>'0'
 );
 wwv_flow_api.create_plugin_attribute(
  p_id=>wwv_flow_api.id(44709687016305798)
