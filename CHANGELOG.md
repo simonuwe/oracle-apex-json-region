@@ -1,4 +1,11 @@
-# 0.9.1 2024-05-31
+# 0.9.1 2024-06-03
+
+# New features
+- CSS-classes supported for items
+- show image for URLs pointing to images
+- Support of APEX 20.2
+
+## Fixed issues
 - #103 Array: add/delete row does not work for simple arrays (bug)
 - #110 APEX-22.1: datepicker broken (bug)
 - #111 configuration of CSS-classes (enhancement)
@@ -20,7 +27,7 @@
 - **if** with **allOf**, **anyOf** and **not**
 - Align of input-fields
 
-## Issues
+## Fixed issues
 
 
 - #106 Support of more item configurations (enhancement)

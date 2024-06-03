@@ -624,24 +624,6 @@ console.log(pOptions);
                   l_value = value;
                 break;
                 }
-  /*
-                if(pOptions.apex_version<C_APEX_VERSION_2301){                
-                  if(pOptions.apex_version<C_APEX_VERSION_2102){
-                    value = value.replace('T', ' '); // except datetime with " " or "T" between date and time, APEX<22.1 " " delimiter
-                    value = $.datepicker.formatDate(gDateFormat, new Date(value)) + ' ' + value.match(/[\d]{2}:[\d]{2}(:[\d]{2})?/g);
-                  } else {
-                    value = value.replace(' ', 'T'); // except datetime with " " or "T" between date and time  APEX> =22.1.0 "T" delimiter
-                  }
-                  l_value = value;
-                  if(pOptions.apex_version>C_APEX_VERSION_2201){
-                    l_value = apex.date.format(new Date(value), gDateFormat + ' ' + gTimeFormat);
-                  } else if(pOptions.apex_version>=C_APEX_VERSION_2102){
-                    l_value = apex.date.format(new Date(value), gDateFormat + ' ' + gTimeFormat.replace('mm','MI').replace('HH24','HH').replace('HH','HH24'));
-                  }
-                } else {
-                l_value = value;
-                }
-*/
               break;
               case C_JSON_FORMAT_TIME:
                 l_value = value.substring(0,5);
@@ -2251,12 +2233,6 @@ console.log(pOptions);
         l_generated.html += generateArrayDeleteButton(genItemname(prefix, name));
       }
     }
-/*
-          if(l_gen.items == 1) { // a simple array, so add deletebutton, for objects its already generated
-            l_generated.html += generateSeparator(schema, generateLabel(name, schema), prefix + C_DELIMITER + i, true, null) + l_gen.html;
-            l_generated.html += generateArrayDeleteButton(prefix + C_DELIMITER + i);
-          } else {
-*/
     apex.debug.trace("<<jsonRegion.generateForObject", l_generated);
     return(l_generated);
   }
