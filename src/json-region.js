@@ -1622,7 +1622,7 @@ console.log(pOptions);
             items: 1,
             wrappertype: 'apex-item-wrapper--text-field',
             html: `
-<input type="email" id="#ID#" name="#ID#" #REQUIRED# #PLACEHOLDER# #PATTERN# class="#ALIGN# text_field apex-item-text" size="32" #MINLENGTH# #MAXLENGTH# data-trim-spaces="#TRIMSPACES#" aria-describedby="#ID#_error">
+<input type="email" id="#ID#" name="#ID#" #REQUIRED# #PLACEHOLDER# #PATTERN# #TEXTCASE# class="#ALIGN# text_field apex-item-text" size="32" #MINLENGTH# #MAXLENGTH# data-trim-spaces="#TRIMSPACES#" aria-describedby="#ID#_error">
 `};
         break;
         case C_JSON_FORMAT_URI:
@@ -1630,7 +1630,7 @@ console.log(pOptions);
             items: 1,
             wrappertype: 'apex-item-wrapper--text-field',
             html: `
-<input type="url" id="#ID#" name="#ID#" #REQUIRED# #PLACEHOLDER# #PATTERN# class="#ALIGN# text_field apex-item-text" size="32" #MINLENGTH# #MAXLENGTH# data-trim-spaces="#TRIMSPACES#" aria-describedby="#ID#_error">
+<input type="url" id="#ID#" name="#ID#" #REQUIRED# #PLACEHOLDER# #PATTERN# #TEXTCASE# class="#ALIGN# text_field apex-item-text" size="32" #MINLENGTH# #MAXLENGTH# data-trim-spaces="#TRIMSPACES#" aria-describedby="#ID#_error">
 `};
         break;
         case C_JSON_FORMAT_DATE:
@@ -1710,7 +1710,7 @@ console.log(pOptions);
            items: 1,
            wrappertype: 'apex-item-wrapper--text-field',
            html: `
-<input type="text" id="#ID#" name="#ID#" #REQUIRED# #MINLENGTH# #MAXLENGTH# #PLACEHOLDER# #PATTERN# class="#ALIGN# text_field apex-item-text" size="32" data-trim-spaces="#TRIMSPACES#" aria-describedby="#ID#_error">
+<input type="text" id="#ID#" name="#ID#" #REQUIRED# #MINLENGTH# #MAXLENGTH# #PLACEHOLDER# #PATTERN# #TEXTCASE# class="#ALIGN# text_field apex-item-text" size="32" data-trim-spaces="#TRIMSPACES#" aria-describedby="#ID#_error">
 `};
           switch (schema.apex.itemtype){
           case C_APEX_PASSWORD:
@@ -1791,7 +1791,7 @@ console.log(pOptions);
                 items: 1,
                 wrappertype: 'apex-item-wrapper--number-field',
                 html: `
-<input type="text" id="#ID#" name="#ID#" #REQUIRED# #PLACEHOLDER# class="#ALIGN# number_field apex-item-text apex-item-number" size="30" #MIN# #MAX# data-format="#FORMAT#" inputmode="decimal" style="text-align:start">
+<input type="text" id="#ID#" name="#ID#" #REQUIRED# #PLACEHOLDER# class="#ALIGN# number_field apex-item-text apex-item-number" size="30" #MIN# #MAX# data-format="#FORMAT#" inputmode="decimal">
 `};
           }
         }
@@ -2196,6 +2196,7 @@ console.log(pOptions);
                                                      "ID":           genItemname(prefix, name), 
                                                      "NAME":         genItemname(prefix, name),
                                                      "LABEL":        label,
+                                                     "TEXTCASE":      schema.apex.textcase?'data-text-case="' + (''+ schema.apex.textcase).toUpperCase() +'"':'',
                                                      "FIELDTEMPLATE": l_template.container,
                                                      "LABELTEMPLATE": l_template.label,
                                                      "LABELHIDDEN":   l_template.hidden,

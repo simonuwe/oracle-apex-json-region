@@ -1,4 +1,8 @@
-# 0.9.2
+# 0.9.2 2024-06-12
+
+# New features
+- #121 auto upper/lower for text fields
+
 ## Fixed issues
 
 - #118 date format RR not working for APEX<21.2
