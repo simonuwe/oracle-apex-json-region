@@ -54,7 +54,10 @@ In addition the keyword **const** for a constant value is accepted.
     "items": {"type": "string", "enum": ["val1", "val2", ..]}
   },
   "$defs":{
-    "id"{ "type": "string", "maxLength": 30},
+    "id": { 
+      "type": "string", 
+      "maxLength": 30
+    },
     "address": {
       "type": "object",
        "required": ["zipcode", "town", "street"],
@@ -202,6 +205,7 @@ The **type** **array** is supported for multiselect checkbox-groups, the checkbo
 Optional configurations for the UI could be done with the **"apex": {...}**. The supported  properties are
 - **label** could be used in any **type**, it is used to set a specific label for the input-item.
 - **align** positions integer/number **left**, **center**, **right** in the input-item.
+- **textcase** for converting strings into **lower** or **upper**
 - **newRow** starts a new row, so the current filed will be the first i this row.
 - **textBefore** defines text with is shown in a row above the current field. This can be used for logically grouping properties. This will always start a **newRow** 
 - **lines** defines for long strings the rows used for the textarea.
@@ -261,7 +265,7 @@ The supported Identification types
 | Markdown Editor | --- |
 | Number Field | {"field1": {"type": "number"}} |
 | Password | {"field1": { "type": "string", "writeOnly": true", "apex": {"itemtype": "password"}}} | "writeOnly": true forces new password input when mandatory |
-| Percent Graph | {"field1": {"type": "number", "apex"{"itemtype": "pctgraph"}}} | Supported types "number" and integer" |
+| Percent Graph | {"field1": {"type": "number", "apex": {"itemtype": "pctgraph"}}} | Supported types "number" and integer" |
 | Popop LOV | --- |
 | QR-code: Data Type: Plain Text, Size: Default| {"field1": {"type": "string", "apex": {"itemtype": "qrcode"}}} | Support for types "string", "integer", "number" |
 | Radio Group | {"field1": {"type" "string", "enum": ["val1", "val2"], "apex": {"itemtype": "radio"}} |
@@ -290,7 +294,9 @@ Other supported configurations.
 
 | APEX-item-config  | JSON-Schema | Comment |
 |-------------------|-------------|---------|
-| Name              | {"field1": {"type": "...", "apex": {"label": "Label1"}}} | use "Label1" instead of default (separate workds, 1st case upper case rest lower) |
+| Name              | {"field1": {"type": "...", "apex": {"label": "Label1"}}} | use "Label1" instead of default (separate words, 1st case upper case rest lower) |
+| Subtype           | {"field1": {"type": "string", "format": "uri"}} | supported formats for **string** are **uri**, **email** | 
+| Textcase          | {"field1": {"type": "string", ..., "apex": {"textcase": "lower", ...}}} | supported values **lower**, **upper** |
 | Value Required    | {"type": "object", "required": ["field1", ...]} |
 | Maximum Length    | {"field1": {"type": "...", "maxLength": "---"}} |
 | CSS Classes       | {"field1": {"type": "...", "apex": {"css": "class1 class2"}}} | |
@@ -571,7 +577,7 @@ The "Lost Update Detection" of APEX does not work with the relational-duality-vi
 The Workarround: **switch off "Prevent Lost Updates"**
 
 
-### Import to a APEX23.2
+### Import
 
 To use the features of APEX23.2, for example the new combobox, don't forget to refresh your theme (shared-components->themes), otherwith the combobox doesn't look as expected. 
 
@@ -586,6 +592,7 @@ To use the features of APEX23.2, for example the new combobox, don't forget to r
 - In SQL-Workshop in APEX-Oracle-Cloud (Oracle19c) you can not create JSON-Columns (trying this returns ORA-00002 invalid datatype). Here you have to use CLOB columns. 
 - When using a CLOB for the JSONs use check constraint **IS JSON(STRICT)** to enforce that the JSON is returned wth **"** enclosed keys..
 - In APEX 22.1 there is a general issue (with plugin and without) with "**Modal Dialog** with template **Drawer**", this causes a jquery-error (looks like a datepicker issue). Without "Drawer" all work fine. 
+- In APEX 20.2 the validation for **integer**/**number** doesn't show any errormessages - invalid entires are converted to **null**.
 
 ## Next steps
 

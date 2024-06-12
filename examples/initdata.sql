@@ -777,6 +777,7 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('test-string-1'
       "pattern": "[0-9]{4}( [0-9]{4}){3}",
       "apex": {"label": "CC pattern"}
     },
+    "all_lower": { "type": "string", "apex": {"textcase": "lower"}},
     "long_string": { "type": "string", "maxLength":400},
     "length": { "type": "string", "minLength": 3, "maxLength":10},
     "password":  {"type": "string", "minLength": 8, "maxLength": 16, "writeOnly": true, "apex": {"itemtype": "password"}},

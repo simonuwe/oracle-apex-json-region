@@ -18,7 +18,7 @@ apex.date = apex.date||{
     let l_ret =null;
     if(pDate.includes(' ')){  // contains time
       pDate = pDate.replace('T', ' '); // except datetime with " " or "T" between date and time, APEX<22.1 " " delimiter
-      l_ret = $.datepicker.parseDate('dd.mm.yy', pDate);
+      l_ret = $.datepicker.parseDate(pFormat.match('[^ ]+')[0], pDate);
       l_ret = new Date(l_ret.getTime() - l_ret.getTimezoneOffset()*60000);
       l_ret = new Date(l_ret.toISOString().substring(0,10) + ' ' + pDate.match(/[\d]{2}:[\d]{2}(:[\d]{2})?/g)[0] + 'Z');
     } else { // date only
@@ -63,6 +63,8 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
 // console.error(JSON.stringify(pOptions));
   let gData = {};  // holds the JSON-data as an object hierarchie
   let gDateFormat = apex.locale.getDateFormat?apex.locale.getDateFormat():null;
+
+  pOptions.nls_date_format = pOptions.nls_date_format.toLowerCase().replace(/rr/g,'yy');
   if(!gDateFormat) {
     gDateFormat = pOptions.nls_date_format.toLowerCase().replace(/yy/g,'y');
   } else {
@@ -679,6 +681,7 @@ console.log(pOptions);
     $('#' + l_item ).after(l_generated.html);
     attachObject(dataitem + '_' + l_id, '', schema.items, false, {}, true);
     apex.item.attach($('#' + pRegionId));
+    addArrayDeleteEvent();
     apexHacks();
     apex.debug.trace("<<jsonRegion.addArrayRow");
   }
@@ -704,8 +707,6 @@ console.log(pOptions);
         for(const i in data){
           attachObject(dataitem + C_DELIMITER + i , previtem, item, readonly, data[i], newItem) 
         }
-            // Delete buttons for every row
-        $('[id^="' + dataitem + '_"] button').on('click', function(ev){ delArrayRow($(this)[0].id); });
       }
     }
     if(readonly) {
@@ -1621,7 +1622,7 @@ console.log(pOptions);
             items: 1,
             wrappertype: 'apex-item-wrapper--text-field',
             html: `
-<input type="email" id="#ID#" name="#ID#" #REQUIRED# #PLACEHOLDER# #PATTERN# class="#ALIGN# text_field apex-item-text" size="32" #MINLENGTH# #MAXLENGTH# data-trim-spaces="#TRIMSPACES#" aria-describedby="#ID#_error">
+<input type="email" id="#ID#" name="#ID#" #REQUIRED# #PLACEHOLDER# #PATTERN# #TEXTCASE# class="#ALIGN# text_field apex-item-text" size="32" #MINLENGTH# #MAXLENGTH# data-trim-spaces="#TRIMSPACES#" aria-describedby="#ID#_error">
 `};
         break;
         case C_JSON_FORMAT_URI:
@@ -1629,7 +1630,7 @@ console.log(pOptions);
             items: 1,
             wrappertype: 'apex-item-wrapper--text-field',
             html: `
-<input type="url" id="#ID#" name="#ID#" #REQUIRED# #PLACEHOLDER# #PATTERN# class="#ALIGN# text_field apex-item-text" size="32" #MINLENGTH# #MAXLENGTH# data-trim-spaces="#TRIMSPACES#" aria-describedby="#ID#_error">
+<input type="url" id="#ID#" name="#ID#" #REQUIRED# #PLACEHOLDER# #PATTERN# #TEXTCASE# class="#ALIGN# text_field apex-item-text" size="32" #MINLENGTH# #MAXLENGTH# data-trim-spaces="#TRIMSPACES#" aria-describedby="#ID#_error">
 `};
         break;
         case C_JSON_FORMAT_DATE:
@@ -1709,7 +1710,7 @@ console.log(pOptions);
            items: 1,
            wrappertype: 'apex-item-wrapper--text-field',
            html: `
-<input type="text" id="#ID#" name="#ID#" #REQUIRED# #MINLENGTH# #MAXLENGTH# #PLACEHOLDER# #PATTERN# class="#ALIGN# text_field apex-item-text" size="32" data-trim-spaces="#TRIMSPACES#" aria-describedby="#ID#_error">
+<input type="text" id="#ID#" name="#ID#" #REQUIRED# #MINLENGTH# #MAXLENGTH# #PLACEHOLDER# #PATTERN# #TEXTCASE# class="#ALIGN# text_field apex-item-text" size="32" data-trim-spaces="#TRIMSPACES#" aria-describedby="#ID#_error">
 `};
           switch (schema.apex.itemtype){
           case C_APEX_PASSWORD:
@@ -1790,7 +1791,7 @@ console.log(pOptions);
                 items: 1,
                 wrappertype: 'apex-item-wrapper--number-field',
                 html: `
-<input type="text" id="#ID#" name="#ID#" #REQUIRED# #PLACEHOLDER# class="#ALIGN# number_field apex-item-text apex-item-number" size="30" #MIN# #MAX# data-format="#FORMAT#" inputmode="decimal" style="text-align:start">
+<input type="text" id="#ID#" name="#ID#" #REQUIRED# #PLACEHOLDER# class="#ALIGN# number_field apex-item-text apex-item-number" size="30" #MIN# #MAX# data-format="#FORMAT#" inputmode="decimal">
 `};
           }
         }
@@ -2017,12 +2018,16 @@ console.log(pOptions);
     return(l_html);
   }
 
+  function addArrayDeleteEvent(){
+    $('button.json_region_del_row').on('click', function(ev){ delArrayRow($(this)[0].id); });
+//    $('button.gen_delete_event').removeClass();
+  }
    
   function generateArrayDeleteButton(dataitem){
     apex.debug.trace(">>jsonRegion.generateArrayDeleteButton", dataitem); 
     let l_html = `
 <div class="t-Region-headerItems t-Region-headerItems--buttons">
-  <button id="#ID#_DELETE" type="button" class="t-Button t-Button--noLabel t-Button--icon js-ignoreChange lto33153869848604592_0" title="Delete" aria-label="Create">
+  <button id="#ID#_DELETE" type="button" class="json_region_del_row t-Button t-Button--noLabel t-Button--icon js-ignoreChange lto33153869848604592_0" title="Delete" aria-label="Delete">
     <span class="a-Icon icon-ig-delete" aria-hidden="true"></span>
   </button>
 </div>
@@ -2191,6 +2196,7 @@ console.log(pOptions);
                                                      "ID":           genItemname(prefix, name), 
                                                      "NAME":         genItemname(prefix, name),
                                                      "LABEL":        label,
+                                                     "TEXTCASE":      schema.apex.textcase?'data-text-case="' + (''+ schema.apex.textcase).toUpperCase() +'"':'',
                                                      "FIELDTEMPLATE": l_template.container,
                                                      "LABELTEMPLATE": l_template.label,
                                                      "LABELHIDDEN":   l_template.hidden,
@@ -2225,7 +2231,7 @@ console.log(pOptions);
       l_generated.html = generateSeparator(schema, schema.apex.textBefore, prefix + '_OBJ', inArray, null) + l_generated.html;
     }
 
-    if(inArray && l_generated.items==1){ // this object is generated inside an array, so add onbject related html arround}
+    if(inArray && l_generated.items==1){ // this object is generated inside an array, so add object related html arround}
       if(pOptions.headers){
         l_generated.html = generateSeparator(schema, generateLabel(name, schema), genItemname(prefix, name), inArray, null) + l_generated.html;
       }
@@ -2369,6 +2375,7 @@ console.log(pOptions);
     await richtextHack();
 //        // attach the fields to the generated UI
     attachObject(pOptions.dataitem, '', pOptions.schema, pOptions.readonly, gData, newItem);
+    addArrayDeleteEvent();
     apexHacks();
     apex.debug.trace("<<jsonRegion.refresh");
   }
@@ -2549,6 +2556,7 @@ console.log(pOptions);
                 await loadRequiredFiles(l_itemtypes);
                 await richtextHack();
                 attachObject(pOptions.dataitem, '', pOptions.schema, pOptions.readonly, gData, l_newitem);
+                addArrayDeleteEvent();
                 apexHacks();
                 setObjectValues(pOptions.dataitem, '', pOptions.schema, pOptions.readonly, gData)
                 createRegion();
