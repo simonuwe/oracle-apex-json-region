@@ -375,6 +375,26 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('test-enum-1','
       "type": "string",
       "enum": ["val1", "val2"],
       "apex": {"itemtype": "radio", "direction": "vertical", "enum": {"val1": "disp1", "val2": "disp2"}}
+    },
+    "num_enum": {
+      "type": "integer",
+      "enum": [1, 2, 3, 4, 5],
+      "apex": {
+        "enum": {
+          "1": "1",
+          "2": "Two",
+          "3": "Three",
+          "4": "Four",
+          "5": "Five"
+        }
+      }
+    },
+    "num_combo": { "type": "array",
+      "items": {
+        "type": "integer",
+        "enum": [1,2,3]
+      },
+      "apex": {"itemtype": "combobox"}
     }
   }
 }');
@@ -625,6 +645,19 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('test-numeric-1
     "money_cent":   { "type": "number", "apex": {"format": "currency"}},
     "money":        { "type": "integer", "apex": {"format": "currency"}},
     "num_sel":      { "type": "number", "enum": [0, 0.5, 1, 1.5, 2]},
+    "num_enum": {
+      "type": "integer",
+      "enum": [1, 2, 3, 4, 5],
+      "apex": {
+        "enum": {
+          "1": "1",
+          "2": "Two",
+          "3": "Three",
+          "4": "Four",
+          "5": "Five"
+        }
+      }
+    },
     "starrating": {
       "type": "integer", "maximum": 5,
       "apex": {"itemtype": "starrating"}
@@ -769,7 +802,7 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('test-readonly-
 }]');
 Insert into OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('test-string-1',q'[{
   "type": "object",
-  "required": ["string", "radio", "combo", "long_string", "editor_string", "password"],
+  "required": ["string", "radio", "long_string", "editor_string", "password"],
   "properties": {
     "string": { "type": "string"},
     "pattern": { 
@@ -848,7 +881,7 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('test-validate-
 
     "array": {
       "type": "object",
-      "required": ["checkbox", "combo"],
+      "required": ["checkbox", "combo", "num_combo"],
       "properties": {
         "checkbox": { "type": "array",
                       "items": {
@@ -862,6 +895,13 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('test-validate-
                      "enum": ["val1", "val2", "val3"]
                    },
                    "apex": {"itemtype": "combobox"}
+        },
+        "num_combo": { "type": "array",
+          "items": {
+            "type": "integer",
+            "enum": [1,2,3]
+          },
+          "apex": {"itemtype": "combobox"}
         }
       }
     }
