@@ -64,11 +64,14 @@ Here an example
     "warranty_ends":"2024-31-09" 
 }
 ```
- 
 
-### Cool stuff for Oracle 23c
+It should also be possible to generate the JSON-schema directly from the JSON-data. 
 
-Starting Oracle 23c a validation of a JSON-column with a JSON-schema via **VALIDATE '...'**  is supported. 
+### Cool stuff for Oracle 23ai
+
+#### JSON-validate-constraint
+
+Starting Oracle 23ai a validation of a JSON-column with a JSON-schema via **VALIDATE '...'**  is supported. 
 When you want your APEX-application to reference this setting, you can use in the json-region-setup the query 
 
 ```
@@ -81,6 +84,10 @@ WHERE c.table_name='TAB' AND column_name='JSON_DATA'
 ```
 
 This retrievs the JSON-schema for column **TAB.JSON_DATA** from the data dictionary, as long as the constraint-text is less than 4000 char long (the full text isin a LONG-column, which is not easy to process). So changing this VALIDATE setting will automatically adopt the layout of the json-region in your APEX-UI.
+
+#### JSON-duality-views
+
+The plugin can also retrieve the JSON-schema from a JSON-duality-views
 
 
 ## Know issues

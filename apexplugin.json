@@ -23,7 +23,7 @@
       "apex" : {
         "versions" :       ["20.02", "21.01", "21.2", "22.01", "22.02", "23.1", "23.02"],
         "plugin" : {
-          "internalName" : "JSON_REGION.UWESIMON.SELFHOST.EU",
+          "internalName" : "JSON_REGION.UWESIMON.SELFHOST.E",
           "type" :         "region",
           "demo" :         "https://tlodfjxbrej9i6r-uwe01.adb.eu-frankfurt-1.oraclecloudapps.com/ords/r/uwe/json-region-demo/home",
           "previewImage" : "https://raw.githubusercontent.com/simonuwe/oracle-apex-json-region/main/docu/demo.gif"
