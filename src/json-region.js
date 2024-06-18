@@ -57,6 +57,7 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
   const C_APEX_VERSION_2202 = "22.2"
   const C_APEX_VERSION_2301 = "23.1"
   const C_APEX_VERSION_2302 = "23.2"
+  const C_APEX_VERSION_2401 = "24.1"
 
 
         // get the datat-template-id for inline errors from another input field
@@ -580,6 +581,7 @@ console.log(pOptions);
                   l_value = apex.locale.formatNumber(l_value);
                 }
               }
+              if(l_value && l_value.startsWith(' ')) { l_value=l_value.substring(1)}  // when numeric string starts with ' ' remove it
             }
           break;
           case C_JSON_STRING:
@@ -727,6 +729,7 @@ console.log(pOptions);
     if(Array.isArray(data)){
       if( Array.isArray(item.enum)){  // when there is an enum, this array for a multiselection
         if([C_JSON_STRING, C_JSON_INTEGER, C_JSON_NUMBER].includes(item.type)){
+          l_value = Array.isArray(l_value)?l_value.map(x=> ''+x):[];   //convert to string array
           apex.debug.trace('setArrayValues:', l_value);
           apex.item(dataitem).setValue(l_value||[]);
           if(readonly) {
@@ -790,7 +793,7 @@ console.log(pOptions);
         }
         
         if([C_APEX_RICHTEXT].includes(schema.apex.itemtype)){
-          l_value = window.marked.parse( l_value, {
+          l_value = window.marked.parse( l_value||'', {
                               gfm: true,
                               breaks: true,
                               tables: true,
@@ -1076,6 +1079,9 @@ console.log(pOptions);
         if(Array.isArray(schema.items.enum)){  // array for multiple selection
           let l_data = apex.item(dataitem).getValue();
           l_json = itemValue2Json(schema, l_data);
+          if([C_JSON_INTEGER, C_JSON_NUMBER].includes(schema.items.type)) { // when numeric, convert string to numeric
+            l_json = Array.isArray(l_json)?l_json.map( x=> Number(x)):[];
+          }
         } else {
           let i=0;
           let l_found = false;
@@ -1454,7 +1460,7 @@ console.log(pOptions);
 `,
                                                 {
                                                     placeholders: {
-                                                      "VALUES": apex.util.escapeHTML(l_values)
+                                                      "VALUES": apex.util.escapeHTML(''+l_values)
                                                    }
                                                 });
     for(const l_option of schema.enum ||[]){
@@ -1462,7 +1468,7 @@ console.log(pOptions);
   <a-option value="1">#OPTION#<a-option-column-value>#OPTION#</a-option-column-value></a-option>
 `,                                                 {
                                                     placeholders: {
-                                                      "OPTION": apex.util.escapeHTML(l_option)
+                                                      "OPTION": apex.util.escapeHTML(''+l_option)
                                                    }
                                                 });
     }
@@ -1498,7 +1504,7 @@ console.log(pOptions);
                                                 {
                                                     placeholders: {
                                                       "VALUE":        jsonValue2Item(schema, l_value),
-                                                      "DISPLAYVALUE": jsonValue2Item(schema, schema.apex.enum[l_value]||l_value)
+                                                      "DISPLAYVALUE": ['boolean', 'number'].includes(typeof schema.apex.enum[l_value])?jsonValue2Item(schema, schema.apex.enum[l_value]):(schema.apex.enum[l_value]||l_value)
                                                    }
                                                 });
       }
@@ -1532,7 +1538,7 @@ console.log(pOptions);
                                                       "DIR":          (schemaApex.direction==C_APEX_HORIZONTAL)?'style="float: left"':"",
                                                       "TYPE":         itemtype,
                                                       "VALUE":        jsonValue2Item(schema, l_value),
-                                                      "DISPLAYVALUE": jsonValue2Item(schema, schema.apex.enum[l_value]||l_value),
+                                                      "DISPLAYVALUE": ['boolean', 'number'].includes(typeof schema.apex.enum[l_value])?jsonValue2Item(schema, schema.apex.enum[l_value]):(schema.apex.enum[l_value]||l_value),
                                                       "NR":           l_nr++
                                                    }
                                                 });
