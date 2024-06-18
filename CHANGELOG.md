@@ -1,5 +1,11 @@
 # 0.9.3
 
+# New features
+- Support for APEX-24.1
+
+## Fixed issues
+- #125 alternate labels for comboboxes
+
 # 0.9.2 2024-06-12
 
 # New features
