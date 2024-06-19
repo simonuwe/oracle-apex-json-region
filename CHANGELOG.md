@@ -1,3 +1,10 @@
+# 0.9.4
+
+# New features
+- Support of APEX-24.1 **SelectOne** and **SelectMany**
+
+# Fixed issues
+
 # 0.9.3
 
 # New features
