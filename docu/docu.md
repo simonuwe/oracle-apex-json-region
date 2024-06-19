@@ -110,12 +110,21 @@ The optional **additionalProperties** defines whether the object is allowed to h
 
 The **const** attribute identifies a constant value of types **string**, **number**, **integer** or **boolean**.
 
-The Oracle23-JSON-schema-extension **extendedType** is supported too. Because **date** always produces a **date-time** a format could be specified to force a **date**
+The Oracle23ai-JSON-schema-extension **extendedType** is supported too. Because **date** always produces a **date-time** a format could be specified to force a **date**
 
 ### Advanced schema
 
 The json-region-plugin uses an optional extension item **"apex"** in the JSON-schema. Here APEX-specific information are specified. To get more flexible UIs the properties **"dependentRequired"**, **"dependentSchema"**, **"if"**, **"then"** and **"else"** are supported too.
 
+Every property-type supports
+```JSON
+{
+  "apex": {
+    "label":       "your label",
+    "placeholder": "your placeholder"
+  }
+}
+```
 Currently supported are
 ```JSON
 { "type": "object"
@@ -123,8 +132,7 @@ Currently supported are
     "prop1": {
       "type": "boolean", 
       "apex": {
-        "itemtype": "switch", 
-        "label": "your label"
+        "itemtype": "switch"
       }
     },
     "prop2": {
@@ -132,7 +140,6 @@ Currently supported are
       "maximum": 5,
       "apex": {
         "itemtype": "starrating", 
-        "label": "your label", 
         "align": "right"
       }
     },
@@ -140,8 +147,7 @@ Currently supported are
       "type": "number", 
       "maximum": 5,
       "apex": {
-        "itemtype": "starrating", 
-        "label": "your label"
+        "itemtype": "starrating"
         }
     },
     "prop4": {
@@ -150,8 +156,7 @@ Currently supported are
       "apex": {
         "newRow": true, 
         "colSpan": 3, 
-        "lines": 5, 
-        "label": "your label"
+        "lines": 5
       }
     },
     "image": {
@@ -249,6 +254,7 @@ With APEX >=24.1 it supports the **selectOne** ans **selectMany**.
 
 Optional configurations for the UI could be done with the **"apex": {...}**. The supported  properties are
 - **label** could be used in any **type**, it is used to set a specific label for the input-item.
+- **placeholder** the text shown when the inputfield is empty (iggnored for checkboxes, switches and radiobuttons).
 - **align** positions integer/number **left**, **center**, **right** in the input-item.
 - **textcase** for converting strings into **lower** or **upper**
 - **newRow** starts a new row, so the current filed will be the first i this row.

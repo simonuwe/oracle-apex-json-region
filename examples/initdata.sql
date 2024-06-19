@@ -971,7 +971,26 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('test-placehold
     "integer":   {"type": "integer", "apex": {"placeholder": "integer input"}},
     "number":    {"type": "number", "apex": {"placeholder": "number input"}},
     "date":      {"type": "string", "format": "date", "apex": {"placeholder": "date input"}},
-    "date_time": {"type": "string", "format": "date-time", "apex": {"placeholder": "date-time input"}}
+    "date_time": {"type": "string", "format": "date-time", "apex": {"placeholder": "date-time input"}},
+    "combo": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["val1", "val2", "val3"]
+      },
+      "apex": { 
+        "itemtype": "combobox",
+        "placeholder": "combo select/input"
+      }
+    },
+    "selectone": {
+      "type": "string",
+      "enum": ["val1", "val2", "val3"],
+      "apex": { 
+        "itemtype": "selectone",
+        "placeholder": "select one"
+      }
+    }
   } 
 }]');
 

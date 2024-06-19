@@ -120,6 +120,7 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
                                                    // Extended Oracle types 
   const C_ORACLE_TIMESTAMP  = 'timestamp';      
 
+  const C_VALUESEPARATOR    = '|';
 
         // get the datat-template-id for inline errors from another input field
 // console.error(JSON.stringify(pOptions));
@@ -702,7 +703,7 @@ console.log(pOptions);
     let item = schema.items||{};
     if(Array.isArray(item.enum)){  //[C_JSON_STRING, C_JSON_INTEGER, C_JSON_NUMBER].includes(item.type)){
       if(schema.apex.itemtype==C_APEX_SELECTMANY){
-        apex.item.create(dataitem, {item_type: 'selectmany', multiValueSeparator: '|', multiSelect: true, multiValue: true, choices: {data: [{d: 'abc', r: '123'}, {d: 'def', r: 456}]}});
+        apex.item.create(dataitem, {item_type: 'selectmany'});
       } else if(pOptions.apex_version >=C_APEX_VERSION_2302 && (schema.apex.itemtype == C_APEX_COMBO || (item.apex && item.apex.itemtype == C_APEX_COMBO))){
         apex.item.create(dataitem, {item_type: 'combobox'});
       } else {
@@ -1451,19 +1452,20 @@ console.log(pOptions);
   */
   function generateForCombo(schema, data, prefix, name, startend, itemtype, schemaApex){
     let l_generated = {items: 0, wrappertype: null, html: ''};
-    let l_values = (data||[]).join('|');
+    let l_values = (data||[]).join(C_VALUESEPARATOR);
     apex.debug.trace(">>jsonRegion.generateForCombo", schema, data, prefix, name, startend, itemtype);
     l_generated = {
         items:       1,
         wrappertype: 'apex-item-wrapper--combobox apex-item-wrapper--combobox-many',
         html:        apex.util.applyTemplate(`
-<a-combobox id="#ID#" name="#ID#" #REQUIRED# value="#VALUES#" multi-value="true" return-display="false" value-separators="|" max-results="7" min-characters-search="0" match-type="contains" maxlength="100" multi-select="true" parents-required="true">
+<a-combobox id="#ID#" name="#ID#" #REQUIRED# #PLACEHOLDER# value="#VALUES#" multi-value="true" return-display="false" value-separators="#VALUESEPARATOR#" max-results="7" min-characters-search="0" match-type="contains" maxlength="100" multi-select="true" parents-required="true">
   <div class="apex-item-comboselect">
     <ul class="a-Chips a-Chips--applied a-Chips--wrap" role="presentation">
 `,
                                                 {
                                                     placeholders: {
-                                                      "VALUES": l_values
+                                                      "VALUES": l_values,
+                                                      "VALUESEPARATOR": C_VALUESEPARATOR
                                                    }
                                                 })
     };
@@ -1507,16 +1509,16 @@ console.log(pOptions);
     schema.apex = schema.apex||{};
     schema.apex.enum = schema.apex.enum||{};
     apex.debug.trace(">>jsonRegion.generateForSelectOneMany", schema, data, prefix, name, startend, itemtype);
-    let l_values = (itemtype==C_APEX_SELECTMANY)?(data||[]).join('|'):data;
+    let l_values = (itemtype==C_APEX_SELECTMANY)?(data||[]).join(C_VALUESEPARATOR):data;
     l_generated = {
         items:       1,
         wrappertype: (itemtype==C_APEX_SELECTMANY)?'apex-item-wrapper--select-many':'apex-item-wrapper--select-one',
         html:        apex.util.applyTemplate(`
-<a-select id="#ID#" name="#ID#" #REQUIRED# value="#VALUE#"return-display="true" multi-select="#MULTISELECT#" multi-value="#MULTIVALUE#" #VALUESEPARATOR#  max-results="250" min-characters-search="0" match-type="contains" parents-required="true">
+<a-select id="#ID#" name="#ID#" #REQUIRED# #PLACEHOLDER# value="#VALUE#"return-display="true" multi-select="#MULTISELECT#" multi-value="#MULTIVALUE#" #VALUESEPARATOR#  max-results="250" min-characters-search="0" match-type="contains" parents-required="true">
 `,
                                                 {
                                                     placeholders: {
-                                                      "VALUESEPARATOR": 'multi-value-storage="separated" multi-value-separator="|"',
+                                                      "VALUESEPARATOR": 'multi-value-storage="separated" multi-value-separator="'+ C_VALUESEPARATOR+'"',
                                                       "MULTIVALUE":  (itemtype==C_APEX_SELECTMANY)?'true':'false',
                                                       "MULTISELECT": (itemtype==C_APEX_SELECTMANY)?'true':'false',
                                                       "VALUES":      l_values
