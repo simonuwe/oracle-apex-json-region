@@ -5,7 +5,7 @@
 
 ## Fixed issues
 
-# 0.9.3
+# 0.9.3 2024-06-18
 
 # New features
 - Support for APEX-24.1
