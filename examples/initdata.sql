@@ -800,6 +800,61 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('test-readonly-
       }
   }
 }]');
+
+Insert into OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('test-select-1',q'[{
+  "type": "object",
+  "properties": {
+    "simple": {
+      "type": "string",
+      "enum": ["val1", "val2", "val3"]
+    },
+    "radio": {
+      "type": "string",
+      "enum": ["val1", "val2", "val3"],
+      "apex": { 
+        "itemtype": "radio"
+      }
+    },
+    "checkbox": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["val1", "val2", "val3"]
+      }
+    },
+    "combo": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["val1", "val2", "val3"]
+      },
+      "apex": { 
+        "itemtype": "combobox"
+      }
+    },
+    "selectone": {
+      "type": "string",
+      "enum": ["val1", "val2", "val3"],
+      "apex": { 
+        "itemtype": "selectone"
+      }
+    },
+    "selectmany": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["val1", "val2", "val3"],
+        "apex": { 
+          "enum": {"val1": "disp1", "val2": "disp2", "val3": "disp3"}
+        }
+      },
+      "apex": { 
+        "itemtype": "selectmany"
+      }
+    }
+  }
+}]');
+
 Insert into OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('test-string-1',q'[{
   "type": "object",
   "required": ["string", "radio", "long_string", "editor_string", "password"],

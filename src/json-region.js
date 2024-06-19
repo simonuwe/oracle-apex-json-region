@@ -59,6 +59,67 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
   const C_APEX_VERSION_2302 = "23.2"
   const C_APEX_VERSION_2401 = "24.1"
 
+                                                   // JSON "type": "..."
+  const C_JSON_OBJECT           = 'object';
+  const C_JSON_ARRAY            = 'array';
+  const C_JSON_PROPERTIES       = 'properties';
+  const C_JSON_REQUIRED         = 'required';
+  const C_JSON_REF              = '$ref';
+  const C_JSON_STRING           = 'string';
+  const C_JSON_INTEGER          = 'integer';
+  const C_JSON_NUMBER           = 'number';
+  const C_JSON_BOOLEAN          = 'boolean';
+  const C_JSON_CONST            = 'const';
+  const C_JSON_FORMAT_DATE      = 'date';
+  const C_JSON_FORMAT_DATETIME  = 'date-time';
+  const C_JSON_FORMAT_TIME      = 'time';
+  const C_JSON_FORMAT_EMAIL     = 'email';
+  const C_JSON_FORMAT_URI       = 'uri';
+
+                                            // conditional keywords
+  const C_JSON_COND_ALL_OF      = 'allOf';
+  const C_JSON_COND_ANY_OF      = 'anyOf';
+  const C_JSON_COND_NOT         = 'not';
+  
+                                                   // JSON encoded strings
+  const C_JSON_IMAGE_PNG        = 'image/png';
+  const C_JSON_IMAGE_JPG        = 'image/jpg';
+  const C_JSON_IMAGE_GIF        = 'image/gif';
+  const C_JSON_BASE64           = 'base64';
+
+  const C_DELIMITER         = '_'                  // delimiter for path of nested objects
+                                                   // "apex": {"itemtype": "...", ...} 
+  const C_APEX_SWITCH       = 'switch';            // itemtype switch
+  const C_APEX_RICHTEXT     = 'richtext';          // itemtype richtext editor
+  const C_APEX_TEXTAREA     = 'textarea';
+  const C_APEX_COMBO        = 'combobox';          // itemtype combobox
+  const C_APEX_RADIO        = 'radio';
+  const C_APEX_CHECKBOX     = 'checkbox';
+  const C_APEX_SELECT       = 'select';            // itemtype select
+  const C_APEX_PASSWORD     = 'password';
+  const C_APEX_STARRATING   = 'starrating';
+  const C_APEX_QRCODE       = 'qrcode';
+  const C_APEX_IMAGE        = 'image';
+  const C_APEX_CURRENCY     = 'currency';
+  const C_APEX_HORIZONTAL   = 'horizontal';
+  const C_APEX_VERTICAL     = 'vertical';
+  const C_APEX_PCTGRAPH     = 'pctgraph';
+  const C_APEX_LABEL        = 'label';
+  const C_APEX_SELECTONE    = 'selectone';
+  const C_APEX_SELECTMANY   = 'selectmany'
+
+  const C_APEX_ALIGN        = 'align';
+  const C_APEX_LEFT         = 'left';
+  const C_APEX_CENTER       = 'center';
+  const C_APEX_RIGHT        = 'right';
+
+  const C_APEX_TEMPLATE_LABEL_HIDDEN   = 'hidden';
+  const C_APEX_TEMPLATE_LABEL_LEFT     = 'left';
+  const C_APEX_TEMPLATE_LABEL_ABOVE    = 'above';
+  const C_APEX_TEMPLATE_LABEL_FLOATING = 'floating';
+                                                   // Extended Oracle types 
+  const C_ORACLE_TIMESTAMP  = 'timestamp';      
+
 
         // get the datat-template-id for inline errors from another input field
 // console.error(JSON.stringify(pOptions));
@@ -179,63 +240,6 @@ console.log(pOptions);
     // Hack to remove border from region
   $('#' + pRegionId).css("border", "none");
 
-                                                   // JSON "type": "..."
-  const C_JSON_OBJECT           = 'object';
-  const C_JSON_ARRAY            = 'array';
-  const C_JSON_PROPERTIES       = 'properties';
-  const C_JSON_REQUIRED         = 'required';
-  const C_JSON_REF              = '$ref';
-  const C_JSON_STRING           = 'string';
-  const C_JSON_INTEGER          = 'integer';
-  const C_JSON_NUMBER           = 'number';
-  const C_JSON_BOOLEAN          = 'boolean';
-  const C_JSON_CONST            = 'const';
-  const C_JSON_FORMAT_DATE      = 'date';
-  const C_JSON_FORMAT_DATETIME  = 'date-time';
-  const C_JSON_FORMAT_TIME      = 'time';
-  const C_JSON_FORMAT_EMAIL     = 'email';
-  const C_JSON_FORMAT_URI       = 'uri';
-
-                                            // conditional keywords
-  const C_JSON_COND_ALL_OF      = 'allOf';
-  const C_JSON_COND_ANY_OF      = 'anyOf';
-  const C_JSON_COND_NOT         = 'not';
-  
-                                                   // JSON encoded strings
-  const C_JSON_IMAGE_PNG        = 'image/png';
-  const C_JSON_IMAGE_JPG        = 'image/jpg';
-  const C_JSON_IMAGE_GIF        = 'image/gif';
-  const C_JSON_BASE64           = 'base64';
-
-  const C_DELIMITER         = '_'                  // delimiter for path of nested objects
-                                                   // "apex": {"itemtype": "...", ...} 
-  const C_APEX_SWITCH       = 'switch';            // itemtype switch
-  const C_APEX_RICHTEXT     = 'richtext';          // itemtype richtext editor
-  const C_APEX_TEXTAREA     = 'textarea';
-  const C_APEX_COMBO        = 'combobox';          // itemtype combobox
-  const C_APEX_RADIO        = 'radio';
-  const C_APEX_CHECKBOX     = 'checkbox';
-  const C_APEX_SELECT       = 'select';            // itemtype select
-  const C_APEX_PASSWORD     = 'password';
-  const C_APEX_STARRATING   = 'starrating';
-  const C_APEX_QRCODE       = 'qrcode';
-  const C_APEX_IMAGE        = 'image';
-  const C_APEX_CURRENCY     = 'currency';
-  const C_APEX_HORIZONTAL   = 'horizontal';
-  const C_APEX_VERTICAL     = 'vertical';
-  const C_APEX_PCTGRAPH     = 'pctgraph';
-  const C_APEX_LABEL        = 'label';
-  const C_APEX_ALIGN        = 'align';
-  const C_APEX_LEFT         = 'left';
-  const C_APEX_CENTER       = 'center';
-  const C_APEX_RIGHT        = 'right';
-
-  const C_APEX_TEMPLATE_LABEL_HIDDEN   = 'hidden';
-  const C_APEX_TEMPLATE_LABEL_LEFT     = 'left';
-  const C_APEX_TEMPLATE_LABEL_ABOVE    = 'above';
-  const C_APEX_TEMPLATE_LABEL_FLOATING = 'floating';
-                                                   // Extended Oracle types 
-  const C_ORACLE_TIMESTAMP  = 'timestamp';      
 
     // mapping from file-extionsions like .js to html-tags required to opad the file
   const cMapType = {
@@ -697,7 +701,9 @@ console.log(pOptions);
     schema.apex = schema.apex || {};
     let item = schema.items||{};
     if(Array.isArray(item.enum)){  //[C_JSON_STRING, C_JSON_INTEGER, C_JSON_NUMBER].includes(item.type)){
-      if(pOptions.apex_version >=C_APEX_VERSION_2302 && (schema.apex.itemtype == C_APEX_COMBO || (item.apex && item.apex.itemtype == C_APEX_COMBO))){
+      if(schema.apex.itemtype==C_APEX_SELECTMANY){
+        apex.item.create(dataitem, {item_type: 'selectmany', multiValueSeparator: '|', multiSelect: true, multiValue: true, choices: {data: [{d: 'abc', r: '123'}, {d: 'def', r: 456}]}});
+      } else if(pOptions.apex_version >=C_APEX_VERSION_2302 && (schema.apex.itemtype == C_APEX_COMBO || (item.apex && item.apex.itemtype == C_APEX_COMBO))){
         apex.item.create(dataitem, {item_type: 'combobox'});
       } else {
         apex.widget.checkboxAndRadio('#'+ dataitem,'checkbox');
@@ -729,7 +735,7 @@ console.log(pOptions);
     if(Array.isArray(data)){
       if( Array.isArray(item.enum)){  // when there is an enum, this array for a multiselection
         if([C_JSON_STRING, C_JSON_INTEGER, C_JSON_NUMBER].includes(item.type)){
-          l_value = Array.isArray(l_value)?l_value.map(x=> ''+x):[];   //convert to string array
+          l_value = (l_value||[]).map(x=> ''+x);   //convert to string array
           apex.debug.trace('setArrayValues:', l_value);
           apex.item(dataitem).setValue(l_value||[]);
           if(readonly) {
@@ -793,7 +799,7 @@ console.log(pOptions);
         }
         
         if([C_APEX_RICHTEXT].includes(schema.apex.itemtype)){
-          l_value = window.marked.parse( l_value||'', {
+          l_value = window.marked.parse( l_value, {
                               gfm: true,
                               breaks: true,
                               tables: true,
@@ -1079,8 +1085,8 @@ console.log(pOptions);
         if(Array.isArray(schema.items.enum)){  // array for multiple selection
           let l_data = apex.item(dataitem).getValue();
           l_json = itemValue2Json(schema, l_data);
-          if([C_JSON_INTEGER, C_JSON_NUMBER].includes(schema.items.type)) { // when numeric, convert string to numeric
-            l_json = Array.isArray(l_json)?l_json.map( x=> Number(x)):[];
+          if([C_JSON_INTEGER, C_JSON_NUMBER].includes(schema.items.type)) { // when numeric, conwert string to numeric
+            l_json = l_json.map( x=> Number(x));
           }
         } else {
           let i=0;
@@ -1383,6 +1389,19 @@ console.log(pOptions);
     }
 
         // set apex.formats
+    if(pOptions.apex_version <C_APEX_VERSION_2401){ // check for new itemtype in old releases, remove them and log error
+      if(schema.apex.itemtype==C_APEX_SELECTONE){
+        logSchemaError('itemtype not supported in APEX-version', schema.apex.itemtype, pOptions.apex_version);
+        schema.apex.itemtype = C_APEX_SELECT; // Fallback simple select
+      }
+      if(schema.apex.itemtype==C_APEX_SELECTMANY){
+        logSchemaError('itemtype not supported in APEX-version', schema.apex.itemtype, pOptions.apex_version);
+         schema.apex.itemtype = C_APEX_COMBO;  // fallback 23.2 Combo
+      }
+    }
+
+
+        // set apex.formats
     if(pOptions.apex_version <C_APEX_VERSION_2302){ // check for new itemtype in old releases, remove them and log error
       if([C_APEX_QRCODE, C_APEX_RICHTEXT, C_APEX_COMBO, ].includes(schema.apex.itemtype)){
         logSchemaError('itemtype not supported in APEX-version', schema.apex.itemtype, pOptions.apex_version);
@@ -1430,10 +1449,10 @@ console.log(pOptions);
    * generate the UI HTML for 23.2 Combobox 
    * returns {items: 0, wrappertype: "xxx", html: "xxx"}
   */
-  function generateForCombo(schema, data, prefix, name, startend, checkbox){
+  function generateForCombo(schema, data, prefix, name, startend, itemtype, schemaApex){
     let l_generated = {items: 0, wrappertype: null, html: ''};
     let l_values = (data||[]).join('|');
-    apex.debug.trace(">>jsonRegion.generateForCombo", schema, data, prefix, name, startend, checkbox);
+    apex.debug.trace(">>jsonRegion.generateForCombo", schema, data, prefix, name, startend, itemtype);
     l_generated = {
         items:       1,
         wrappertype: 'apex-item-wrapper--combobox apex-item-wrapper--combobox-many',
@@ -1483,12 +1502,75 @@ console.log(pOptions);
    * generate the UI-item for a pulldown/radio/checkbox property depending on itemtype
    * returns {items: 0, wrappertype: "xxx", html: "xxx"}
   */
+  function generateForSelectOneMany(schema, data, prefix, name, startend, itemtype, schemaApex){
+    let l_generated = { items:0, wrappertype: null, html: ''};
+    schema.apex = schema.apex||{};
+    schema.apex.enum = schema.apex.enum||{};
+    apex.debug.trace(">>jsonRegion.generateForSelectOneMany", schema, data, prefix, name, startend, itemtype);
+    let l_values = (itemtype==C_APEX_SELECTMANY)?(data||[]).join('|'):data;
+    l_generated = {
+        items:       1,
+        wrappertype: (itemtype==C_APEX_SELECTMANY)?'apex-item-wrapper--select-many':'apex-item-wrapper--select-one',
+        html:        apex.util.applyTemplate(`
+<a-select id="#ID#" name="#ID#" #REQUIRED# value="#VALUE#"return-display="true" multi-select="#MULTISELECT#" multi-value="#MULTIVALUE#" #VALUESEPARATOR#  max-results="250" min-characters-search="0" match-type="contains" parents-required="true">
+`,
+                                                {
+                                                    placeholders: {
+                                                      "VALUESEPARATOR": 'multi-value-storage="separated" multi-value-separator="|"',
+                                                      "MULTIVALUE":  (itemtype==C_APEX_SELECTMANY)?'true':'false',
+                                                      "MULTISELECT": (itemtype==C_APEX_SELECTMANY)?'true':'false',
+                                                      "VALUES":      l_values
+                                                   }
+                                                })
+    };
+/*
+    l_generated.html +=`
+           <a-column-metadata name="DESCRIPTION" searchable="true" index="0"></a-column-metadata>
+               <a-option value="1">
+                   Option 1
+                   <a-option-column-value>Description for option 1</a-option-column-value>
+               </a-option>
+               <a-option value="2">
+                   Option 2
+                   <a-option-column-value>Description for option 2</a-option-column-value>
+               </a-option>
+               <a-option value="3">
+                   Option 3
+                   <a-option-column-value>Description for option 2</a-option-column-value>
+               </a-option>
+`;
+*/
+    for(const l_value of schema.enum ||[]){
+      l_generated.html += apex.util.applyTemplate(`
+<a-option value="#VALUE#">
+  #DISPLAYVALUE#
+</a-option>
+`,                                                 {
+                                                    placeholders: {
+                                                      "VALUE":        apex.util.escapeHTML(''+l_value),
+                                                      "DISPLAYVALUE": ['boolean', 'number'].includes(typeof schema.apex.enum[l_value])?jsonValue2Item(schema, schema.apex.enum[l_value]):(schema.apex.enum[l_value]||l_value)
+                                                   }
+                                                });
+    }
+
+    l_generated.html += `
+</a-select>
+`;
+    apex.debug.trace("<<jsonRegion.generateForSelectOneMany", l_generated);
+    return(l_generated);
+  }
+
+  /*
+   * generate the UI-item for a pulldown/radio/checkbox property depending on itemtype
+   * returns {items: 0, wrappertype: "xxx", html: "xxx"}
+  */
   function generateForSelect(schema, data, prefix, name, startend, itemtype, schemaApex){
     let l_generated = { items:0, wrappertype: null, html: ''};
     schema.apex = schema.apex||{};
     schema.apex.enum = schema.apex.enum||{};
     apex.debug.trace(">>jsonRegion.generateForSelect", schema, data, prefix, name, startend, itemtype);
-    if(itemtype == C_APEX_SELECT){
+    switch (itemtype){
+    case C_APEX_SELECT:
       l_generated = {
         items: 1,
         html: `
@@ -1512,7 +1594,8 @@ console.log(pOptions);
 `
 </select>
 `;
-    } else {
+    break;
+    default:
       l_generated = {
         items: 1,
         html: apex.util.applyTemplate(`
@@ -1547,6 +1630,7 @@ console.log(pOptions);
       l_generated.html += `
 </div>
 `;
+    break;
     }
     switch (itemtype){
     case C_APEX_SELECT: 
@@ -1616,9 +1700,15 @@ console.log(pOptions);
       }
     } else {
       if(Array.isArray(schema.enum)){
-        if([C_APEX_SELECT, C_APEX_RADIO].includes(schema.apex.itemtype)){
+        switch(schema.apex.itemtype){
+        case C_APEX_SELECTONE:
+          l_generated = generateForSelectOneMany(schema, data, prefix, name, startend, C_APEX_SELECTONE, schema.apex);
+        break;
+        case C_APEX_SELECT:
+        case C_APEX_RADIO:
           l_generated = generateForSelect(schema, data, prefix, name, startend, schema.apex.itemtype, schema.apex);
-        } else {
+        break;
+        default:
           logSchemaError('enum not supported for', schema.apex.itemtype);  
         }
       } else {
@@ -1865,16 +1955,23 @@ console.log(pOptions);
     data = data || [];
     if(Array.isArray(data)){
       if( Array.isArray(item.enum)){  // when there is an enum, this array for a multiselection
-        if([C_JSON_STRING, C_JSON_INTEGER, C_JSON_NUMBER].includes(item.type)){
+        if([C_JSON_BOOLEAN, C_JSON_STRING, C_JSON_INTEGER, C_JSON_NUMBER].includes(item.type)){
           l_generated.items =1;
-          if(pOptions.apex_version >=C_APEX_VERSION_2302 && (schema.apex.itemtype==C_APEX_COMBO || (item.apex && item.apex.itemtype==C_APEX_COMBO))){
-            l_generated = generateForCombo(item, data, prefix, name, startend, newItem);
-          } else {
+          switch(schema.apex.itemtype){
+          case C_APEX_COMBO:
+            l_generated = generateForCombo(item, data, prefix, name, startend, schema.apex.itemtype, schema.apex);
+          break;  
+          case C_APEX_SELECTMANY:
+            l_generated = generateForSelectOneMany(item, data, prefix, name, startend, schema.apex.itemtype, schema.apex);
+          break;  
+          default:
             l_generated =  generateForSelect(item, data, prefix, name, startend, C_APEX_CHECKBOX, schema.apex);
+          break;  
           }
         } else {
           logSchemaError('"type":: "array" simple type string with enum only', schema, data, prefix, name, startend);
         }
+
       } else {  // loop through the array and generate an object for each row
         if(pOptions.headers){
           l_generated.html = generateSeparator(schema, generateLabel(name, schema), prefix, false, 'CREATE');
@@ -2593,11 +2690,7 @@ console.log(pOptions);
       submit: function(){
         apex.debug.trace(">>jsonRegion.submit");
           // Hack to remove the dynamically generated item from client-response
-        $('#' + pRegionId + ' input').removeAttr('name');
-        $('#' + pRegionId + ' textarea').removeAttr('name');
-        $('#' + pRegionId + ' select').removeAttr('name');  
-        $('#' + pRegionId + ' a-combobox').removeAttr('name');
-        $('#' + pRegionId + ' a-rich-text-editor').removeAttr('name');      
+        $('#' + pRegionId + ' [name]').removeAttr('name');
         apex.debug.trace("<<jsonRegion.submit");
       }
     };
