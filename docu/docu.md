@@ -110,34 +110,54 @@ The optional **additionalProperties** defines whether the object is allowed to h
 
 The **const** attribute identifies a constant value of types **string**, **number**, **integer** or **boolean**.
 
-The Oracle23-JSON-schema-extension **extendedType** is supported too. Because **date** always produces a **date-time** a format could be specified to force a **date**
+The Oracle23ai-JSON-schema-extension **extendedType** is supported too. Because **date** always produces a **date-time** a format could be specified to force a **date**
 
 ### Advanced schema
 
 The json-region-plugin uses an optional extension item **"apex"** in the JSON-schema. Here APEX-specific information are specified. To get more flexible UIs the properties **"dependentRequired"**, **"dependentSchema"**, **"if"**, **"then"** and **"else"** are supported too.
 
+Every property-type supports
+```JSON
+{
+  "apex": {
+    "label":       "your label",
+    "placeholder": "your placeholder"
+  }
+}
+```
 Currently supported are
 ```JSON
 { "type": "object"
   "properties": {
     "prop1": {
       "type": "boolean", 
-      "apex": {"itemtype": "switch", "label": "your label"}
+      "apex": {
+        "itemtype": "switch"
+      }
     },
     "prop2": {
       "type": "integer", 
       "maximum": 5,
-      "apex": {"itemtype": "starrating", "label": "your label", "align": "right"}
+      "apex": {
+        "itemtype": "starrating", 
+        "align": "right"
+      }
     },
     "prop3": {
       "type": "number", 
       "maximum": 5,
-      "apex": {"itemtype": "starrating", "label": "your label", "align": "right"}
+      "apex": {
+        "itemtype": "starrating"
+        }
     },
     "prop4": {
       "type": "string",
       "default": "abc", 
-      "apex": {"newRow": true, "colSpan": 3, "lines": 5, "label": "your label"}
+      "apex": {
+        "newRow": true, 
+        "colSpan": 3, 
+        "lines": 5
+      }
     },
     "image": {
       "type":   "string",
@@ -148,20 +168,48 @@ Currently supported are
       "type": "string",
       "readOnly": true,  
       "enum": ["val1", "val2", ...], 
-      "apex": {"itemtype": "radio", "enum": {"val1": "disp1", "val2": "disp2",...}, "direction": "horizontal"}
+      "apex": {
+        "itemtype": "radio", 
+        "enum": {
+          "val1": "disp1", 
+          "val2": "disp2",
+          ...
+        }, 
+        "direction": "horizontal"
+      }
     },
     "prop6": {
       "type": "array",
-      "items": {"type": "string", 
-                "enum": ["val1", "val2", ...]},
+      "items": {
+        "type": "string", 
+        "enum": ["val1", "val2", ...]
+      },
       "apex":  {"itemtype": "combobox"} 
     },
-    "prop7": {"type": null},
-    "prop8": ["const": "const string"],
-    "prop9": {"type": "string", "apex": {"itemtype": "qrcode"}}
+    "prop6": {
+      "type": "array",
+      "items": {
+        "type": "string", 
+        "enum": ["val1", "val2", ...]
+      },
+      "apex":  {
+        "itemtype": "selectmany",
+        "enum": {
+          "val1": "disp1", 
+          "val2": "disp2", 
+          ...
+        }
+      } 
+    },
+    "prop8": {"type": null},
+    "prop9": ["const": "const string"],
+    "prop10": {
+      "type": "string", 
+      "apex": {"itemtype": "qrcode"}
+    }
   ...
   },
-  "required": ["prop1", "pro2", ...]
+  "required": ["prop1", "pro2", ...],
   "dependentRequired": {
     "prop1": ["prop4", ...]
   },
@@ -169,21 +217,21 @@ Currently supported are
     "prop1": { 
       "properties": {
         "prop11": {"type": "integer"},
-        "prop12": {"type": string"},
+        "prop12": {"type": "string"},
         ....
       }
      }
   },
   "if": {
-    "anyOf": [
+    "anyOf": {
       "not": { "required": ["prop3"]},
       "properties": {
         "allOf": [
           { "prop1": { "const": true }},
-          { "prop2": { "enum: ["val1", "val2"] }}
+          { "prop2": { "enum": ["val1", "val2"] }}
         ]
       }
-    ]
+    }
   },
   "then": {
     "properties": {
@@ -200,10 +248,13 @@ Currently supported are
 ```
 #### Advanced APEX-properties
 
-The **type** **array** is supported for multiselect checkbox-groups, the checkboxes are generate from the **enum**. For APEX >=23.2 it also supports the **combobox** which allows chips and the input of additional values beside the valies defined in the enum.
+The **type** **array** is supported for multiselect checkbox-groups, the checkboxes are generate from the **enum**. 
+With APEX >=23.2 it supports the **combobox** which allows chips and the input of additional values beside the valies defined in the enum.
+With APEX >=24.1 it supports the **selectOne** ans **selectMany**.
 
 Optional configurations for the UI could be done with the **"apex": {...}**. The supported  properties are
 - **label** could be used in any **type**, it is used to set a specific label for the input-item.
+- **placeholder** the text shown when the inputfield is empty (iggnored for checkboxes, switches and radiobuttons).
 - **align** positions integer/number **left**, **center**, **right** in the input-item.
 - **textcase** for converting strings into **lower** or **upper**
 - **newRow** starts a new row, so the current filed will be the first i this row.
@@ -224,6 +275,8 @@ For example JSON-data has **"enum": ["a", "b", "c"]**, so the **"apex": {"enum":
   - **radio** use a radio group for the values of an **enum** (default is a selectlist).
   - **image** use the string as an URL for an image (**format** must be **uri** too).
   - **combobox** to support a combobox with **chips** for an **array** of **string** with an **enum** (for APEX >=23.2)
+  - **selectone** to support the select dropdown of APEX>=24.1
+  - **selectmany** to support the multi select dropdown of APEX>=24.1. Here the option **"asChips"=true** will display the items as chips, otherwise as separated list 
   - **richtext** to support a textarea with a richtext-editor (for APEX >=23.2). Use **collspan the use expand the columns, so that the iconbar of the richtext-editor fits  
   - **qrcode** will display (the item will be readonly) a **string** as qrcode (for APEX >= 23.2).
 
@@ -250,7 +303,7 @@ The supported Identification types
 | Checkbox | {"field1": {"type": "boolean"} }| |
 | Checkbox Group | {"field1": "type": "array", "items": {"type": "string", "enum": ["val1", "val2", ...]}} |
 | Color Picker | --- |
-| Combobox | {"field1": "type": "array", "apex": {"itemtype": "combobox"}, "items": {"type": "string", "enum": ["val1", "val2", ...]}} |
+| Combobox | {"field1": "type": "array", "apex": {"itemtype": "combobox"}, "items": {"type": "string", "enum": ["val1", "val2", ...]}} | No separate display values
 | Datepicker: Settings: Show Time: false| {"field1": {"type": "string", "format": "date"} |
 | Datepicker: Settings:  Show Time: true| {"field1": {"type": "string", "format": "date-time"} |
 | Display Image | {"field1": { "type": "string", "contentEncoding": "base64", "contentMediaType": "imagetype"}} | imagetypes: jpg, png, gif |
@@ -271,6 +324,8 @@ The supported Identification types
 | Radio Group | {"field1": {"type" "string", "enum": ["val1", "val2"], "apex": {"itemtype": "radio"}} |
 | Rich Text Editor | {"field1": {"type": "string", "apex": {"itemtype": "richtext"}}} | Format Markdown only |
 | Select List: List of Values: Type: Static Values | {"field1": {"type": "string", "enum": ["val1", "val2", ...]}} | Support for types "string", "integer", "number" |
+| SelectOne: List of Values: Type: Static Values | {"field1": {"type": "string", "enum": ["val1", "val2", ...], "apex":{"itemtype": "selectone"}}} | Support for types "string", "integer", "number" |
+| SelectMany | {"field1": "type": "array", "apex": {"itemtype": "selectmany", "asChips": true}, "items": {"type": "string", "enum": ["val1", "val2", ...], "apex"{"enum": {"val1": "disp1", "val2": "disp2, ...}}}} |
 | Shuffle | --- | |
 | Star Rating | {"field1": {"type": "integer", "maxValue": 5, "apex": {"itemtype": "starrating"}}} | Supported types "integer" and "number" |
 | Switch | {"field1": {"type": "boolean", "apex": {"itemtype": "switch"}} |
