@@ -275,6 +275,8 @@ For example JSON-data has **"enum": ["a", "b", "c"]**, so the **"apex": {"enum":
   - **radio** use a radio group for the values of an **enum** (default is a selectlist).
   - **image** use the string as an URL for an image (**format** must be **uri** too).
   - **combobox** to support a combobox with **chips** for an **array** of **string** with an **enum** (for APEX >=23.2)
+  - **selectone** to support the select dropdown of APEX>=24.1
+  - **selectmany** to support the multi select dropdown of APEX>=24.1. Here the option **"asChips"=true** will display the items as chips, otherwise as separated list 
   - **richtext** to support a textarea with a richtext-editor (for APEX >=23.2). Use **collspan the use expand the columns, so that the iconbar of the richtext-editor fits  
   - **qrcode** will display (the item will be readonly) a **string** as qrcode (for APEX >= 23.2).
 
@@ -323,7 +325,7 @@ The supported Identification types
 | Rich Text Editor | {"field1": {"type": "string", "apex": {"itemtype": "richtext"}}} | Format Markdown only |
 | Select List: List of Values: Type: Static Values | {"field1": {"type": "string", "enum": ["val1", "val2", ...]}} | Support for types "string", "integer", "number" |
 | SelectOne: List of Values: Type: Static Values | {"field1": {"type": "string", "enum": ["val1", "val2", ...], "apex":{"itemtype": "selectone"}}} | Support for types "string", "integer", "number" |
-| SelectMany | {"field1": "type": "array", "apex": {"itemtype": "selectmany"}, "items": {"type": "string", "enum": ["val1", "val2", ...], "apex"{"enum": {"val1": "disp1", "val2": "disp2, ...}}}} |
+| SelectMany | {"field1": "type": "array", "apex": {"itemtype": "selectmany", "asChips": true}, "items": {"type": "string", "enum": ["val1", "val2", ...], "apex"{"enum": {"val1": "disp1", "val2": "disp2, ...}}}} |
 | Shuffle | --- | |
 | Star Rating | {"field1": {"type": "integer", "maxValue": 5, "apex": {"itemtype": "starrating"}}} | Supported types "integer" and "number" |
 | Switch | {"field1": {"type": "boolean", "apex": {"itemtype": "switch"}} |

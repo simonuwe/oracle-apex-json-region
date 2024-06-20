@@ -749,55 +749,79 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('test-readonly-
       "type": "object",
       "apex": { "readonly": true},
       "properties": {
-          "string":      { "type": "string"},
-          "date":        { "type": "string", "format": "date"},
-          "datetime":    { "type": "string", "format": "date-time"},
-          "long_string": { "type": "string", "maxLength": 1000},
-          "boolean": {
-            "type": "boolean"
-          },
-          "switch": {
-            "type": "boolean",
-            "apex": { "itemtype": "switch"}
-          },
-          "integer": { "type": "integer"},
-          "number":  { "type": "number"},
-          "money_cent":   {
-            "type": "number", 
-            "apex": { "format": "currency"}
-          },
-          "money":        {
-            "type": "integer", 
-            "apex": { "format": "currency"}
-          },
-          "starrating": {
-            "type": "integer", "maximum": 5,
-            "apex": { "itemtype": "starrating"}
-          },
-          "pct": {
-            "type": "integer",
-            "apex": { "itemtype": "pctgraph", "newRow": true}
-          },
-          "image": {
+        "string":      { "type": "string"},
+        "date":        { "type": "string", "format": "date"},
+        "datetime":    { "type": "string", "format": "date-time"},
+        "long_string": { "type": "string", "maxLength": 1000},
+        "boolean": {
+          "type": "boolean"
+        },
+        "switch": {
+          "type": "boolean",
+          "apex": { "itemtype": "switch"}
+        },
+        "integer": { "type": "integer"},
+        "number":  { "type": "number"},
+        "money_cent":   {
+          "type": "number", 
+          "apex": { "format": "currency"}
+        },
+        "money":        {
+          "type": "integer", 
+          "apex": { "format": "currency"}
+        },
+        "starrating": {
+          "type": "integer", "maximum": 5,
+          "apex": { "itemtype": "starrating"}
+        },
+        "pct": {
+          "type": "integer",
+          "apex": { "itemtype": "pctgraph", "newRow": true}
+        },
+        "image": {
+          "type": "string",
+          "contentEncoding": "base64",
+          "contentMediaType": "image/png"
+        },
+        "image_url": {
+          "type": "string",
+          "format": "uri",
+          "apex": {"itemtype": "image"}
+        },
+        "qrcode": { 
+          "type": "string",
+          "apex": {"itemtype": "qrcode"}
+        },
+        "editor_string": {
+          "type": "string", "maxLength": 1000, 
+          "apex": { "itemtype": "richtext", "colSpan":12}
+        },
+        "combo": {
+          "type": "array",
+          "items": {
             "type": "string",
-            "contentEncoding": "base64",
-            "contentMediaType": "image/png"
+            "enum": ["val1", "val2", "val3"]
           },
-          "image_url": {
+          "apex": { "itemtype": "combobox" }
+        },
+        "selectone": {
+          "type": "string",
+          "enum": ["val1", "val2", "val3"],
+          "apex": { "itemtype": "selectone"}
+        },
+        "selectmany": {
+          "type": "array",
+          "items": {
             "type": "string",
-            "format": "uri",
-            "apex": {"itemtype": "image"}
+            "enum": ["val1", "val2", "val3"],
+            "apex": { 
+              "enum": {"val1": "disp1", "val2": "disp2", "val3": "disp3"}
+            }
           },
-          "qrcode": { 
-            "type": "string",
-            "apex": {"itemtype": "qrcode"}
-          },
-          "editor_string": {
-            "type": "string", "maxLength": 1000, 
-            "apex": { "itemtype": "richtext", "colSpan":12}
-          }
+          "apex": { "itemtype": "selectmany" }
         }
       }
+    }
   }
 }]');
 

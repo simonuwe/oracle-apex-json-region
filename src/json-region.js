@@ -1330,11 +1330,6 @@ console.log(pOptions);
       }
     }
 
-      // default für "enum"
-    if(schema.enum){
-      schema.apex.itemtype = schema.apex.itemtype|| C_APEX_SELECT;
-    }
-
     schema.apex.readonly = booleanIfNotSet(schema.apex.readonly, readonly);
     schema.readOnly = booleanIfNotSet(schema.readOnly, schema.apex.readonly);
     schema.writeOnly = booleanIfNotSet(schema.writeOnly, writeonly);
@@ -1391,16 +1386,11 @@ console.log(pOptions);
 
         // set apex.formats
     if(pOptions.apex_version <C_APEX_VERSION_2401){ // check for new itemtype in old releases, remove them and log error
-      if(schema.apex.itemtype==C_APEX_SELECTONE){
+      if([C_APEX_SELECTONE, C_APEX_SELECTMANY].includes(schema.apex.itemtype)){
         logSchemaError('itemtype not supported in APEX-version', schema.apex.itemtype, pOptions.apex_version);
-        schema.apex.itemtype = C_APEX_SELECT; // Fallback simple select
-      }
-      if(schema.apex.itemtype==C_APEX_SELECTMANY){
-        logSchemaError('itemtype not supported in APEX-version', schema.apex.itemtype, pOptions.apex_version);
-         schema.apex.itemtype = C_APEX_COMBO;  // fallback 23.2 Combo
+        delete schema.apex.itemtype;
       }
     }
-
 
         // set apex.formats
     if(pOptions.apex_version <C_APEX_VERSION_2302){ // check for new itemtype in old releases, remove them and log error
@@ -1414,6 +1404,11 @@ console.log(pOptions);
       }
     }
 
+      // default für "enum"
+    if(schema.enum){
+      schema.apex.itemtype = schema.apex.itemtype|| C_APEX_SELECT;
+    }    
+      
         // propagate required to each properties
     if(Array.isArray(schema.required)){
       for(let l_schema of schema.required){
@@ -1501,47 +1496,31 @@ console.log(pOptions);
   }
 
   /*
-   * generate the UI-item for a pulldown/radio/checkbox property depending on itemtype
+   * generate the UI-item for selectOne/selectMany items depending on itemtype
    * returns {items: 0, wrappertype: "xxx", html: "xxx"}
   */
   function generateForSelectOneMany(schema, data, prefix, name, startend, itemtype, schemaApex){
     let l_generated = { items:0, wrappertype: null, html: ''};
     schema.apex = schema.apex||{};
     schema.apex.enum = schema.apex.enum||{};
-    apex.debug.trace(">>jsonRegion.generateForSelectOneMany", schema, data, prefix, name, startend, itemtype);
+    apex.debug.trace(">>jsonRegion.generateForSelectOneMany", schema, data, prefix, name, startend, itemtype, schemaApex);
     let l_values = (itemtype==C_APEX_SELECTMANY)?(data||[]).join(C_VALUESEPARATOR):data;
     l_generated = {
         items:       1,
         wrappertype: (itemtype==C_APEX_SELECTMANY)?'apex-item-wrapper--select-many':'apex-item-wrapper--select-one',
         html:        apex.util.applyTemplate(`
-<a-select id="#ID#" name="#ID#" #REQUIRED# #PLACEHOLDER# value="#VALUE#"return-display="true" multi-select="#MULTISELECT#" multi-value="#MULTIVALUE#" #VALUESEPARATOR#  max-results="250" min-characters-search="0" match-type="contains" parents-required="true">
+<a-select id="#ID#" name="#ID#" #REQUIRED# #PLACEHOLDER# value="#VALUE#"return-display="true" multi-select="#MULTISELECT#" multi-value="#MULTIVALUE#" #VALUESEPARATOR#  max-results="250" min-characters-search="0" match-type="contains" parents-required="true" display-values-as="#DISPLAYAS#">
 `,
                                                 {
                                                     placeholders: {
                                                       "VALUESEPARATOR": 'multi-value-storage="separated" multi-value-separator="'+ C_VALUESEPARATOR+'"',
                                                       "MULTIVALUE":  (itemtype==C_APEX_SELECTMANY)?'true':'false',
                                                       "MULTISELECT": (itemtype==C_APEX_SELECTMANY)?'true':'false',
+                                                      "DISPLAYAS":   schemaApex.asChips?'chips':'separated',
                                                       "VALUES":      l_values
                                                    }
                                                 })
     };
-/*
-    l_generated.html +=`
-           <a-column-metadata name="DESCRIPTION" searchable="true" index="0"></a-column-metadata>
-               <a-option value="1">
-                   Option 1
-                   <a-option-column-value>Description for option 1</a-option-column-value>
-               </a-option>
-               <a-option value="2">
-                   Option 2
-                   <a-option-column-value>Description for option 2</a-option-column-value>
-               </a-option>
-               <a-option value="3">
-                   Option 3
-                   <a-option-column-value>Description for option 2</a-option-column-value>
-               </a-option>
-`;
-*/
     for(const l_value of schema.enum ||[]){
       l_generated.html += apex.util.applyTemplate(`
 <a-option value="#VALUE#">
