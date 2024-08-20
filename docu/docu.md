@@ -201,6 +201,20 @@ Currently supported are
         }
       } 
     },
+    "prop7": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "comment":  {"type": "string"},
+          "datetime": {"type": "string", "format": "date-time", "default": "NOW"}          
+        }
+      },
+      "apex":  {
+        "hasInsert": "begin",
+        "hasDelete": true
+      }    
+    },
     "prop8": {"type": null},
     "prop9": ["const": "const string"],
     "prop10": {
@@ -248,7 +262,10 @@ Currently supported are
 ```
 #### Advanced APEX-properties
 
-The **type** **array** is supported for multiselect checkbox-groups, the checkboxes are generate from the **enum**. 
+The **type** **array** is supported for multiselect checkbox-groups, the checkboxes are generate from the 
+- **enum** 
+- lists of entries  (a (+) button and a "delete" button per row)
+ 
 With APEX >=23.2 it supports the **combobox** which allows chips and the input of additional values beside the valies defined in the enum.
 With APEX >=24.1 it supports the **selectOne** ans **selectMany**.
 
@@ -279,6 +296,9 @@ For example JSON-data has **"enum": ["a", "b", "c"]**, so the **"apex": {"enum":
   - **selectmany** to support the multi select dropdown of APEX>=24.1. Here the option **"asChips"=true** will display the items as chips, otherwise as separated list 
   - **richtext** to support a textarea with a richtext-editor (for APEX >=23.2). Use **collspan the use expand the columns, so that the iconbar of the richtext-editor fits  
   - **qrcode** will display (the item will be readonly) a **string** as qrcode (for APEX >= 23.2).
+- For type **array**
+  - **hasInsert** with values **begin** or **end** (default) defines where new rows are inserted in the list
+  - **hasDelete** enables the delete-button for the rows
 
 For a better support of questionnaires, the output direction for itemtypes **radio** and **checkbox**  could be specified with **"direction": "horizontal"** (place the radiobutton or checkbox in a line), default is **vertical** (place in a column)
 
@@ -634,7 +654,17 @@ The Workarround: **switch off "Prevent Lost Updates"**
 
 ### Import
 
-To use the features of APEX23.2, for example the new combobox, don't forget to refresh your theme (shared-components->themes), otherwith the combobox doesn't look as expected. 
+To use the features of APEX23.2 or newer, for example the new combobox, don't forget to refresh your theme (shared-components->themes), otherwith the combobox doesn't look as expected. 
+
+### Useful other stuff
+
+For People who are not familiar with JSON-schema. You can use the APEX-Application  [Simple-Form-Builder](https://github.com/mt-ag/apex-simple-form-builder) for generating JSON-Schema used by the **JSON-Region-Plugin**.
+
+How it works:
+- Generate a form with the Simple-Form-Builder
+- Copy the JSON-Schema
+- Paste it into a column of a database-table or past it as a fixed JSON-Schema in the JSON-Region-Configuration in the APEX-page-editor.
+
 
 ## Know issues
 
@@ -650,4 +680,6 @@ To use the features of APEX23.2, for example the new combobox, don't forget to r
 - In APEX 20.2 the validation for **integer**/**number** doesn't show any errormessages - invalid entires are converted to **null**.
 
 ## Next steps
+
+
 
