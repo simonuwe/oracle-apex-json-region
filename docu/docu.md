@@ -297,8 +297,9 @@ For example JSON-data has **"enum": ["a", "b", "c"]**, so the **"apex": {"enum":
   - **richtext** to support a textarea with a richtext-editor (for APEX >=23.2). Use **collspan the use expand the columns, so that the iconbar of the richtext-editor fits  
   - **qrcode** will display (the item will be readonly) a **string** as qrcode (for APEX >= 23.2).
 - For type **array**
-  - **hasInsert** with values **begin** or **end** (default) defines where new rows are inserted in the list
+  - **hasInsert** with values **begin**, **end** (default) or **none** defines where new rows are inserted in the list (**none** no insert permitted).
   - **hasDelete** enables the delete-button for the rows
+  - if **readOnly: true**, setting **hasInsert** != none will allow to add new rows without the possibility to delete/change existing rows.
 
 For a better support of questionnaires, the output direction for itemtypes **radio** and **checkbox**  could be specified with **"direction": "horizontal"** (place the radiobutton or checkbox in a line), default is **vertical** (place in a column)
 

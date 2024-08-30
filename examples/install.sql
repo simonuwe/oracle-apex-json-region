@@ -62,7 +62,3 @@ ALTER TABLE relation ADD CONSTRAINT relation_fk1 FOREIGN KEY(relation_type_id) R
 ALTER TABLE relation ADD CONSTRAINT relation_fk2 FOREIGN key(from_objecT_id) REFERENCING OBJECT;
 
 ALTER TABLE relation ADD CONSTRAINT relation_fk3 FOREIGN key(to_objecT_id) REFERENCING OBJECT;
-
-
-
-exit;

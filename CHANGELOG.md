@@ -1,45 +1,51 @@
-# 0.9.4
+# 0.9.5 2024-08-30
+## Fixed Issues
+- #129 placeholder not shown for 23.2 combo-item
 
-## New features
-- Support of APEX-24.1 **SelectOne** and **SelectMany**
+## New Features
+- #133 Permissions for "type": "array"
+- #136 Improve demo installation
 
-## Fixed issues
+# 0.9.4 2024-06-20
+## Fixed Issues
+
+## New Features
+- #127 APEX-24.1: Support of new itemtypes SelectOne/SelectMany
+
+## Fixed Issues
 
 # 0.9.3 2024-06-18
-
-# New features
+## New Features
 - Support for APEX-24.1
 
-## Fixed issues
+## Fixed Issues
 - #125 alternate labels for comboboxes
 
 # 0.9.2 2024-06-12
 
-# New features
+## New Features
 - #121 auto upper/lower for text fields
 
-## Fixed issues
+## Fixed Issues
 
 - #118 date format RR not working for APEX<21.2
 - #119 delete button on array items does not work for newly created 
 
 # 0.9.1 2024-06-03
 
-# New features
+## New Features
 - CSS-classes supported for items
 - show image for URLs pointing to images
 - Support of APEX 20.2
+- images via URL
 
-## Fixed issues
+## Fixed Issues
 - #103 Array: add/delete row does not work for simple arrays (bug)
 - #110 APEX-22.1: datepicker broken (bug)
 - #111 configuration of CSS-classes (enhancement)
 - #112 Support of APEX 20.2 (enhancement)
 - #113 Show images for "type": "string", "format": "uri" (enhancement) 
 - #116 wrong time in "default": "NOW" (bug)
-
-## New Features:
-- images via URL
 
 # 0.9.0 2024-05-13
 
@@ -52,7 +58,7 @@
 - **if** with **allOf**, **anyOf** and **not**
 - Align of input-fields
 
-## Fixed issues
+## Fixed Issues
 
 
 - #106 Support of more item configurations (enhancement)

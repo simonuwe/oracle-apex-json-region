@@ -6,70 +6,28 @@
 ![Switch](switch.png)
 
 
-# Installation
 
-To install the demo step into the **examples** directory.
+## Installation of the DEMO-application
 
-
-## install database schema
-
-```
-sqlplus  username@db @install.sql
-sqlplus  username@db @initdata.sql
-```
-
-## install APEX-demo-application
-
-```
-sqlplus  username@db @json-region-demo.sql
-```
-This installs the demo-application and the json-region-plugin which is already part of this application.
-
-## deinstall APEX-application
-
-## deinstall database schema
-
-```
-sqlplus  username@db @deinstall.sql
-```
-
-## Use the generic database example
-
-The example demonstrates how to use row-dependent JSON-schemas.
-It uses a "generic" database-schema with 2 tables **object** and **object_type**
-Via **object_type** it is possible to configure object_type dependend JSON-schemas.
-
-While creating a new object in **objects** the matching input fields will be displays after selecting an **Object Type**.
-
-## Examples for Oracle 23ai
-
-The script validate23ai.sql installs a JSON-schema validation .
-
-```
-sqlplus  username@db @validate23ai.sql
-```
-
-You can try modifying the validation of the JSON-column and see how the UI is changing.
-
-The script duality23ai.sql installs a simple relational-duality-view based on the racing example.
-
-```
-sqlplus  username@db @duality23ai.sql
-```
-
-## Installatopn of the DEMO-application
+The demo application installs objects depending on the Oracle-DB-Release.
+When  installed in an Oracle23ai database, you will see an additional duality-view **JSON23AI** and an additional table **OBJECT23AI** with a JSON-validate-constraint.
+The demo application will contain additional options for this object in the main-menu too.
 
 ### Import the demo application
 
-Import the application from file **json-region-demo.sql**
+Import the application from file **json-region-demo.sql**, do'nt forget to install the supporting objects.
 
 ### Upgrade application to your APEX-version
 
-When the import was successfully completed, with newer versions of APEX a button "Upgrade Application" appears. Upgrade all entries in the upgrade list here.
-Upgrade could be found at **Shared Comonents->Utilities->Upgrade Application too**.
+When the import was successfully completed, for newer versions of APEX (application is xported with 20.2) a button "Upgrade Application" appears. Upgrade all entries in the upgrade list here.
+Upgrade could be found at **Utilities->Upgrade Application**.
 
 ### Upgrading the theme
 
 After the installation has finished, upgrade the theme with **Shared Components->Themes->Universial Theme42->Refresh Theme**.
 Without this, the UI will not always behave/look as expected.
 When you receive an "compatibility mode" error here, upgrade the compatibility mode first, so it matches your APEX-version.  
+
+### Deinstall the demo application
+
+When deleting the demo application do'nt forget to delete the supporting objects too.

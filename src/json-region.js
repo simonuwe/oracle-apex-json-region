@@ -75,6 +75,9 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
   const C_JSON_FORMAT_TIME      = 'time';
   const C_JSON_FORMAT_EMAIL     = 'email';
   const C_JSON_FORMAT_URI       = 'uri';
+  const C_JSON_FORMAT_IPV4      = 'ipv4';
+  const C_JSON_FORMAT_IPV6      = 'ipv6';
+  const C_JSON_FORMAT_UUID      = 'uuid';
 
                                             // conditional keywords
   const C_JSON_COND_ALL_OF      = 'allOf';
@@ -458,7 +461,7 @@ console.log(pOptions);
   /*
   * set the required attribute and UI marker for a UI-item
   */
-  function propagateRequired(dataitem, schema, mode){
+  function propagateRequired(schema, mode){
     apex.debug.trace(">>jsonRegion.propagateRequired", dataitem, schema, mode);
     let item = $('#' + dataitem);
     item.prop("required",mode);
@@ -468,6 +471,20 @@ console.log(pOptions);
       item.closest(".t-Form-fieldContainer").removeClass("is-required");
     }
     apex.debug.trace("<<jsonRegion.propagateRequired");
+  }
+
+  /*
+  * set the readOnly attribute recursively
+  */
+  function propagateReadOnly(schema, readOnly){
+    apex.debug.trace(">>jsonRegion.propagateReadOnly", schema, readOnly);
+    schema.readOnly = readOnly;
+    if(schema.type==C_JSON_OBJECT){
+      for(let [l_name, l_schema] of Object.entries(schema.properties)){
+        propagateReadOnly(l_schema, readOnly);
+      }
+    }
+    apex.debug.trace("<<jsonRegion.propagateReadOnly");
   }
 
   /*
@@ -684,12 +701,14 @@ console.log(pOptions);
     const l_id = atLast?l_items.length-1:0;
     const l_item = l_items[l_id].id;
 
+     // calc next ID for the new row, greater than MAX of the existing rows
     const l_newId = Math.max(...l_items.map( (id, item)=> {
         const val = item.id.replace(/.+_(\d+)_CONTAINER$/, '$1'); 
         return isNaN(val)?0:val
       }).toArray()
     )+1;    
     // console.error(dataitem, l_newId);
+    propagateReadOnly(schema.items, false);  // when add is permitted, add row with 
     let l_generated = generateForObject(schema.items, {}, dataitem, ''+ l_newId, false, true, true, true);
     l_generated.html = '<div class="row jsonregion">' + l_generated.html + '</div>';
 
@@ -724,7 +743,7 @@ console.log(pOptions);
     } else {
       data = data || [];
       if(Array.isArray(data)){
-        if(schema.apex.hasInsert){
+        if(schema.apex.hasInsert != 'none'){
           $('#' + dataitem + '_CREATE').on('click', function(ev){ addArrayRow(dataitem, schema, schema.apex.hasInsert!='begin');});
         }
         for(const i in data){
@@ -1075,7 +1094,7 @@ console.log(pOptions);
     apex.debug.trace(">>jsonRegion.getObjectValues", dataitem, name, schema, oldJson);
     let l_json = {};
     schema.apex = schema.apex||{};
-    if(![C_JSON_ARRAY, C_JSON_OBJECT].includes(schema.type) && schema.readOnly){ // when simple attribute amnd readonly no data could be read, keep the old data
+    if(![C_JSON_ARRAY, C_JSON_OBJECT].includes(schema.type) && schema.readOnly){ // when simple attribute and readonly no data could be read, keep the old data
       l_json = oldJson;
     } else {
       l_json = schema.additionalProperties?oldJson:{};  // when there are additionalProperties, keep there values
@@ -1114,6 +1133,13 @@ console.log(pOptions);
             const l_data = getObjectValues(l_id, '', schema.items, {});
             if(!isObjectEmpty(l_data)){  // don't add empty rows
               l_json.push(l_data);
+            }
+          }
+          if(schema.readOnly) {  // array is readOnly
+            if(schema.apex.hasInsert == 'begin') {  // inserts at the begin, so array = new + old
+              l_json = l_json.concat(oldJson);
+            } else { // inserts at the end, so array = old + new
+              l_json = oldJson.concat(l_json);
             }
           }
         }
@@ -1304,6 +1330,22 @@ console.log(pOptions);
       schema.type = C_JSON_STRING;
     }
 
+    // handle special formats as pattern
+    switch(schema.format){
+    case C_JSON_FORMAT_IPV4:   // examples: 123.123.123.123 or 123.123.123.123/32
+      schema.maxLength = 18;
+      schema.pattern   = "(\\d{1,3}\\.){3}\\d{1,3}(/\\d{1,2})?";
+    break;
+    case C_JSON_FORMAT_IPV6:
+      schema.maxLength = 43;
+      schema.pattern   = "([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}(/\\d{1,3})?";
+    break;
+    case C_JSON_FORMAT_UUID:   // example: 12345678-abcd-abcd-abcd-1234567890ab
+      schema.maxLength = 36;
+      schema.pattern   = "[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}";
+    break;
+    }
+
     // Oracle specific SCHEMA extensions
     if(schema.properties && schema.properties.dbPrimaryKey){  // remove dbPrimaryKey, it's a property and would so be handled as en input item
       delete schema.properties.dbPrimaryKey;
@@ -1448,6 +1490,7 @@ console.log(pOptions);
     }
 
     if(schema.items){  // there is an item definition, process this
+      schema.apex.hasDelete = booleanIfNotSet(schema.apex.hasDelete, !schema.readOnly);
       schema.items.additionalProperties = booleanIfNotSet(schema.items.additionalProperties, additionalProperties);
       propagateProperties(schema.items, level, schema.readOnly, schema.writeOnly, schema.additionalProperties, false);
     }
@@ -1708,6 +1751,16 @@ console.log(pOptions);
         }
       } else {
         switch(schema.format){
+        case C_JSON_FORMAT_IPV4:
+        case C_JSON_FORMAT_IPV6:
+        case C_JSON_FORMAT_UUID:
+            l_generated = {
+              items: 1,
+              wrappertype: 'apex-item-wrapper--text-field',
+              html: `
+  <input type="text" id="#ID#" name="#ID#" #REQUIRED# #PLACEHOLDER# #PATTERN# #TEXTCASE# class="#ALIGN# text_field apex-item-text" size="32" #MINLENGTH# #MAXLENGTH# data-trim-spaces="#TRIMSPACES#" aria-describedby="#ID#_error">
+  `};
+        break;
         case C_JSON_FORMAT_EMAIL:
           l_generated = {
             items: 1,
@@ -2083,7 +2136,7 @@ console.log(pOptions);
  `;
     }
  
-    if(button && schema.apex.hasInsert){  // 
+    if(button && schema.apex.hasInsert != 'none'){  // 
       l_html += `
     <div class="t-Region-headerItems t-Region-headerItems--buttons">
       <button id="#ID#_CREATE" type="button" class="t-Button t-Button--noLabel t-Button--icon js-ignoreChange lto33153869848604592_0" title="Create" aria-label="Create">
@@ -2301,7 +2354,7 @@ console.log(pOptions);
                                                      "INPUTTEMPLATE": l_template.input,
                                                      "CSS":           schema.apex.css||'',
                                                      "ALIGN":        cAlign[schema.apex.align]||'',
-                                                     "READONLY":     schema.readonly?"true":"false",
+                                                     "READONLY":     schema.readOnly?"true":"false",
                                                      "TRIMSPACES":   'BOTH',
                                                      "AJAXIDENTIFIER": pAjaxIdentifier,
                                                      "DATATEMPLATE": pOptions.datatemplateET,
