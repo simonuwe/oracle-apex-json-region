@@ -461,7 +461,7 @@ console.log(pOptions);
   /*
   * set the required attribute and UI marker for a UI-item
   */
-  function propagateRequired(schema, mode){
+  function propagateRequired(dataitem, schema, mode){
     apex.debug.trace(">>jsonRegion.propagateRequired", dataitem, schema, mode);
     let item = $('#' + dataitem);
     item.prop("required",mode);
