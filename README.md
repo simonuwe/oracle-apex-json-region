@@ -3,7 +3,7 @@
 An Oracle-APEX-plugin that provides dynamic input items for an easy way to display and edit **JSON-data** in an APEX-application. 
 The field-items are dynamically generate based on a JSON-schema. The JSON-schema could be fixed for a page or dynamically based on a JSON-schema found by a SQL_query.
 
-Starting with **Oracle 23c** a **JSON-schema** could be used for the valition of a column with datatype **JSON**.
+Starting with **Oracle 23ai** a **JSON-schema** could be used for the valition of a column with datatype **JSON**.
 So this plugin could also use the JSON-schema of the JSON-validation to **dynamically generate items** to display and/or edit **JSON-data**. 
 In this way the field-items of an application always match with the format of your JSON-column.
 

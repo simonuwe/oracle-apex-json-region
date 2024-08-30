@@ -1,13 +1,12 @@
--- drop the database schema of the generic demo application
+-- drop all already installed objects of the generic demo application
 
-
-DROP TABLE relation;
-DROP TABLE object;
-DROP TABLE relation_type;
-DROP TABLE object_type;
-DROP TABLE cardinality;
-
-DROP VIEW object23ai;
-DROP VIEW json23ai;
-
-exit;
+BEGIN
+  FOR l_object IN (
+    SELECT object_type, object_name
+    FROM user_objects WHERE object_name IN ('RELATION', 'OBJECT', 'RELATION_TYPE', 'OBJECT_TYPE', 'CARDINALITY', 'OBJECT23AI', 'DRIVER', 'TEAM', 'JSON23AI')
+  ) LOOP
+    dbms_output.put_line(l_object.object_type||'-'||l_object.object_name);
+    EXECUTE IMMEDIATE 'DROP '||l_object.object_type||' '||l_object.objecT_name||' CASCADE CONSTRAINTS';
+  END LOOP;
+END;
+/

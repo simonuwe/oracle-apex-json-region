@@ -75,6 +75,9 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
   const C_JSON_FORMAT_TIME      = 'time';
   const C_JSON_FORMAT_EMAIL     = 'email';
   const C_JSON_FORMAT_URI       = 'uri';
+  const C_JSON_FORMAT_IPV4      = 'ipv4';
+  const C_JSON_FORMAT_IPV6      = 'ipv6';
+  const C_JSON_FORMAT_UUID      = 'uuid';
 
                                             // conditional keywords
   const C_JSON_COND_ALL_OF      = 'allOf';
@@ -458,7 +461,7 @@ console.log(pOptions);
   /*
   * set the required attribute and UI marker for a UI-item
   */
-  function propagateRequired(dataitem, schema, mode){
+  function propagateRequired(schema, mode){
     apex.debug.trace(">>jsonRegion.propagateRequired", dataitem, schema, mode);
     let item = $('#' + dataitem);
     item.prop("required",mode);
@@ -468,6 +471,20 @@ console.log(pOptions);
       item.closest(".t-Form-fieldContainer").removeClass("is-required");
     }
     apex.debug.trace("<<jsonRegion.propagateRequired");
+  }
+
+  /*
+  * set the readOnly attribute recursively
+  */
+  function propagateReadOnly(schema, readOnly){
+    apex.debug.trace(">>jsonRegion.propagateReadOnly", schema, readOnly);
+    schema.readOnly = readOnly;
+    if(schema.type==C_JSON_OBJECT){
+      for(let [l_name, l_schema] of Object.entries(schema.properties)){
+        propagateReadOnly(l_schema, readOnly);
+      }
+    }
+    apex.debug.trace("<<jsonRegion.propagateReadOnly");
   }
 
   /*
@@ -678,15 +695,29 @@ console.log(pOptions);
   /*
    *  add a row to an array
   */
-  function addArrayRow(dataitem, schema){
-    apex.debug.trace(">>jsonRegion.addArrayRow", dataitem, schema);
+  function addArrayRow(dataitem, schema, atLast){
+    apex.debug.trace(">>jsonRegion.addArrayRow", dataitem, schema, atLast);
     let l_items = $("#" + pRegionId + ' [id^="' + dataitem + '_"].row');
-    const l_id = l_items.length-1
+    const l_id = atLast?l_items.length-1:0;
     const l_item = l_items[l_id].id;
-    let l_generated = generateForObject(schema.items, {}, dataitem, ''+l_id, false, true, true);
+
+     // calc next ID for the new row, greater than MAX of the existing rows
+    const l_newId = Math.max(...l_items.map( (id, item)=> {
+        const val = item.id.replace(/.+_(\d+)_CONTAINER$/, '$1'); 
+        return isNaN(val)?0:val
+      }).toArray()
+    )+1;    
+    // console.error(dataitem, l_newId);
+    propagateReadOnly(schema.items, false);  // when add is permitted, add row with 
+    let l_generated = generateForObject(schema.items, {}, dataitem, ''+ l_newId, false, true, true, true);
     l_generated.html = '<div class="row jsonregion">' + l_generated.html + '</div>';
-    $('#' + l_item ).after(l_generated.html);
-    attachObject(dataitem + '_' + l_id, '', schema.items, false, {}, true);
+
+    if(atLast){
+      $('#' + l_item ).after(l_generated.html);
+    } else {
+      $('#' + l_item ).before(l_generated.html);
+    }
+    attachObject(dataitem + '_' + l_newId, '', schema.items, false, {}, true);
     apex.item.attach($('#' + pRegionId));
     addArrayDeleteEvent();
     apexHacks();
@@ -705,14 +736,16 @@ console.log(pOptions);
       if(schema.apex.itemtype==C_APEX_SELECTMANY){
         apex.item.create(dataitem, {item_type: 'selectmany'});
       } else if(pOptions.apex_version >=C_APEX_VERSION_2302 && (schema.apex.itemtype == C_APEX_COMBO || (item.apex && item.apex.itemtype == C_APEX_COMBO))){
-        apex.item.create(dataitem, {item_type: 'combobox'});
+        apex.item.create(dataitem, {item_type: C_APEX_COMBO});
       } else {
-        apex.widget.checkboxAndRadio('#'+ dataitem,'checkbox');
+        apex.widget.checkboxAndRadio('#'+ dataitem, C_APEX_CHECKBOX);
       };
     } else {
       data = data || [];
       if(Array.isArray(data)){
-        $('#' + dataitem + '_CREATE').on('click', function(ev){ addArrayRow(dataitem, schema);});
+        if(schema.apex.hasInsert != 'none'){
+          $('#' + dataitem + '_CREATE').on('click', function(ev){ addArrayRow(dataitem, schema, schema.apex.hasInsert!='begin');});
+        }
         for(const i in data){
           attachObject(dataitem + C_DELIMITER + i , previtem, item, readonly, data[i], newItem) 
         }
@@ -930,7 +963,7 @@ console.log(pOptions);
 
         switch (schema.apex.itemtype){
         case C_APEX_RADIO:
-          apex.widget.checkboxAndRadio('#'+ dataitem,'radio');
+          apex.widget.checkboxAndRadio('#'+ dataitem, C_APEX_RADIO);
         break;
         case C_APEX_IMAGE:  // display only
         case C_APEX_QRCODE: // display only
@@ -947,7 +980,7 @@ console.log(pOptions);
         apex.widget.yesNo(dataitem, 'SWITCH_CB'); 
       break;
       case C_APEX_RADIO:
-        apex.widget.checkboxAndRadio('#'+ dataitem,'radio');
+        apex.widget.checkboxAndRadio('#'+ dataitem, C_APEX_RADIO);
       break;
       case C_APEX_SELECT:
         apex.item.create(dataitem, {}); 
@@ -1061,7 +1094,7 @@ console.log(pOptions);
     apex.debug.trace(">>jsonRegion.getObjectValues", dataitem, name, schema, oldJson);
     let l_json = {};
     schema.apex = schema.apex||{};
-    if(![C_JSON_ARRAY, C_JSON_OBJECT].includes(schema.type) && schema.readOnly){ // when simple attribute amnd readonly no data could be read, keep the old data
+    if(![C_JSON_ARRAY, C_JSON_OBJECT].includes(schema.type) && schema.readOnly){ // when simple attribute and readonly no data could be read, keep the old data
       l_json = oldJson;
     } else {
       l_json = schema.additionalProperties?oldJson:{};  // when there are additionalProperties, keep there values
@@ -1100,6 +1133,13 @@ console.log(pOptions);
             const l_data = getObjectValues(l_id, '', schema.items, {});
             if(!isObjectEmpty(l_data)){  // don't add empty rows
               l_json.push(l_data);
+            }
+          }
+          if(schema.readOnly) {  // array is readOnly
+            if(schema.apex.hasInsert == 'begin') {  // inserts at the begin, so array = new + old
+              l_json = l_json.concat(oldJson);
+            } else { // inserts at the end, so array = old + new
+              l_json = oldJson.concat(l_json);
             }
           }
         }
@@ -1290,6 +1330,22 @@ console.log(pOptions);
       schema.type = C_JSON_STRING;
     }
 
+    // handle special formats as pattern
+    switch(schema.format){
+    case C_JSON_FORMAT_IPV4:   // examples: 123.123.123.123 or 123.123.123.123/32
+      schema.maxLength = 18;
+      schema.pattern   = "(\\d{1,3}\\.){3}\\d{1,3}(/\\d{1,2})?";
+    break;
+    case C_JSON_FORMAT_IPV6:
+      schema.maxLength = 43;
+      schema.pattern   = "([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}(/\\d{1,3})?";
+    break;
+    case C_JSON_FORMAT_UUID:   // example: 12345678-abcd-abcd-abcd-1234567890ab
+      schema.maxLength = 36;
+      schema.pattern   = "[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}";
+    break;
+    }
+
     // Oracle specific SCHEMA extensions
     if(schema.properties && schema.properties.dbPrimaryKey){  // remove dbPrimaryKey, it's a property and would so be handled as en input item
       delete schema.properties.dbPrimaryKey;
@@ -1434,6 +1490,7 @@ console.log(pOptions);
     }
 
     if(schema.items){  // there is an item definition, process this
+      schema.apex.hasDelete = booleanIfNotSet(schema.apex.hasDelete, !schema.readOnly);
       schema.items.additionalProperties = booleanIfNotSet(schema.items.additionalProperties, additionalProperties);
       propagateProperties(schema.items, level, schema.readOnly, schema.writeOnly, schema.additionalProperties, false);
     }
@@ -1694,6 +1751,16 @@ console.log(pOptions);
         }
       } else {
         switch(schema.format){
+        case C_JSON_FORMAT_IPV4:
+        case C_JSON_FORMAT_IPV6:
+        case C_JSON_FORMAT_UUID:
+            l_generated = {
+              items: 1,
+              wrappertype: 'apex-item-wrapper--text-field',
+              html: `
+  <input type="text" id="#ID#" name="#ID#" #REQUIRED# #PLACEHOLDER# #PATTERN# #TEXTCASE# class="#ALIGN# text_field apex-item-text" size="32" #MINLENGTH# #MAXLENGTH# data-trim-spaces="#TRIMSPACES#" aria-describedby="#ID#_error">
+  `};
+        break;
         case C_JSON_FORMAT_EMAIL:
           l_generated = {
             items: 1,
@@ -1929,9 +1996,9 @@ console.log(pOptions);
    * Currently only arrays of simple types with "enum"
    * returns {items: 0, wrappertype: "xxx", html: "xxx"} 
   */  
-  function generateForArray(schema, data, prefix, name, startend, inArray, newItem){
+  function generateForArray(schema, data, prefix, name, startend, inArray, hasDelete, newItem){
     let l_generated = {items: 0, wrappertype: null, html: ''};
-    apex.debug.trace(">>jsonRegion.generateForArray", schema, data, prefix, name, startend, inArray, newItem);
+    apex.debug.trace(">>jsonRegion.generateForArray", schema, data, prefix, name, startend, inArray, hasDelete, newItem);
     let item = schema.items||{};
     data = data || [];
     if(Array.isArray(data)){
@@ -1958,7 +2025,7 @@ console.log(pOptions);
           l_generated.html = generateSeparator(schema, generateLabel(name, schema), prefix, false, 'CREATE');
         }
         for(const  i in data) {
-          const l_gen = generateForObject(item, data[i], prefix, '' +i, startend, true, newItem);
+          const l_gen = generateForObject(item, data[i], prefix, '' +i, startend, true, hasDelete, newItem);
           l_generated.html += l_gen.html;
         }
 
@@ -2027,7 +2094,7 @@ console.log(pOptions);
         if(schema.then){
           if(schema.then.properties){
             for(let [l_name, l_schema] of Object.entries(schema.then.properties||{})){
-              let l_gen = generateForObject(l_schema, data[l_name], (prefix?prefix+C_DELIMITER:'')+name, l_name, startend, false, newItem);
+              let l_gen = generateForObject(l_schema, data[l_name], (prefix?prefix+C_DELIMITER:'')+name, l_name, startend, false, false, newItem);
               l_generated.html += l_gen.html;
             }
           }
@@ -2036,7 +2103,7 @@ console.log(pOptions);
         if(schema.else){  // with else
           if(schema.else.properties){
             for(let [l_name, l_schema] of Object.entries(schema.else.properties||{})){
-              let l_gen = generateForObject(l_schema, data[l_name], (prefix?prefix+C_DELIMITER:'')+name, l_name, startend, false, newItem);
+              let l_gen = generateForObject(l_schema, data[l_name], (prefix?prefix+C_DELIMITER:'')+name, l_name, startend, false, false, newItem);
               l_generated.html += l_gen.html;
             }
           }
@@ -2069,7 +2136,7 @@ console.log(pOptions);
  `;
     }
  
-    if(button && !schema.readOnly){  // 
+    if(button && schema.apex.hasInsert != 'none'){  // 
       l_html += `
     <div class="t-Region-headerItems t-Region-headerItems--buttons">
       <button id="#ID#_CREATE" type="button" class="t-Button t-Button--noLabel t-Button--icon js-ignoreChange lto33153869848604592_0" title="Create" aria-label="Create">
@@ -2174,11 +2241,11 @@ console.log(pOptions);
    * generate UI for an object schema, follow nested schemas 
    * returns {items:0, wrappertype: "xxx", html: "xxx"}
   */
-  function generateForObject(schema, data, prefix, name, startend, inArray, newItem){
+  function generateForObject(schema, data, prefix, name, startend, inArray, hasDelete, newItem){
     schema.apex = schema.apex ||{};
     let l_generated = {items: 0, wrappertype: null, html: ''};
 
-    apex.debug.trace(">>jsonRegion.generateForObject", schema, data, prefix, name, startend, inArray, newItem);
+    apex.debug.trace(">>jsonRegion.generateForObject", schema, data, prefix, name, startend, inArray, hasDelete, newItem);
 
     if((''+name).startsWith('_')){   // ignore properties having names starting with "_"
         apex.debug.trace("<<jsonRegion.generateForObject", l_generated);
@@ -2187,7 +2254,7 @@ console.log(pOptions);
 
     switch(schema.type){
         case "array":
-          l_generated = generateForArray(schema, data, (prefix?prefix+C_DELIMITER:'')+name, name, startend, true, newItem);
+          l_generated = generateForArray(schema, data, (prefix?prefix+C_DELIMITER:'')+name, name, startend, true, schema.apex.hasDelete, newItem);
         break;
         case "object": // an object, so generate all of its properties
           data = data ||'{}';
@@ -2196,7 +2263,7 @@ console.log(pOptions);
           }
           for(let [l_name, l_schema] of Object.entries(schema.properties||{})){
             startend = 0; //l_row==1?-1:(l_row>=Object.keys(schema.properties).length?1:0);
-            let l_gen = generateForObject(l_schema, data[l_name], (prefix?prefix+C_DELIMITER:'')+name, l_name, startend, false, newItem);
+            let l_gen = generateForObject(l_schema, data[l_name], (prefix?prefix+C_DELIMITER:'')+name, l_name, startend, false, false, newItem);
             l_generated.html += l_gen.html;
             l_generated.items += l_gen.items;
           }
@@ -2207,7 +2274,7 @@ console.log(pOptions);
             l_generated.items += l_gen.items;
           }
 
-          if(inArray && !schema.readOnly){
+          if(inArray && hasDelete){
             l_generated.html += generateArrayDeleteButton(genItemname(prefix, name));
           }
         break;
@@ -2287,7 +2354,7 @@ console.log(pOptions);
                                                      "INPUTTEMPLATE": l_template.input,
                                                      "CSS":           schema.apex.css||'',
                                                      "ALIGN":        cAlign[schema.apex.align]||'',
-                                                     "READONLY":     schema.readonly?"true":"false",
+                                                     "READONLY":     schema.readOnly?"true":"false",
                                                      "TRIMSPACES":   'BOTH',
                                                      "AJAXIDENTIFIER": pAjaxIdentifier,
                                                      "DATATEMPLATE": pOptions.datatemplateET,
@@ -2319,7 +2386,7 @@ console.log(pOptions);
       if(pOptions.headers){
         l_generated.html = generateSeparator(schema, generateLabel(name, schema), genItemname(prefix, name), inArray, null) + l_generated.html;
       }
-      if(!schema.readOnly){
+      if(hasDelete){
         l_generated.html += generateArrayDeleteButton(genItemname(prefix, name));
       }
     }
@@ -2332,7 +2399,7 @@ console.log(pOptions);
   */
   function generateRegion(schema, data, prefix, name, startend, inArray, newItem){
     apex.debug.trace(">>jsonRegion.generateRegion", schema, data, prefix, name, startend, inArray, newItem);
-    let l_generated = generateForObject(schema, data, prefix, name, startend, inArray, newItem);
+    let l_generated = generateForObject(schema, data, prefix, name, startend, inArray, false, newItem);
     l_generated.html = `
 <div class="row jsonregion">
 ` + l_generated.html + `

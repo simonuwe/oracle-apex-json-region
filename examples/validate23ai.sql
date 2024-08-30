@@ -23,3 +23,8 @@ ALTER TABLE object23ai ADD CONSTRAINT object23ai_ck_1 check (data is json valida
   },
   "required"   : ["fruit", "quantity"]
 }]');
+
+
+Insert into UWE.OBJECT23AI (OBJECT_NAME,DATA) values ('bananas','{"fruit":"banana","quantity":12,"orderdate":"2024-08-23"}');
+Insert into UWE.OBJECT23AI (OBJECT_NAME,DATA) values ('apples','{"fruit":"apples","quantity":10,"orderdate":"2024-08-23"}');
+COMMIT;
