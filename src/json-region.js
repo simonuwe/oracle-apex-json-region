@@ -798,7 +798,9 @@ console.log(pOptions);
     switch(schema.type){
     case null:
     case undefined:
-      logSchemaError('missing "type" at', dataitem);
+      if(!'const' in schema) {  // const has no type
+        logSchemaError('missing "type" at', dataitem);
+      }
     break;
     case C_JSON_OBJECT:
       if(typeof schema.properties == 'object'){
@@ -918,7 +920,9 @@ console.log(pOptions);
     switch(schema.type){
     case null:
     case undefined:
-      logSchemaError('missing "type" at ', dataitem);
+      if(!'const' in schema) {  // const has no type
+        logSchemaError('missing "type" at', dataitem);
+      }
     break;
     case C_JSON_OBJECT:
       if(typeof schema.properties == 'object'){

@@ -1,6 +1,7 @@
 # 0.9.5 2024-08-30
 ## Fixed Issues
 - #129 placeholder not shown for 23.2 combo-item
+- #139 "const": "..." causes Errormessage in console log
 
 ## New Features
 - #133 Permissions for "type": "array"
