@@ -8,6 +8,48 @@ COMMIT;
 -- object types
 REM INSERTING into OBJECT_TYPE
 SET DEFINE OFF;
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('1','Server',TO_CLOB(q'[{
+  "type": "object",
+  "required": ["vendor", "model"],
+  "properties": {
+    "vendor":  {"type": "string", "maxLength": 30},
+    "model":   {"type": "string", "maxLength": 30},
+    "os":      {"type": "string"},
+    "cputype": {"type": "string"},
+    "cpus":    {"type": "integer", "minimum": 1},
+    "cores":   {"type": "integer", "minimum": 1},
+    "threads": {"type": "integer", "minimum": 1},
+    "ram":     {"type": "integer", "minimum": 1},
+    "storage": {"type": "integer", "minimum": 0},
+ ]')
+|| TO_CLOB(q'[   "warranty_ends": {"type": "string", "format": "date"}
+  },
+  "apex": {
+    "display": {
+      "default": "Server: #$.vendor# #$.model#"
+    }
+  }
+}]'));
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('2','Switch','{
+  "type": "object",
+  "required": ["vendor", "model"],
+  "properties": {
+    "vendor": {"type": "string",  "maxLength": 30},
+    "model":  {"type": "string",  "maxLength": 30},
+    "ports":  {"type": "integer", "minimum": 1},
+    "speed":  {"type": "string",  "enum": ["10MBit", "100MBit", "1GBit", "10GBit", "100GBit"]}
+  }
+}');
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('3','Printer','{
+  "type": "object",
+  "required": ["vendor", "model"],
+  "properties": {
+    "vendor": {"type": "string", "maxLength": 30},
+    "model": {"type": "string", "maxLength": 30},
+    "color": {"type": "boolean"},
+    "papersize": {"type": "string", "enum":["A4", "A3", "Letter"]}
+   }
+}');
 Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('4','Full-Example',TO_CLOB(q'[
 {
   "title": "An example schema with all supported types",
@@ -19,34 +61,41 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
   "properties": {
     "lastname":    {"$ref": "#/$defs/name"},
     "firstname":   {"$ref": "#/$defs/name"},
-    "birthday":    {"type": "string", "format": "date", "minimum": "1900-01-01"},
-    "gender":      {"type": "string", "enum":["female", "male", "diverse"]},
-    "creditcard":  {"type": "string", "enum":["Visa", "]')
-|| TO_CLOB(q'[Mastercard", "Amex", "Diners"]},
+    "birthday":    {
+                     "type": "string", "format": "date", 
+                     "apex": {"minimum": "1900-01-01"}
+                   },
+    "gender":      {"type": "string", "enum":["female", "m]')
+|| TO_CLOB(q'[ale", "diverse"]},
+    "creditcard":  {"type": "string", "enum":["Visa", "Mastercard", "Amex", "Diners"]},
     "creditid":    {"$ref": "#/$defs/cardid"},
     "salary":      {"type": "number", "minimum": 10000.00,
                     "apex": {"format": "currency"}
                    },
     "payments":    {"type": "integer", "minimum": 1, "maximum": 15},
     "retired":     {"type": "boolean"},
-    "email":       {"type": "string", "format": "email"},
-    "website":     {"type": "string", "format": "uri"},
+    "email":       { "type": "string", 
+                     "apex": {"format": "email"}
+                ]')
+|| TO_CLOB(q'[   },
+    "website":     { "type": "string", 
+                     "apex": {"format": "uri"
+                   }},
     "home_address":       {"$ref": "#/$defs/address"},
-    "offic]')
-|| TO_CLOB(q'[e_address":     {"$ref": "#/$defs/address",
+    "office_address":     {"$ref": "#/$defs/address",
                            "room": {"type": "string"}
                           },
     "comment":     {"type": "string", "maxLength": 500},
     "lastlogin":   {"type": "string", "format": "date-time", "default": "2023-01-02T12:10:20"},
-    "source":      {"const": "via APEX-application"},
+    "source":      {"const": "via APEX-a]')
+|| TO_CLOB(q'[pplication"},
     "dummy":       {"type": "null"}
   },
   "$defs":{
       "name": {"type": "string", "maxLength": 30},
       "address": {
         "type": "object",
-        "required]')
-|| TO_CLOB(q'[": ["zipcode", "city"],
+        "required": ["zipcode", "city"],
         "properties": {
            "country": {"$ref": "#/$defs/name"},
            "state":   {"$ref": "#/$defs/name"},
@@ -55,7 +104,8 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
            "street":  {"$ref": "#/$defs/name"}
          }
        }, 
-      "cardid": {"type": "string", "pattern": "[0-9]{4}( [0-9]{4}){3}"}
+]')
+|| TO_CLOB(q'[      "cardid": {"type": "string", "pattern": "[0-9]{4}( [0-9]{4}){3}"}
    }
 }]'));
 Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('5','Hotel',TO_CLOB(q'[{
@@ -89,10 +139,10 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
       "type": "boolean", 
       "apex": {"itemtype": "switch"}
     },
-    "updated":   {"extendedType": "date",
+    "updated":   {"type": "string",
                   "format": "date-time",
-]')
-|| TO_CLOB(q'[                  "default": "NOW"
+      ]')
+|| TO_CLOB(q'[            "apex": {"default": "now"}
     },
     "features":  {"type": "array",
                   "items": { 
@@ -107,9 +157,9 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
     }
   },
   "required": ["name", "continent", "city"],
-  "$defs" :{
-]')
-|| TO_CLOB(q'[    "price": {
+  "$defs"]')
+|| TO_CLOB(q'[ :{
+    "price": {
         "type": "number",
         "minimum": 0,
         "apex": {"format": "currency"}
@@ -121,103 +171,6 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
     }
   }
 }]'));
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('18','Invoice',TO_CLOB(q'[
-{ 
-  "type":"object",
-  "properties": {
-    "customer": {"$ref": "#/$defs/customer"},
-    "invoice":  {"$ref": "#/$defs/invoice"},
-    "items": {
-      "type": "array",
-      "items": {"$ref": "#/$defs/item"}
-    },
-    "total":    {"$ref": "#/$defs/total"},
-    "payment":  {"$ref": "#/$defs/payment"},
-    "comments": {"type": "string", "maxLength": 1000}
-  },
-  "$defs": {
-    "invoice": {
-      "type": "object",
-      "required": ["nr", "date", "status"],
-      "properties": {
-        "nr": {"]')
-|| TO_CLOB(q'[type": "integer"},
-        "date": {"type": "string", "format": "date", "maximum": "now"},
-        "status": {"type": "string", "default": "new", "enum": ["new", "open", "paid", "rejected"]}
-      }
-    },
-    "sepa": {
-      "type": "object",
-      "required": ["iban"],
-      "properties": {
-        "iban": {"type": "string", "pattern": "[A-Z]{2}[0-9]{2}[0-9]{12,30}"},
-        "bic":  {"type": "string", "pattern": "[A-Z0-9]{11}", "apex": {"colSpan": 3}}
-      }
-    },
-    "creditcard": {
-      ]')
-|| TO_CLOB(q'["type": "object",
-      "required": ["number", "validity", "securitycode"],
-      "properties":{
-        "number":       { "type": "string", "pattern": "[0-9]{4}( [0-9]{4}){3}",  "apex": {"placeholder": "1234 1234 1234 1234"}},
-        "validity":     { "type": "string", "pattern": "[0-9]{2}/[0-9]{2}", "apex": {"placeholder": "00/00", "colSpan": 2}},
-        "securitycode": { "type": "string", "pattern": "[0-9]{3}", "maxLength": 3, "apex": {"colSpan": 2, "itemtype": "password"}}
-      }
-    },
- ]')
-|| TO_CLOB(q'[   "payment": {
-      "type": "object",
-      "required": ["type"],
-      "properties": {
-        "type": {"type": "string", "enum": ["SEPA", "VISA", "Mastercard", "Amex", "Diners"], "apex": {"colSpan": 2}}
-      },
-      "if": {"type": {"const": "SEPA"}},
-      "then": {
-        "properties": {
-          "sepa": {"$ref": "#/$defs/sepa"}
-        }
-      },
-      "else": {
-        "properties": {
-          "creditcard": {"$ref": "#/$defs/creditcard"}
-        }
-      }
-    },
-    "customer": {
-   ]')
-|| TO_CLOB(q'[   "type": "object",
-      "required": ["name", "zipcode", "city"],
-      "properties": {
-        "name":    { "type": "string"},
-        "zipcode": { "type": "string"},
-        "city":    { "type": "string"},
-        "street":  { "type": "string"}
-      }
-    },
-    "item": {
-      "type": "object",
-      "required": ["description", "quantity", "unit", "price_per_unit"],
-      "properties": {
-        "description":    { "type": "string", "apex": {"colSpan": 3}},
-        "quantity":       {"type]')
-|| TO_CLOB(q'[": "integer", "apex": {"colSpan": 2, "align": "right"}},
-        "unit":           {"type": "string", "enum": ["hour", "day", "pcs", "l", "m","km", "m²", "m³"], "apex": {"colSpan": 2}},
-        "price_per_unit": {"type": "number", "apex": {"colSpan": 2, "format": "currency", "align": "right"}},
-        "total":          {"type": "number", "apex": {"colSpan": 2, "format": "currency", "align": "right"}}
-     }
-    },
-    "total": {
-      "type": "object",
-      "required": ["description", "units",]')
-|| TO_CLOB(q'[ "price_per_unit"],
-      "properties": {
-        "total": {"type": "number", "apex": {"colSpan": 11, "format": "currency", "align": "right"}},
-        "vat": {"type": "number", "apex": {"colSpan": 11, "format": "currency", "align": "right", "label": "VAT 10%"}},
-        "grand_total": {"type": "number", "apex": {"colSpan": 11, "format": "currency", "align": "right"}}
-     }
-    }
-  }
-}]'));
 Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('6','Person',TO_CLOB(q'[{
   "type": "object",
   "required": ["lastname", "email"],
@@ -225,12 +178,12 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
   "properties": {
     "lastname":  {"type": "string", "maxLength": 30},
     "firstname": {"type": "string", "maxLength": 30},
-    "email":     {"type": "string", "format": "email"},
+    "email":     {"type": "string", "apex": {"format": "email"}},
     "job":       {"type": "string", "enum": ["User", "DBA", "Admin"]},
     "password":  {"type": "string", "minLength": 8, "maxLength": 8, 
                   "apex": {"itemtype": "password"}},
-    "office_address":     {"$ref"]')
-|| TO_CLOB(q'[: "#/$defs/address"},
+    "office_address":  ]')
+|| TO_CLOB(q'[   {"$ref": "#/$defs/address"},
     "deliverytohome":     { "type": "boolean", "apex": {"type": "switch", "label": "Delivery to homeoffice"}}
   },
   "if": {
@@ -250,9 +203,9 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
   },
   "$defs":{
       "name": {"type": "string", "maxLength": 30},
-      "address": {
- ]')
-|| TO_CLOB(q'[       "type": "object",
+      "add]')
+|| TO_CLOB(q'[ress": {
+        "type": "object",
         "required": ["zipcode", "city"],
         "properties": {
            "country": {"type": "string"},
@@ -265,48 +218,6 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
       "cardid": {"type": "string", "pattern": "[0-9]{4}( [0-9]{4}){3}"}
    }
 }]'));
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('3','Printer','{
-  "type": "object",
-  "required": ["vendor", "model"],
-  "properties": {
-    "vendor": {"type": "string", "maxLength": 30},
-    "model": {"type": "string", "maxLength": 30},
-    "color": {"type": "boolean"},
-    "papersize": {"type": "string", "enum":["A4", "A3", "Letter"]}
-   }
-}');
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('1','Server',TO_CLOB(q'[{
-  "type": "object",
-  "required": ["vendor", "model"],
-  "properties": {
-    "vendor":  {"type": "string", "maxLength": 30},
-    "model":   {"type": "string", "maxLength": 30},
-    "os":      {"type": "string"},
-    "cputype": {"type": "string"},
-    "cpus":    {"type": "integer", "minimum": 1},
-    "cores":   {"type": "integer", "minimum": 1},
-    "threads": {"type": "integer", "minimum": 1},
-    "ram":     {"type": "integer", "minimum": 1},
-    "storage": {"type": "integer", "minimum": 0},
- ]')
-|| TO_CLOB(q'[   "warranty_ends": {"type": "string", "format": "date"}
-  },
-  "apex": {
-    "display": {
-      "default": "Server: #$.vendor# #$.model#"
-    }
-  }
-}]'));
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('2','Switch','{
-  "type": "object",
-  "required": ["vendor", "model"],
-  "properties": {
-    "vendor": {"type": "string",  "maxLength": 30},
-    "model":  {"type": "string",  "maxLength": 30},
-    "ports":  {"type": "integer", "minimum": 1},
-    "speed":  {"type": "string",  "enum": ["10MBit", "100MBit", "1GBit", "10GBit", "100GBit"]}
-  }
-}');
 Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('7','test-array-1',TO_CLOB(q'[{
   "type": "object",
   "properties": {
@@ -343,7 +254,7 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
   "properties": {
     "lastname":  {"type": "string", "maxLength": 30},
     "firstname": {"type": "string", "maxLength": 30},
-    "email":     {"type": "string", "format": "email"},
+    "email":     {"type": "string", "apex": {"format": "email"}},
     "addresses": {
       "type": "array",
       "items": {"$ref": "#/$defs/address"}
@@ -355,8 +266,8 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
       "type": "object",
       "required": ["zipcode", "city"],
       "properties": {
-        "country": {"type": "string"]')
-|| TO_CLOB(q'[},
+        "country": {"type"]')
+|| TO_CLOB(q'[: "string"},
         "zipcode": {"type": "string"},
         "city":    {"type": "string"},
         "street":  {"type": "string"}
@@ -377,36 +288,9 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
     }
   }
 }');
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('301','test-array-4',TO_CLOB(q'[{
-  "type": "object",
-  "properties": {
-    "lastname":  {"type": "string", "maxLength": 30},
-    "firstname": {"type": "string", "maxLength": 30},
-    "email":     {"type": "string", "format": "email"},
-    "comments": {
-      "type":     "array",
-      "items":    {"$ref": "#/$defs/comment"},
-      "readOnly": true,
-      "apex": {
-        "hasInsert": "end",
-        "xhasDelete": false
-      }
-    } 
-  },
-  "$defs":{
-    "comment": {
-      "type": "object",
-      "properties": {
-        "comm]')
-|| TO_CLOB(q'[ent": {"type": "string"},
-        "datetime": {"type": "string", "format": "date-time", "default": "NOW"}
-      }
-    }
-  }
-}]'));
 Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('10','test-boolean-1',TO_CLOB(q'[{
   "type": "object",
-  "required": ["checkbox", "bool_switch", "bool_radio", "radio", "select"],
+  "required": ["checkbox", "bool_switch", "bool_radio", "bool_radio_hor", "select"],
   "properties": {
     "checkbox": { "type": "boolean"},
     "checkbox_optional": { "type": "boolean"},
@@ -420,34 +304,20 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
     },
     "bool_radio_hor": {
       "type": "boolean", 
-      "apex":{"itemtype": "radio", "direction": "horizontal"}
+      "apex":{"itemtype": "radio", "direction": "horizontal"}]')
+|| TO_CLOB(q'[
     },
- ]')
-|| TO_CLOB(q'[   "select": { "type": "boolean",
+    "select": { "type": "boolean",
                 "apex": {"itemtype": "select"}
     }
   }
 }]'));
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('28','test-css-1','{
-  "type":"object",
-  "apex": {"css": "class-object"},
-  "properties":{
-    "lastname": {
-      "type": "string",
-      "apex": { "css": "class-lastname" }
-    },
-    "firstname": {
-      "type": "string",
-      "apex": { "css": "class-firstname" }
-    }
-  }
-}');
 Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('11','test-default-1',TO_CLOB(q'[{
   "type": "object",
   "properties": {
     "string": {"type": "string", "default": "string"},
     "date": {"type": "string", "format": "date", "default": "NOW"},
-    "datetime": {"type": "string", "format": "date-time", "default": "NOW"},
+    "datetime": {"type": "string", "format": "date-time", "apex": {"default": "NOW"}},
     "long_string": {"type": "string", "maxLength": 1000, "default": "long\nstring"},
     "boolean": {
       "type": "boolean", "default": true
@@ -455,9 +325,9 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
     "switch": {
       "type": "boolean", "default": true,
       "apex": {"itemtype": "switch"}
-    },
-    "rad]')
-|| TO_CLOB(q'[io": {
+    }]')
+|| TO_CLOB(q'[,
+    "radio": {
       "type": "boolean", "default": true,
       "apex": {"itemtype": "radio"}
     },
@@ -473,8 +343,8 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
     },
     "starrating": {
       "type": "integer", "maximum": 5, "default": 3,
-      "apex": {]')
-|| TO_CLOB(q'["itemtype": "starrating"}
+     ]')
+|| TO_CLOB(q'[ "apex": {"itemtype": "starrating"}
     },
     "editor_string": {
       "type": "string", "maxLength": 1000, "default": "editor\n**string**",
@@ -559,40 +429,62 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
   "required": ["date", "date_time", "time", "email", "uri"],
   "properties": {
     "date":         { 
-     "type": "string", 
-     "format": "date",
-     "default": "NOW"
+      "type": "string", 
+      "format": "date",
+      "apex": {
+        "default": "NOW"
+      }
     },
     "date_time":    { 
       "type": "string", 
       "format": "date-time",
-      "default": "NOW"
+      "apex": {
+       "default": "NOW"
+      }
     },
     "time": {
       "type": "string",
       "format": "time",
-      "default": "now"
+      "apex": {
+        "default": "now"
+      }
     },
-    "date_past":         { 
-     "type": "string", 
-     "format": "date",
-     "default": "NOW",
-   ]')
-|| TO_CLOB(q'[  "maximum": "NOW"
-    },    "date_future":         { 
-     "type": "string", 
-     "format": "date",
-     "default": "NOW",
-     "minimum": "NOW"
+    "date_past": { 
+ ]')
+|| TO_CLOB(q'[     "type": "string", 
+      "format": "date",
+      "apex": {
+        "default": "NOW",
+        "maximum": "NOW"
+      }
     },
-    "email":        { "type": "string", "format": "email", "apex": {"newRow": true}},
-    "uri":          { "type": "string", "format": "uri"}
+    "date_future": { 
+      "type": "string", 
+      "format": "date",
+      "apex": {
+        "default": "NOW",
+        "minimum": "NOW"
+      } 
+    },
+    "email":        { "type": "string", "apex": {"format": "email", "newRow": true}},
+    "uri":          { "type": "string", "apex": {"format": "uri"}},
+    "ipv4":         { "type":    "string", 
+                  ]')
+|| TO_CLOB(q'[    "apex": {"format":  "ipv4"}
+                    },
+    "ipv6":         { "type":      "string", 
+                      "apex":      {"format": "ipv6", "colSpan": 6}
+                    },
+    "uuid":         { 
+                      "type":      "string", 
+                      "apex":      {"format":    "uuid", "colSpan": 6}
+                    }
   }
 }]'));
 Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('15','test-if-1',TO_CLOB(q'[{
   "type": "object",
   "required": ["lastname"],
-  "additionalProperties": false,
+  "additionalProperties": true,
   "properties": {
     "lastname":  {"type": "string", "maxLength": 30},
     "firstname": {"type": "string", "maxLength": 30},
@@ -606,8 +498,8 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
   },
   "then": {
      "properties": {
-]')
-|| TO_CLOB(q'[       "home_address":     {"$ref": "#/$defs/address"}
+ ]')
+|| TO_CLOB(q'[      "home_address":     {"$ref": "#/$defs/address"}
      }
   },
   "else": {
@@ -625,8 +517,8 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
            "state":   {"type": "string"},
            "zipcode": {"type": "string"},
            "city":    {"type": "string"},
-]')
-|| TO_CLOB(q'[           "street":  {"type": "string"}
+ ]')
+|| TO_CLOB(q'[          "street":  {"type": "string"}
          }
        }
    }
@@ -634,7 +526,7 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
 Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('16','test-if-2',TO_CLOB(q'[{
   "type": "object",
   "required": ["lastname"],
-  "additionalProperties": false,
+  "additionalProperties": true,
   "properties": {
     "lastname":  {"type": "string", "maxLength": 30},
     "firstname": {"type": "string", "maxLength": 30},
@@ -646,8 +538,8 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
     "allOf": [
       {
         "properties": {
-          "anyOf]')
-|| TO_CLOB(q'[": [
+          "anyOf"]')
+|| TO_CLOB(q'[: [
             {"deliverytohome":  { "const": true}},
             {"not": {"invoice_address": { "const": true}}}
           ]
@@ -669,8 +561,8 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
   "$defs":{
       "name": {"type": "string", "maxLength": 30},
       "address": {
-        "type": "obje]')
-|| TO_CLOB(q'[ct",
+        "type": "objec]')
+|| TO_CLOB(q'[t",
         "required": ["zipcode", "city"],
         "properties": {
            "country": {"type": "string"},
@@ -680,7 +572,8 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
            "street":  {"type": "string"}
          }
        }
-   }
+   },
+  "apex": {"validate": false}
 }]'));
 Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('17','test-image-1','{
   "type": "object",
@@ -693,8 +586,7 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
     },
     "image_url": {
       "type": "string",
-      "format": "uri",
-      "apex": {"itemtype": "image"}
+      "apex": { "format": "uri", "itemtype": "image"}
     },
     "qrcode": { 
       "type": "string",
@@ -702,13 +594,103 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
     }
   }
 }');
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('241','test-invalidkeys-1','{
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('18','Invoice',TO_CLOB(q'[
+{ 
   "type":"object",
   "properties": {
-    "key_ok": {"type": "string"},
-    "key not ok": {"type": "string"}
-  } 
-}');
+    "customer": {"$ref": "#/$defs/customer"},
+    "invoice":  {"$ref": "#/$defs/invoice"},
+    "items": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/item"}
+    },
+    "total":    {"$ref": "#/$defs/total"},
+    "payment":  {"$ref": "#/$defs/payment"},
+    "comments": {"type": "string", "maxLength": 1000}
+  },
+  "$defs": {
+    "invoice": {
+      "type": "object",
+      "required": ["nr", "date", "status"],
+      "properties": {
+        "nr": {"]')
+|| TO_CLOB(q'[type": "integer"},
+        "date": {"type": "string", "format": "date", "maximum": "now"},
+        "status": {"type": "string", "default": "new", "enum": ["new", "open", "paid", "rejected"]}
+      }
+    },
+    "sepa": {
+      "type": "object",
+      "required": ["iban"],
+      "properties": {
+        "iban": {"type": "string", "pattern": "[A-Z]{2}[0-9]{2}[0-9]{12,30}", "apex": {"placeholder": "DE123456789012..."}},
+        "bic":  {"type": "string", "pattern": "[A-Z0-9]{11}", "apex": {"placehold]')
+|| TO_CLOB(q'[er": "DE123XYZ456", "colSpan": 3}}
+      }
+    },
+    "creditcard": {
+      "type": "object",
+      "required": ["number", "validity", "securitycode"],
+      "properties":{
+        "number":       { "type": "string", "pattern": "[0-9]{4}( [0-9]{4}){3}",  "apex": {"placeholder": "1234 1234 1234 1234"}},
+        "validity":     { "type": "string", "pattern": "[0-9]{2}/[0-9]{2}", "apex": {"placeholder": "00/00", "colSpan": 2}},
+        "securitycode": { "type": "string", "pattern": "[0-9]{3}", "max]')
+|| TO_CLOB(q'[Length": 3, "apex": {"colSpan": 2, "itemtype": "password"}}
+      }
+    },
+    "payment": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {"type": "string", "enum": ["SEPA", "VISA", "Mastercard", "Amex", "Diners"], "apex": {"colSpan": 2}}
+      },
+      "if": {"type": {"const": "SEPA"}},
+      "then": {
+        "properties": {
+          "sepa": {"$ref": "#/$defs/sepa"}
+        }
+      },
+      "else": {
+        "properties": {
+          "creditcard": {]')
+|| TO_CLOB(q'["$ref": "#/$defs/creditcard"}
+        }
+      }
+    },
+    "customer": {
+      "type": "object",
+      "required": ["name", "zipcode", "city"],
+      "properties": {
+        "name":    { "type": "string"},
+        "zipcode": { "type": "string"},
+        "city":    { "type": "string"},
+        "street":  { "type": "string"}
+      }
+    },
+    "item": {
+      "type": "object",
+      "required": ["description", "quantity", "unit", "price_per_unit"],
+      "properties": {
+        "description":    {]')
+|| TO_CLOB(q'[ "type": "string", "apex": {"colSpan": 3}},
+        "quantity":       {"type": "integer", "apex": {"colSpan": 2, "align": "right"}},
+        "unit":           {"type": "string", "enum": ["hour", "day", "pcs", "l", "m","km", "m²", "m³"], "apex": {"colSpan": 2}},
+        "price_per_unit": {"type": "number", "apex": {"colSpan": 2, "format": "currency", "align": "right"}},
+        "total":          {"type": "number", "apex": {"colSpan": 2, "format": "currency", "align": "right"}}
+     }
+    },
+    "]')
+|| TO_CLOB(q'[total": {
+      "type": "object",
+      "required": ["description", "units", "price_per_unit"],
+      "properties": {
+        "total": {"type": "number", "apex": {"colSpan": 11, "format": "currency", "align": "right"}},
+        "vat": {"type": "number", "apex": {"colSpan": 11, "format": "currency", "align": "right", "label": "VAT 10%"}},
+        "grand_total": {"type": "number", "apex": {"colSpan": 11, "format": "currency", "align": "right"}}
+     }
+    }
+  }
+}]'));
 Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('19','test-numeric-1',TO_CLOB(q'[{
   "type": "object",
   "required": ["int", "number"],
@@ -763,38 +745,6 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
        }, 
       "cardid": {"type": "string", "pattern": "[0-9]{4}( [0-9]{4}){3}"}
    }
-}]'));
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('26','test-placeholder-1',TO_CLOB(q'[{ 
-  "type":"object",
-  "properties": {
-    "string":    {"type": "string", "apex": {"placeholder": "string input"}},
-    "credit_card":    {"type": "string", "pattern": "[0-9]{4}( [0-9]{4}){3}", "apex": {"placeholder": "1234 1234 1234 1234"}},
-    "integer":   {"type": "integer", "apex": {"placeholder": "integer input"}},
-    "number":    {"type": "number", "apex": {"placeholder": "number input"}},
-    "date":      {"type": "string", "format": "date", "apex": {"placeholder": "date input"}},
-   ]')
-|| TO_CLOB(q'[ "date_time": {"type": "string", "format": "date-time", "apex": {"placeholder": "date-time input"}},
-    "combo": {
-      "type": "array",
-      "items": {
-        "type": "string",
-        "enum": ["val1", "val2", "val3"]
-      },
-      "apex": { 
-        "itemtype": "combobox",
-        "placeholder": "combo select/input"
-      }
-    },
-    "selectone": {
-      "type": "string",
-      "enum": ["val1", "val2", "val3"],
-      "apex": { 
-        "itemtype": "selectone",
-        "placeholder": "sel]')
-|| TO_CLOB(q'[ect one"
-      }
-    }
-  } 
 }]'));
 Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('21','test-poll-1',TO_CLOB(q'[{
   "type": "object",
@@ -896,12 +846,11 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
         },
         "image_url": {
           "type": "string",
-          "format": "uri",
-          "apex": {"itemtype": "image"}
+          "apex": {"format": "uri", "itemtype": "image"}
         },
         "qrcode": { 
-      ]')
-|| TO_CLOB(q'[    "type": "string",
+          "type"]')
+|| TO_CLOB(q'[: "string",
           "apex": {"itemtype": "qrcode"}
         },
         "editor_string": {
@@ -918,8 +867,8 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
         },
         "selectone": {
           "type": "string",
-          "enum": ["]')
-|| TO_CLOB(q'[val1", "val2", "val3"],
+          "enum": ["val1", "va]')
+|| TO_CLOB(q'[l2", "val3"],
           "apex": { "itemtype": "selectone"}
         },
         "selectmany": {
@@ -935,8 +884,222 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
         }
       }
     }
+  },
+  "apex": {"validate": false}
+}]'));
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('24','test-string-1',TO_CLOB(q'[{
+  "type": "object",
+  "required": ["string", "radio", "long_string", "editor_string", "password"],
+  "properties": {
+    "string": { "type": "string"},
+    "pattern": { 
+      "type": "string", 
+      "pattern": "[0-9]{4}( [0-9]{4}){3}",
+      "apex": {"label": "CC pattern"}
+    },
+    "all_lower": { "type": "string", "apex": {"textcase": "lower"}},
+    "long_string": { "type": "string", "maxLength":400},
+    "length": { "type": "string", "minLength": 3, "maxLength":10},
+    "password":  {"typ]')
+|| TO_CLOB(q'[e": "string", "minLength": 8, "maxLength": 16, "writeOnly": true, "apex": {"itemtype": "password"}},
+    "select": { "type": "string", "enum": ["val1", "val2", "val3"]},
+    "radio": { 
+      "type": "string",
+      "enum": ["val1", "val2"],
+      "apex": {"itemtype": "radio", "direction": "horizontal", "enum": {"val1": "disp1", "val2": "disp2"}}
+    },
+    "editor_string": { 
+      "type": "string", 
+      "maxLength":400,
+      "apex": {"itemtype": "richtext", "newRow": true, "colSpan": 12}
+  ]')
+|| TO_CLOB(q'[  }
+  },
+  "apex": {
+    "display": {
+      "default": "string: <b>#$.string#</b> - pattern: <b>#$.pattern#</b>",
+      "list1":   "yyyyyyyyyyyyyyyyy"
+    }
   }
 }]'));
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('25','test-validate-1',TO_CLOB(q'[{
+  "type":"object",
+  "properties": {
+    "boolean": {
+      "type": "object",
+      "required": ["checkbox", "switch", "radio", "select", "switch"],
+      "properties": {
+        "checkbox": {"type": "boolean"},
+        "radio":    {"type": "boolean", "apex":{"itemtype": "radio"}},
+        "select":   {"type": "boolean", "apex":{"itemtype": "select"}},
+        "switch":   {"type": "boolean", "apex":{"itemtype": "switch"}}
+      }
+    },
+    "numeric": {
+      "type": "object",
+      "required"]')
+|| TO_CLOB(q'[: ["integer", "number", "money", "money_full", "starrating"],
+      "properties": {
+        "integer":      {"type": "integer", "minimum": 1,    "maximum": 99},
+        "number":       {"type": "number",  "minimum": 0.01, "maximum":99.99},
+        "money":        {"type": "integer", "minimum": 1,    "maximum":99, "apex": {"format": "currency"}},
+        "money_full":   {"type": "number",  "minimum": 0.01, "maximum":99.99, "apex": {"format": "currency"}},
+        "starrating":   { "type": "intege]')
+|| TO_CLOB(q'[r", "minimum": 1, "maximum": 5, "apex": {"itemtype": "starrating"}}
+      }
+    },
+    "string": {
+      "type": "object",
+      "required": ["string", "pattern", "password", "long_string", "editor_string"],
+      "properties": {
+        "string":        {"type": "string"},
+        "pattern": { 
+          "type": "string", 
+          "pattern": "[0-9]{4}( [0-9]{4}){3}",
+          "apex": {"label": "CC pattern"}
+        },
+        "password":  {
+          "type": "string", "minLength": 8, "maxLen]')
+|| TO_CLOB(q'[gth": 16, 
+          "apex": {"itemtype": "password"}
+        },
+        "long_string":   {"type": "string", "maxLength": 400},
+        "editor_string": {"type": "string", "maxLength": 400, "apex": {"itemtype": "richtext", "colSpan": 12}}
+      }
+    },
+    "date": {
+      "type": "object",
+      "required": ["date", "datetime", "time"],
+      "properties": {
+        "date":     {"type": "string", "format": "date",      "apex": {"minimum": "2024-01-01T:00:00:00", "maximum": "now"}},
+        "dat]')
+|| TO_CLOB(q'[etime": {"type": "string", "format": "date-time", "apex": {"minimum": "NOW", "maximum": "2024-12-31T23:59:00"}},
+        "time":     { "type": "string", "format": "time",     "apex": {"minimum": "09:00", "maximum": "16:59" }}
+      }
+    },
+    "array": {
+      "type": "object",
+      "required": ["checkbox", "combo", "num_combo"],
+      "properties": {
+        "checkbox": { "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum"]')
+|| TO_CLOB(q'[: ["val1", "val2", "val3"]
+                      }
+        },
+        "combo": { "type": "array",
+                   "items": {
+                     "type": "string",
+                     "enum": ["val1", "val2", "val3"]
+                   },
+                   "apex": {"itemtype": "combobox"}
+        },
+        "num_combo": { "type": "array",
+          "items": {
+            "type": "integer",
+            "enum": [1,2,3]
+          },
+          "apex": {"itemtype": "combobox"}
+        }
+      }
+]')
+|| TO_CLOB(q'[    }
+  }
+}]'));
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('26','test-placeholder-1',TO_CLOB(q'[{ 
+  "type":"object",
+  "properties": {
+    "string":    {"type": "string", "apex": {"placeholder": "string input"}},
+    "credit_card":    {"type": "string", "pattern": "[0-9]{4}( [0-9]{4}){3}", "apex": {"placeholder": "1234 1234 1234 1234"}},
+    "integer":   {"type": "integer", "apex": {"placeholder": "integer input"}},
+    "number":    {"type": "number", "apex": {"placeholder": "number input"}},
+    "date":      {"type": "string", "format": "date", "apex": {"placeholder": "date input"}},
+   ]')
+|| TO_CLOB(q'[ "date_time": {"type": "string", "format": "date-time", "apex": {"placeholder": "date-time input"}},
+    "combo": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["val1", "val2", "val3"]
+      },
+      "apex": { 
+        "itemtype": "combobox",
+        "placeholder": "combo select/input"
+      }
+    },
+    "selectone": {
+      "type": "string",
+      "enum": ["val1", "val2", "val3"],
+      "apex": { 
+        "itemtype": "selectone",
+        "placeholder": "sel]')
+|| TO_CLOB(q'[ect one"
+      }
+    }
+  } 
+}]'));
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('27','test-template-1',TO_CLOB(q'[{
+  "type": "object",
+  "required": ["floating_req", "above_req", "left_req", "hidden_req"],
+  "properties": {
+    "floating_req": {
+      "type": "string",
+      "apex": {"template": "floating"}
+    },
+    "floating_opt": {
+      "type": "string",
+      "apex": {"template": "floating"}
+    },
+    "above_req": {
+      "type": "string",
+      "apex": {"template": "above", "newRow": true}
+    },
+    "above_opt": {
+      "type": "string",
+      "apex": {"template": "above"}
+    },
+    "left_req": {]')
+|| TO_CLOB(q'[
+      "type": "string",
+      "apex": {"template": "left", "newRow": true}
+    },
+    "left_opt": {
+      "type": "string",
+      "apex": {"template": "left"}
+    },
+    "hidden_req": {
+      "type": "string",
+      "apex": {"template": "hidden", "newRow": true}
+    },
+    "hidden_opt": {
+      "type": "string",
+      "apex": {"template": "hidden"}
+    }
+  },
+  "apex": {"template": "above"}
+}]'));
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('28','test-css-1','{
+  "type":"object",
+  "apex": {"css": "class-object"},
+  "properties":{
+    "lastname": {
+      "type": "string",
+      "apex": { "css": "class-lastname" }
+    },
+    "firstname": {
+      "type": "string",
+      "apex": { "css": "class-firstname" }
+    }
+  }
+}');
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('241','test-invalidkeys-1','{
+  "type":"object",
+  "properties": {
+    "key_ok": {"type": "string"},
+    "key not ok": {"type": "string"}
+  } 
+}');
 Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('261','test-ref-1',TO_CLOB(q'[{ "type":"object",
   "properties": {
     "boolean":   {"$ref": "#/$defs/boolean"},
@@ -1068,165 +1231,43 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
     }
   }
 }]'));
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('24','test-string-1',TO_CLOB(q'[{
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('301','test-array-4',TO_CLOB(q'[{
   "type": "object",
-  "required": ["string", "radio", "combo", "long_string", "editor_string", "password"],
   "properties": {
-    "string": { "type": "string"},
-    "pattern": { 
-      "type": "string", 
-      "pattern": "[0-9]{4}( [0-9]{4}){3}",
-      "apex": {"label": "CC pattern"}
-    },
-    "all_lower": { "type": "string", "apex": {"textcase": "lower"}},
-    "long_string": { "type": "string", "maxLength":400},
-    "length": { "type": "string", "minLength": 3, "maxLength":10},
-    "password]')
-|| TO_CLOB(q'[":  {"type": "string", "minLength": 8, "maxLength": 16, "writeOnly": true, "apex": {"itemtype": "password"}},
-    "select": { "type": "string", "enum": ["val1", "val2", "val3"]},
-    "radio": { 
-      "type": "string",
-      "enum": ["val1", "val2"],
-      "apex": {"itemtype": "radio", "direction": "horizontal", "enum": {"val1": "disp1", "val2": "disp2"}}
-    },
-    "editor_string": { 
-      "type": "string", 
-      "maxLength":400,
-      "apex": {"itemtype": "richtext", "newRow": true, "colSpan]')
-|| TO_CLOB(q'[": 12}
+    "lastname":  {"type": "string", "maxLength": 30},
+    "firstname": {"type": "string", "maxLength": 30},
+    "email":     {"type": "string", "apex": {"format": "email"}},
+    "comments": {
+      "type":     "array",
+      "items":    {"$ref": "#/$defs/comment"},
+      "readOnly": true,
+      "apex": {
+        "hasInsert": "end",
+        "xhasDelete": false
+      }
+    } 
+  },
+  "$defs":{
+    "comment": {
+      "type": "object",
+      "properties": {
+   ]')
+|| TO_CLOB(q'[     "comment": {"type": "string"},
+        "datetime": {"type": "string", "format": "date-time", "default": "NOW"}
+      }
     }
   },
-  "apex": {
-    "display": {
-      "default": "string: <b>#$.string#</b> - pattern: <b>#$.pattern#</b>",
-      "list1":   "yyyyyyyyyyyyyyyyy"
-    }
-  }
+  "apex": {"validate": false}
 }]'));
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('27','test-template-1',TO_CLOB(q'[{
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('321','test-extended-1','{
   "type": "object",
-  "required": ["floating_req", "above_req", "left_req", "hidden_req"],
   "properties": {
-    "floating_req": {
-      "type": "string",
-      "apex": {"template": "floating"}
-    },
-    "floating_opt": {
-      "type": "string",
-      "apex": {"template": "floating"}
-    },
-    "above_req": {
-      "type": "string",
-      "apex": {"template": "above", "newRow": true}
-    },
-    "above_opt": {
-      "type": "string",
-      "apex": {"template": "above"}
-    },
-    "left_req": {]')
-|| TO_CLOB(q'[
-      "type": "string",
-      "apex": {"template": "left", "newRow": true}
-    },
-    "left_opt": {
-      "type": "string",
-      "apex": {"template": "left"}
-    },
-    "hidden_req": {
-      "type": "string",
-      "apex": {"template": "hidden", "newRow": true}
-    },
-    "hidden_opt": {
-      "type": "string",
-      "apex": {"template": "hidden"}
-    }
+    "date": {"extendedType": "date", "format": "date", "apex": {"default": "now"}},
+    "datetime": {"extendedType": "date", "format": "date-time", "apex": {"default": "now"}},
+    "extended": {"extendedType": "date", "apex": {"default": "now"}}
   },
-  "apex": {"template": "above"}
-}]'));
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('25','test-validate-1',TO_CLOB(q'[{
-  "type":"object",
-  "properties": {
-    "boolean": {
-      "type": "object",
-      "required": ["checkbox", "switch", "radio", "select", "switch"],
-      "properties": {
-        "checkbox": {"type": "boolean"},
-        "radio":    {"type": "boolean", "apex":{"itemtype": "radio"}},
-        "select":   {"type": "boolean", "apex":{"itemtype": "select"}},
-        "switch":   {"type": "boolean", "apex":{"itemtype": "switch"}}
-      }
-    },
-    "numeric": {
-      "type": "object",
-      "required"]')
-|| TO_CLOB(q'[: ["integer", "number", "money", "money_full", "starrating"],
-      "properties": {
-        "integer":      {"type": "integer", "minimum": 1,    "maximum": 99},
-        "number":       {"type": "number",  "minimum": 0.01, "maximum":99.99},
-        "money":        {"type": "integer", "minimum": 1,    "maximum":99, "apex": {"format": "currency"}},
-        "money_full":   {"type": "number",  "minimum": 0.01, "maximum":99.99, "apex": {"format": "currency"}},
-        "starrating":   { "type": "intege]')
-|| TO_CLOB(q'[r", "minimum": 1, "maximum": 5, "apex": {"itemtype": "starrating"}}
-      }
-    },
-    "string": {
-      "type": "object",
-      "required": ["string", "pattern", "password", "long_string", "editor_string"],
-      "properties": {
-        "string":        {"type": "string"},
-        "pattern": { 
-          "type": "string", 
-          "pattern": "[0-9]{4}( [0-9]{4}){3}",
-          "apex": {"label": "CC pattern"}
-        },
-        "password":  {
-          "type": "string", "minLength": 8, "maxLen]')
-|| TO_CLOB(q'[gth": 16, 
-          "apex": {"itemtype": "password"}
-        },
-        "long_string":   {"type": "string", "maxLength": 400},
-        "editor_string": {"type": "string", "maxLength": 400, "apex": {"itemtype": "richtext", "colSpan": 12}}
-      }
-    },
-    "date": {
-      "type": "object",
-      "required": ["date", "datetime", "time"],
-      "properties": {
-        "date":     {"type": "string", "format": "date",      "minimum": "2024-01-01T:00:00:00", "maximum": "now"},
-        "datetime": {"]')
-|| TO_CLOB(q'[type": "string", "format": "date-time", "minimum": "NOW", "maximum": "2024-12-31T23:59:00"},
-        "time":     { "type": "string", "format": "time", "minimum": "09:00", "maximum": "16:59" }
-      }
-    },
-    "array": {
-      "type": "object",
-      "required": ["checkbox", "combo", "num_combo"],
-      "properties": {
-        "checkbox": { "type": "array",
-                      "items": {
-                        "type": "string",
-                        "enum": ["val1", "val2", "val3"]
-       ]')
-|| TO_CLOB(q'[               }
-        },
-        "combo": { "type": "array",
-                   "items": {
-                     "type": "string",
-                     "enum": ["val1", "val2", "val3"]
-                   },
-                   "apex": {"itemtype": "combobox"}
-        },
-        "num_combo": { "type": "array",
-          "items": {
-            "type": "integer",
-            "enum": [1,2,3]
-          },
-          "apex": {"itemtype": "combobox"}
-        }
-      }
-    }
-  }
-}]'));
+  "apex": {"validate": false}
+}');
 
 COMMIT;
 

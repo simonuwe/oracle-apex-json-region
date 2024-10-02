@@ -1,3 +1,9 @@
+# 0.9.6 2024-10-??
+
+## Fixed Issues
+- #144 dbms_json_schema.is_valid return error when json-data IS NULL 
+- #142 Oracle23ai: validation-error on JSON-schema at minumum, maximum for non numeric types
+
 # 0.9.5 2024-08-30
 ## Fixed Issues
 - #129 placeholder not shown for 23.2 combo-item

@@ -115,6 +115,10 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
   const C_APEX_LEFT         = 'left';
   const C_APEX_CENTER       = 'center';
   const C_APEX_RIGHT        = 'right';
+  const C_APEX_UPPER        = 'upper';
+  const C_APEX_LOWER        = 'lower';
+
+  const C_APEX_NOW          = 'now';
 
   const C_APEX_TEMPLATE_LABEL_HIDDEN   = 'hidden';
   const C_APEX_TEMPLATE_LABEL_LEFT     = 'left';
@@ -231,8 +235,8 @@ console.log(pOptions);
 
     // Hack to attach all Handler to the fields in the json-region  
     apex.debug.trace('>>jsonRegion.apexHacks');
-       // apex.item.attach($('#' + pRegionId));
-          // hack to support floating lables for universal-thema 42
+      // apex.item.attach($('#' + pRegionId));
+      // hack to support floating lables for universal-thema 42
     if(apex.theme42){
       apex.debug.info('Theme42 patch');
       apex.event.trigger(apex.gPageContext$, 'apexreadyend');
@@ -544,7 +548,7 @@ console.log(pOptions);
   function getConstant(format, str, isDefault){
     apex.debug.trace(">>jsonRegion.getConstant", format, str, isDefault);
     let l_value = str;
-    if((typeof(str)=='string') && (str.toUpperCase() == 'NOW')){
+    if((typeof(str)=='string') && (str.toLowerCase() == C_APEX_NOW)){
       let l_now = new Date();
       l_now = new Date(l_now - l_now.getTimezoneOffset()*60000).toISOString();
       switch(format){
@@ -1268,6 +1272,12 @@ console.log(pOptions);
       apex.debug.error('propagateProperties recursion', level, 'to deep')
       return;
     }
+
+      // harmonize
+    if(schema.apex.format)  { schema.format = schema.apex.format}
+    if(schema.apex.minimum) { schema.minimum = schema.apex.minimum}
+    if(schema.apex.maximum) { schema.maximum = schema.apex.maximum}
+    if(schema.apex.default) { schema.default = schema.apex.default}
 
     if(schema.dependentSchemas){ // convert dependent schemas to IF/ELSE, required property to dependentRequired
       let l_keys = Object.keys(schema.dependentSchemas);
@@ -2728,8 +2738,8 @@ console.log(pOptions);
         if(!pOptions.readonly){  // do nothing for readonly json-region
           apex.debug.trace('jsonRegion', pOptions);
           let l_json=getObjectValues(pOptions.dataitem, '', pOptions.schema, gData);
-          if(pOptions.removeNulls){
-            l_json = removeNulls(l_json);
+          if(pOptions.removeNulls){ 
+            l_json = removeNulls(l_json)||{};   // NULL as JSON not allowed for validation
             apex.debug.trace('removed NULLs', l_json);
           }
           apex.debug.trace('generated JSON', l_json);
