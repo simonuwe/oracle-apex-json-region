@@ -239,7 +239,28 @@ console.log(pOptions);
       // hack to support floating lables for universal-thema 42
     if(apex.theme42){
       apex.debug.info('Theme42 patch');
-      apex.event.trigger(apex.gPageContext$, 'apexreadyend');
+      // apex.event.trigger(apex.gPageContext$, 'apexreadyend');
+      function needsSmallLabel( item ){
+        return  item.val() ||
+                item.attr( 'placeholder' ) ||
+                item.children( 'option' ).first().text();
+      };
+      function sizeLabel(elem, closest){
+        if(needsSmallLabel($(elem))){
+          $(closest).addClass('is-active');
+        } else {
+          $(closest).removeClass('is-active');
+        }
+      }
+
+      $('#' + pRegionId + ' .t-Form-fieldContainer--floatingLabel input').each(function(id, elem){
+        const closest = elem.closest('.t-Form-fieldContainer');
+        console.log('PATCH ITEM:', id, elem.id, closest.id, $(elem).val());
+        sizeLabel(elem, closest);  // set inizal labelsize
+        $(elem).on('blur', function() {
+          sizeLabel(elem, closest); // change labelsize
+        });
+      })
     }
 
     apex.debug.trace('<<jsonRegion.apexHacks');
@@ -1772,7 +1793,7 @@ console.log(pOptions);
               items: 1,
               wrappertype: 'apex-item-wrapper--text-field',
               html: `
-  <input type="text" id="#ID#" name="#ID#" #REQUIRED# #PLACEHOLDER# #PATTERN# #TEXTCASE# class="#ALIGN# text_field apex-item-text" size="32" #MINLENGTH# #MAXLENGTH# data-trim-spaces="#TRIMSPACES#" aria-describedby="#ID#_error">
+  <input type="text" id="#ID#" name="#ID#" #REQUIRED# #PLACEHOLDER#  value="#VALUE#" #PATTERN# #TEXTCASE# class="#ALIGN# text_field apex-item-text" size="32" #MINLENGTH# #MAXLENGTH# data-trim-spaces="#TRIMSPACES#" aria-describedby="#ID#_error">
   `};
         break;
         case C_JSON_FORMAT_EMAIL:
@@ -1780,7 +1801,7 @@ console.log(pOptions);
             items: 1,
             wrappertype: 'apex-item-wrapper--text-field',
             html: `
-<input type="email" id="#ID#" name="#ID#" #REQUIRED# #PLACEHOLDER# #PATTERN# #TEXTCASE# class="#ALIGN# text_field apex-item-text" size="32" #MINLENGTH# #MAXLENGTH# data-trim-spaces="#TRIMSPACES#" aria-describedby="#ID#_error">
+<input type="email" id="#ID#" name="#ID#" #REQUIRED# #PLACEHOLDER#  value="#VALUE#" #PATTERN# #TEXTCASE# class="#ALIGN# text_field apex-item-text" size="32" #MINLENGTH# #MAXLENGTH# data-trim-spaces="#TRIMSPACES#" aria-describedby="#ID#_error">
 `};
         break;
         case C_JSON_FORMAT_URI:
@@ -1788,7 +1809,7 @@ console.log(pOptions);
             items: 1,
             wrappertype: 'apex-item-wrapper--text-field',
             html: `
-<input type="url" id="#ID#" name="#ID#" #REQUIRED# #PLACEHOLDER# #PATTERN# #TEXTCASE# class="#ALIGN# text_field apex-item-text" size="32" #MINLENGTH# #MAXLENGTH# data-trim-spaces="#TRIMSPACES#" aria-describedby="#ID#_error">
+<input type="url" id="#ID#" name="#ID#" #REQUIRED# #PLACEHOLDER#  value="#VALUE#" #PATTERN# #TEXTCASE# class="#ALIGN# text_field apex-item-text" size="32" #MINLENGTH# #MAXLENGTH# data-trim-spaces="#TRIMSPACES#" aria-describedby="#ID#_error">
 `};
         break;
         case C_JSON_FORMAT_DATE:
@@ -1860,7 +1881,7 @@ console.log(pOptions);
             items: 1,
             wrappertype: 'apex-item-wrapper--text-field',
             html: `
-<input type="time" id="#ID#" name="#ID#" #REQUIRED# #MIN# #MAX# class="text_field apex-item-text"  #PLACEHOLDER# size="5" data-trim-spaces="#TRIMSPACES#" aria-describedby="#ID#_error"/>
+<input type="time" id="#ID#" name="#ID#" #REQUIRED# #MIN# #MAX# value=#VALUE# class="text_field apex-item-text"  #PLACEHOLDER# size="5" data-trim-spaces="#TRIMSPACES#" aria-describedby="#ID#_error"/>
 `};
         break;
         default:
@@ -1868,7 +1889,7 @@ console.log(pOptions);
            items: 1,
            wrappertype: 'apex-item-wrapper--text-field',
            html: `
-<input type="text" id="#ID#" name="#ID#" #REQUIRED# #MINLENGTH# #MAXLENGTH# #PLACEHOLDER# #PATTERN# #TEXTCASE# class="#ALIGN# text_field apex-item-text" size="32" data-trim-spaces="#TRIMSPACES#" aria-describedby="#ID#_error">
+<input type="text" id="#ID#" name="#ID#" #REQUIRED# #MINLENGTH# #MAXLENGTH# value="#VALUE#" #PLACEHOLDER# #PATTERN# #TEXTCASE# class="#ALIGN# text_field apex-item-text" size="32" data-trim-spaces="#TRIMSPACES#" aria-describedby="#ID#_error">
 `};
           switch (schema.apex.itemtype){
           case C_APEX_PASSWORD:
@@ -1876,7 +1897,7 @@ console.log(pOptions);
               items: 1,                
               wrappertype: 'apex-item-wrapper--password',
               html: `
-<input type="password" name="#ID#"" size="30" #PATTERN# #REQUIRED# #MINLENGTH# #MAXLENGTH# autocomplete="password" value="" id="#ID#" class="password apex-item-text">
+<input type="password" name="#ID#"" size="30" #PATTERN# #REQUIRED# #MINLENGTH# #MAXLENGTH# autocomplete="password" value="#VALUE#" id="#ID#" class="password apex-item-text">
 `};
           break;    
           case C_APEX_RICHTEXT:
@@ -2698,9 +2719,9 @@ console.log(pOptions);
     await refresh(newItem);
 
     const callbacks = {
-        // Callback for refreshing of the JSON-region, is called by APEX-refresh
+        // Callback for refreshing the JSON-region, is called by APEX-refresh
       refresh: function() {
-        apex.debug.trace('>>callback.refresh: ', pRegionId, pAjaxIdentifier, pOptions, gData);
+        apex.debug.trace('>>jsonRegion.refresh callback: ', pRegionId, pAjaxIdentifier, pOptions, gData);
         if(pOptions.isDynamic){
            apex.server.plugin ( 
             pAjaxIdentifier, 
@@ -2729,7 +2750,7 @@ console.log(pOptions);
             }  
           );
         }
-        apex.debug.trace('<<callback.refresh')
+        apex.debug.trace('<<jsonRegion.refresh callback')
       },
 
         // Callback called by event "apexbeforepagesubmit"
@@ -2757,10 +2778,12 @@ console.log(pOptions);
       }
     };
 
-    apex.jQuery(apex.gPageContext$).bind( "apexbeforepagesubmit", function() {
+    apex.jQuery(apex.gPageContext$).on( "apexbeforepagesubmit", function() {
+      apex.debug.trace('EVENT:', 'apexbeforepagesubmit');
       callbacks.beforeSubmit();
     });
     apex.jQuery( apex.gPageContext$ ).on( "apexpagesubmit", function() {
+      apex.debug.trace('EVENT:', 'apexpagesubmit');
       callbacks.submit();
     });
     apex.jQuery( window ).on( "apexbeforerefresh", function() {

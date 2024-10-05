@@ -1,4 +1,4 @@
-# 0.9.6 2024-10-??
+# 0.9.6 2024-10-06
 
 ## Fixed Issues
 - #144 dbms_json_schema.is_valid return error when json-data IS NULL 
@@ -7,7 +7,7 @@
 # 0.9.5 2024-08-30
 ## Fixed Issues
 - #129 placeholder not shown for 23.2 combo-item
-- #139 "const": "..." causes Errormessage in console log
+- #139 "const": "..." causes errormessage in console log
 
 ## New Features
 - #133 Permissions for "type": "array"
