@@ -247,13 +247,16 @@ console.log(pOptions);
       };
       function sizeLabel(elem, closest){
         if(needsSmallLabel($(elem))){
-          $(closest).addClass('is-active');
+          $(closest).addClass('js-show-label');
         } else {
-          $(closest).removeClass('is-active');
+          $(closest).removeClass('js-show-label');
         }
       }
 
-      $('#' + pRegionId + ' .t-Form-fieldContainer--floatingLabel input').each(function(id, elem){
+      // $('#' + pRegionId + ' .t-Form-fieldContainer--floatingLabel input, ' + '#' + pRegionId + ' .t-Form-fieldContainer--floatingLabel select').each(function(id, elem){
+      const l_elems = ['input', 'select', 'textarea'].map( x=>{return '#' + pRegionId + ' .t-Form-fieldContainer--floatingLabel ' + x}).join(', ');
+      apex.debug.trace('PATCH ', l_elems);
+      $(l_elems).each(function(id, elem){
         const closest = elem.closest('.t-Form-fieldContainer');
         console.log('PATCH ITEM:', id, elem.id, closest.id, $(elem).val());
         sizeLabel(elem, closest);  // set inizal labelsize
@@ -688,7 +691,9 @@ console.log(pOptions);
                   case C_APEX_RICHTEXT:
                   break;    
                   }  
-                }  
+                }  else {
+                  l_value = value
+                }
             }
           break;  
           case C_JSON_BOOLEAN:
@@ -734,7 +739,7 @@ console.log(pOptions);
     )+1;    
     // console.error(dataitem, l_newId);
     propagateReadOnly(schema.items, false);  // when add is permitted, add row with 
-    let l_generated = generateForObject(schema.items, {}, dataitem, ''+ l_newId, false, true, true, true);
+    let l_generated = generateForObject(schema.items, null, dataitem, ''+ l_newId, false, true, true, true);
     l_generated.html = '<div class="row jsonregion">' + l_generated.html + '</div>';
 
     if(atLast){
@@ -1881,7 +1886,7 @@ console.log(pOptions);
             items: 1,
             wrappertype: 'apex-item-wrapper--text-field',
             html: `
-<input type="time" id="#ID#" name="#ID#" #REQUIRED# #MIN# #MAX# value=#VALUE# class="text_field apex-item-text"  #PLACEHOLDER# size="5" data-trim-spaces="#TRIMSPACES#" aria-describedby="#ID#_error"/>
+<input type="time" id="#ID#" name="#ID#" #REQUIRED# #MIN# #MAX# value="#VALUE#" class="text_field apex-item-text"  #PLACEHOLDER# size="5" data-trim-spaces="#TRIMSPACES#" aria-describedby="#ID#_error"/>
 `};
         break;
         default:
@@ -1970,7 +1975,7 @@ console.log(pOptions);
                 items: 1,
                 wrappertype: 'apex-item-wrapper--number-field',
                 html: `
-<input type="text" id="#ID#" name="#ID#" #REQUIRED# #PLACEHOLDER# class="#ALIGN# number_field apex-item-text apex-item-number" size="30" #MIN# #MAX# data-format="#FORMAT#" inputmode="decimal">
+<input type="text" id="#ID#" name="#ID#" #REQUIRED# #PLACEHOLDER# value="#VALUE#" class="#ALIGN# number_field apex-item-text apex-item-number" size="30" #MIN# #MAX# data-format="#FORMAT#" inputmode="decimal">
 `};
           }
         }
@@ -2352,6 +2357,7 @@ console.log(pOptions);
 `;
         }
 
+        const l_value = jsonValue2Item(schema, data, newItem)||'';
         const l_template = genTemplate(pOptions.template, pOptions.colwidth, schema);
         // console.log(data, schema)
         l_generated = {
@@ -2405,8 +2411,8 @@ console.log(pOptions);
                                                      "ISREQUIRED":   schema.isRequired?'is-required':"",
                                                      "MIN":          ("minimum" in schema)?([C_JSON_FORMAT_DATE, C_JSON_FORMAT_DATETIME, C_JSON_FORMAT_TIME].includes(schema.format)?'min':'data-min')+'="'+schema.minimum+'"':"",
                                                      "MAX":          ("maximum" in schema)?([C_JSON_FORMAT_DATE, C_JSON_FORMAT_DATETIME, C_JSON_FORMAT_TIME].includes(schema.format)?'max':'data-max')+ '="'+schema.maximum+'"':"",
-                                                     "VALUE":        jsonValue2Item(schema, data, newItem)||'',
-                                                     "QUOTEVALUE":   (schema.type== C_JSON_STRING && data)?apex.util.escapeHTML(''+data):(data?data:''),
+                                                     "VALUE":        l_value,
+                                                     "QUOTEVALUE":   (schema.type== C_JSON_STRING)?apex.util.escapeHTML(''+l_value):l_value,
                                                      "IMAGE":        schema.apex.image||""
                                                     }
                                     })
