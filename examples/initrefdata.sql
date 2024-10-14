@@ -908,6 +908,10 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
       "enum": ["val1", "val2"],
       "apex": {"itemtype": "radio", "direction": "horizontal", "enum": {"val1": "disp1", "val2": "disp2"}}
     },
+    "color": {
+      "type": "string",
+      "apex": {"itemtype": "color"}
+    },
     "editor_string": { 
       "type": "string", 
       "maxLength":400,

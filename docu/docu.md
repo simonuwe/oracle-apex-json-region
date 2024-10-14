@@ -164,6 +164,10 @@ Currently supported are
       "format": "uri", 
       "apex": {"itemtype": "image"}
     },
+    "image": {
+      "type":   "string", 
+      "apex": {"itemtype": "color", "colormode": "HEX"}
+    },
     "prop5": {
       "type": "string",
       "readOnly": true,  
@@ -291,6 +295,7 @@ Also the unsupported JSON-schema-formats like **ipv4**,**uuid**, **email, .. can
   - **starrating** uses for the numeric types **integer** and **number** stars to enter the value. The property **maximum** (which also defines in JSON-schema the max value for the item) is used for the number of displayed stars.
   - **checkbox** use checkboxes for the values of an **array** of **string** with an **enum**. 
   - **radio** use a radio group for the values of an **enum** (default is a selectlist).
+  - **color** use a colorpicker for selecting a color. The mode **HEX**, **CSS**, **RGB** or **RGBA** can be defined like **"colormode": "RGB"**. Default is **"HEX"**
   - **image** use the string as an URL for an image (**format** must be **uri** too).
   - **combobox** to support a combobox with **chips** for an **array** of **string** with an **enum** (for APEX >=23.2)
   - **selectone** to support the select dropdown of APEX>=24.1
@@ -769,6 +774,7 @@ How it works:
 - When using a CLOB for the JSONs use check constraint **IS JSON(STRICT)** to enforce that the JSON is returned with **"** enclosed keys..
 - In APEX 22.1 there is a general issue (with plugin and without) with "**Modal Dialog** with template **Drawer**", this causes a jquery-error (looks like a datepicker issue). Without "Drawer" all work fine. 
 - In APEX 20.2 the validation for **integer**/**number** doesn't show any errormessages - invalid entries are converted to **null**.
+- Invalid keys/values are ignoered, no message in log
 
 ## Next steps
 

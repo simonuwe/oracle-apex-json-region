@@ -109,7 +109,9 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
   const C_APEX_PCTGRAPH     = 'pctgraph';
   const C_APEX_LABEL        = 'label';
   const C_APEX_SELECTONE    = 'selectone';
-  const C_APEX_SELECTMANY   = 'selectmany'
+  const C_APEX_SELECTMANY   = 'selectmany';
+  const C_APEX_SHUTTLE      = 'shuttle';
+  const C_APEX_COLOR        = 'color';
 
   const C_APEX_ALIGN        = 'align';
   const C_APEX_LEFT         = 'left';
@@ -156,7 +158,7 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
 
   pOptions.apex_version = pOptions.apex_version.match(/\d+\.\d+/)[0];  // only first 2 numbers of version
   pOptions.datatemplateET = $($('.a-Form-error[data-template-id]')[0]).attr('data-template-id') || 'xx_ET';
-console.log(pOptions);
+
   /*
    *  set boolean val1 wo val2 when val1 is not set
   */
@@ -232,7 +234,6 @@ console.log(pOptions);
    * some Hacks to make the plugin work
   */
   function apexHacks(){
-
     // Hack to attach all Handler to the fields in the json-region  
     apex.debug.trace('>>jsonRegion.apexHacks');
       // apex.item.attach($('#' + pRegionId));
@@ -240,13 +241,20 @@ console.log(pOptions);
     if(apex.theme42){
       apex.debug.info('Theme42 patch');
       // apex.event.trigger(apex.gPageContext$, 'apexreadyend');
-      function needsSmallLabel( item ){
+
+      // calc whether a floating label has to be shown in small
+      function needsSmallLabel( item, closest){
+        // console.log('SMALL:', closest, closest.querySelector('.a-Chip--applied'));
         return  item.val() ||
                 item.attr( 'placeholder' ) ||
-                item.children( 'option' ).first().text();
+                item.children( 'option' ).first().text() ||
+                closest.querySelector('.a-switch') ||
+                closest.querySelector('.a-Chip--applied');
       };
+
+      // size the floating label depending on item content
       function sizeLabel(elem, closest){
-        if(needsSmallLabel($(elem))){
+        if(needsSmallLabel($(elem), closest)){
           $(closest).addClass('js-show-label');
         } else {
           $(closest).removeClass('js-show-label');
@@ -258,7 +266,7 @@ console.log(pOptions);
       apex.debug.trace('PATCH ', l_elems);
       $(l_elems).each(function(id, elem){
         const closest = elem.closest('.t-Form-fieldContainer');
-        console.log('PATCH ITEM:', id, elem.id, closest.id, $(elem).val());
+        // console.log('PATCH ITEM:', id, elem.id, closest.id, $(elem).val());
         sizeLabel(elem, closest);  // set inizal labelsize
         $(elem).on('blur', function() {
           sizeLabel(elem, closest); // change labelsize
@@ -368,7 +376,7 @@ console.log(pOptions);
     apex.debug.trace(">>jsonRegion.evalExpression", schema, data);
             // check whether values are not empty
     for(const [l_field, l_comp] of Object.entries(schema)){
-    console.log('EVAL', l_field, l_comp);
+    // console.log('EVAL', l_field, l_comp);
     switch(l_field){
     case C_JSON_REQUIRED:
       apex.debug.trace('evalExpression: ', schema.required, 'not empty', data);
@@ -865,7 +873,7 @@ console.log(pOptions);
         }
         
         if([C_APEX_RICHTEXT].includes(schema.apex.itemtype)){
-          l_value = window.marked.parse( l_value, {
+          l_value = window.marked.parse( l_value||'', {
                               gfm: true,
                               breaks: true,
                               tables: true,
@@ -1481,6 +1489,15 @@ console.log(pOptions);
     }
 
         // set apex.formats
+    if(pOptions.apex_version <C_APEX_VERSION_2301){ // check for new itemtype in old releases, remove them and log error
+      if([C_APEX_COLOR].includes(schema.apex.itemtype)){
+        logSchemaError('itemtype not supported in APEX-version', schema.apex.itemtype, pOptions.apex_version);
+        delete schema.apex.itemtype;
+      }
+    }
+
+
+        // set apex.formats
     if(pOptions.apex_version <C_APEX_VERSION_2401){ // check for new itemtype in old releases, remove them and log error
       if([C_APEX_SELECTONE, C_APEX_SELECTMANY].includes(schema.apex.itemtype)){
         logSchemaError('itemtype not supported in APEX-version', schema.apex.itemtype, pOptions.apex_version);
@@ -1542,6 +1559,54 @@ console.log(pOptions);
    * generate the UI HTML for 23.2 Combobox 
    * returns {items: 0, wrappertype: "xxx", html: "xxx"}
   */
+  function generateForShuttle(schema, data, prefix, name, startend, itemtype, schemaApex){
+    let l_generated = {items: 0, wrappertype: null, html: ''};
+    let l_values = (data||[]).join(C_VALUESEPARATOR);
+    apex.debug.trace(">>jsonRegion.generateForShuttle", schema, data, prefix, name, startend, itemtype);
+    l_generated = {
+        items:       1,
+        wrappertype: '',
+        html:        apex.util.applyTemplate(`
+<div class="apex-item-group apex-item-group--shuttle" role="group" id="#ID#" aria-labelledby="#ID#_LABEL" tabindex="-1">
+  <table cellpadding="0" cellspacing="0" border="0" role="presentation" class="shuttle">
+    <tbody>
+      <tr>
+<td class="shuttleSelect1">
+<select title="Move from" multiple="multiple" id="#ID#_LEFT" size="5" class="shuttle_left apex-item-select">
+<option value="Return1">Display1</option>
+<option value="Return2">Display2</option>
+</select></td>
+<td align="center" class="shuttleControl">
+<button id="#ID#_RESET" class="a-Button a-Button--noLabel a-Button--withIcon a-Button--small a-Button--noUI a-Button--shuttle" type="button" title="Reset" aria-label="Reset"> <span class="a-Icon icon-shuttle-reset" aria-hidden="true"></span></button><button id="#ID#_MOVE_ALL" class="a-Button a-Button--noLabel a-Button--withIcon a-Button--small a-Button--noUI a-Button--shuttle" type="button" title="Move All" aria-label="Move All"> <span class="a-Icon icon-shuttle-move-all" aria-hidden="true"></span></button><button id="#ID#_MOVE" class="a-Button a-Button--noLabel a-Button--withIcon a-Button--small a-Button--noUI a-Button--shuttle" type="button" title="Move" aria-label="Move"> <span class="a-Icon icon-shuttle-move" aria-hidden="true"></span></button><button id="#ID#_REMOVE" class="a-Button a-Button--noLabel a-Button--withIcon a-Button--small a-Button--noUI a-Button--shuttle" type="button" title="Remove" aria-label="Remove"> <span class="a-Icon icon-shuttle-remove" aria-hidden="true"></span></button><button id="#ID#_REMOVE_ALL" class="a-Button a-Button--noLabel a-Button--withIcon a-Button--small a-Button--noUI a-Button--shuttle" type="button" title="Remove All" aria-label="Remove All"> <span class="a-Icon icon-shuttle-remove-all" aria-hidden="true"></span></button></td>
+<td class="shuttleSelect2">
+<select title="Move to" multiple="multiple" id="#ID#_RIGHT" size="5" name="#ID#" class="shuttle_right apex-item-select">
+<option value="A">A</option>
+<option value="B">B</option>
+<option value="C">C</option>
+<option value="D">D</option>
+</select></td>
+<td align="center" class="shuttleSort2">
+<button id="#ID#_TOP" class="a-Button a-Button--noLabel a-Button--withIcon a-Button--small a-Button--noUI a-Button--shuttle" type="button" title="Top" aria-label="Top"> <span class="a-Icon icon-shuttle-top" aria-hidden="true"></span></button><button id="#ID#_UP" class="a-Button a-Button--noLabel a-Button--withIcon a-Button--small a-Button--noUI a-Button--shuttle" type="button" title="Up" aria-label="Up"> <span class="a-Icon icon-shuttle-up" aria-hidden="true"></span></button><button id="#ID#_DOWN" class="a-Button a-Button--noLabel a-Button--withIcon a-Button--small a-Button--noUI a-Button--shuttle" type="button" title="Down" aria-label="Down"> <span class="a-Icon icon-shuttle-down" aria-hidden="true"></span></button><button id="#ID#_BOTTOM" class="a-Button a-Button--noLabel a-Button--withIcon a-Button--small a-Button--noUI a-Button--shuttle" type="button" title="Bottom" aria-label="Bottom"> <span class="a-Icon icon-shuttle-bottom" aria-hidden="true"></span></button></td>
+      </tr>
+    </tbody>
+  </table>
+</div>`,
+                                                {
+                                                    placeholders: {
+                                                      "VALUES": l_values,
+                                                      "VALUESEPARATOR": C_VALUESEPARATOR
+                                                   }
+                                                })
+    };
+
+    apex.debug.trace("<<jsonRegion.generateForShuttle", l_generated);
+    return(l_generated);
+  }
+
+  /*
+   * generate the UI HTML for 23.2 Combobox 
+   * returns {items: 0, wrappertype: "xxx", html: "xxx"}
+  */
   function generateForCombo(schema, data, prefix, name, startend, itemtype, schemaApex){
     let l_generated = {items: 0, wrappertype: null, html: ''};
     let l_values = (data||[]).join(C_VALUESEPARATOR);
@@ -1591,6 +1656,7 @@ console.log(pOptions);
     apex.debug.trace("<<jsonRegion.generateForCombo", l_generated);
     return(l_generated);
   }
+
 
   /*
    * generate the UI-item for selectOne/selectMany items depending on itemtype
@@ -1897,6 +1963,14 @@ console.log(pOptions);
 <input type="text" id="#ID#" name="#ID#" #REQUIRED# #MINLENGTH# #MAXLENGTH# value="#VALUE#" #PLACEHOLDER# #PATTERN# #TEXTCASE# class="#ALIGN# text_field apex-item-text" size="32" data-trim-spaces="#TRIMSPACES#" aria-describedby="#ID#_error">
 `};
           switch (schema.apex.itemtype){
+          case C_APEX_COLOR:
+            l_generated = {
+              items: 1,                
+              wrappertype: 'apex-item-wrapper--color-picker',
+              html: `
+<a-color-picker id="#ID#" name="#ID#" display-as="POPUP" return-value-as="#COLORMODE#" display-mode="FULL" value="#VALUE#"></a-color-picker>
+`};
+          break;
           case C_APEX_PASSWORD:
             l_generated = {
               items: 1,                
@@ -2046,6 +2120,9 @@ console.log(pOptions);
         if([C_JSON_BOOLEAN, C_JSON_STRING, C_JSON_INTEGER, C_JSON_NUMBER].includes(item.type)){
           l_generated.items =1;
           switch(schema.apex.itemtype){
+          case C_APEX_SHUTTLE:
+            l_generated = generateForShuttle(item, data, prefix, name, startend, schema.apex.itemtype, schema.apex);
+          break;
           case C_APEX_COMBO:
             l_generated = generateForCombo(item, data, prefix, name, startend, schema.apex.itemtype, schema.apex);
           break;  
@@ -2413,6 +2490,7 @@ console.log(pOptions);
                                                      "MAX":          ("maximum" in schema)?([C_JSON_FORMAT_DATE, C_JSON_FORMAT_DATETIME, C_JSON_FORMAT_TIME].includes(schema.format)?'max':'data-max')+ '="'+schema.maximum+'"':"",
                                                      "VALUE":        l_value,
                                                      "QUOTEVALUE":   (schema.type== C_JSON_STRING)?apex.util.escapeHTML(''+l_value):l_value,
+                                                     "COLORMODE":    schema.apex.colormode||'HEX',
                                                      "IMAGE":        schema.apex.image||""
                                                     }
                                     })
@@ -2516,7 +2594,14 @@ console.log(pOptions);
     apex.debug.trace(">>jsonRegion.loadRequiredFiles", itemtypes);
     let l_scripts = [];
 
-    if(pOptions.apex_version >=C_APEX_VERSION_2302){  // new Featurs for 23.2
+    if(pOptions.apex_version >=C_APEX_VERSION_2301){  // new Features for 23.1 
+      if(!customElements.get('a-color-picker')  && itemtypes.itemtype.color){ // colorpicker is used, so load files for colorpicker
+        l_scripts.push('libraries/apex/minified/item.Colorpicker.min.js');
+      }
+    }
+
+
+    if(pOptions.apex_version >=C_APEX_VERSION_2302){  // new Features for 23.2
       if(!customElements.get('a-combobox')  && itemtypes.itemtype.combobox){ // combobox is used, so load files for new combobox
         l_scripts.push('libraries/apex/minified/item.Combobox.min.js');
       }
