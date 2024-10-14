@@ -164,6 +164,10 @@ Currently supported are
       "format": "uri", 
       "apex": {"itemtype": "image"}
     },
+    "image": {
+      "type":   "string", 
+      "apex": {"itemtype": "color", "colormode": "HEX"}
+    },
     "prop5": {
       "type": "string",
       "readOnly": true,  
@@ -281,6 +285,7 @@ Optional configurations for the UI could be done with the **"apex": {...}**. The
 - **enum** is used for mapping the JSON-values to display-values.
 For example JSON-data has **"enum": ["a", "b", "c"]**, so the **"apex": {"enum": {"a": "dispA", "b": "dispB", "c": "dispC"}}** will map a->dispA, ... in the APEX-UI.
 - **format** is used for changing the display format of a JSON-value. Currently **format** supportes only **currency** which will show **integer** and **number** values with a currency symbol and **number** with 2 decimal places and **integer** without an decimal places.
+Also the unsupported JSON-schema-formats like **ipv4**,**uuid**, **email, .. can be defined here.
 - **placeholder** defines the placeholder shown wwhilehen field is empty.
 - **template** used for the input item values are **floating** (default), **left**, **above** and **hidden**
 - **css** defines the CSS-classes added to the form-field of the UI-item
@@ -290,6 +295,7 @@ For example JSON-data has **"enum": ["a", "b", "c"]**, so the **"apex": {"enum":
   - **starrating** uses for the numeric types **integer** and **number** stars to enter the value. The property **maximum** (which also defines in JSON-schema the max value for the item) is used for the number of displayed stars.
   - **checkbox** use checkboxes for the values of an **array** of **string** with an **enum**. 
   - **radio** use a radio group for the values of an **enum** (default is a selectlist).
+  - **color** use a colorpicker for selecting a color. The mode **HEX**, **CSS**, **RGB** or **RGBA** can be defined like **"colormode": "RGB"**. Default is **"HEX"**
   - **image** use the string as an URL for an image (**format** must be **uri** too).
   - **combobox** to support a combobox with **chips** for an **array** of **string** with an **enum** (for APEX >=23.2)
   - **selectone** to support the select dropdown of APEX>=24.1
@@ -405,11 +411,19 @@ Optional attributes are
 - maximum (maximal value for integer, number only)
 - pattern (a regular expression)
 
-### Not supported JSON-schema attributes
+## Limitations
+Oracle doesn't support 100% JSON-schema, so there are some limitations
+
+### JSON-schema attributes not supported in APEX
 The following attributes defined in JSON-schema are not supported by the APEX-field-validaten and are ignored
-- **string**: attributes **minLength**, **time**, **duration**
-- **integer**, **number** the attributes **multiplyOf**, **excludeMinimum**, **excludeMaximum**
-- **object**: the attributes **minProperties**, **maxProperties**,  - **array**: arrays and there attributes are not supported
+| keyword | comment |
+| ------- | ------- |
+| string  | attributes **minLength**, **time**, **duration** not supported |
+| integer, number | the attributes **multiplyOf**, **excludeMinimum**, **excludeMaximum** are not supported |
+| object  | attributes **minProperties**, **maxProperties** are not supported |
+| array   | attributes **minItems**, **maxItems**, **uniqueItems** are not supported |
+| $ref | only simple reference, but no recursive schema - like trees |
+
 
 ## Configuration in the APEX-page-designer
 
@@ -652,10 +666,90 @@ When generating the UI the Oracle-specific attributes with names starting with "
 The "Lost Update Detection" of APEX does not work with the relational-duality-views. This is caused by the property **_metadata.asof**, which changes on each select (it's the current SCN of the database), so the checksum of the data changes per select.
 The Workarround: **switch off "Prevent Lost Updates"**
 
+#### Validation of JSON-column with variable JSON-schema
+
+When a database-column contains JSON-data matching variable JSON-schema the content of the column could be checked with a trigger.
+This makes it possible to use the same JSON-schema for database-check and APEX-UI-generation. 
+
+An example trigger could be found here [JSON-validate-trigger](../examples/trigger23ai.sql).
+
+When the JSON-data  doesn't match the JSON-schema an
+```
+ORA-40875: JSON schema validation error
+```
+is raised.
+When an JSON-schema is invalid an
+```
+ORA-40876: invalid JSON schema document
+```
+is raised. This error is not very specific.
+With the query [check validity](../examples/check23ai.sql) generates a report of all issues of a JSON-column-value.
+For example
+```
+RESULT                     
+----------------------------------------------------------------------------------------------------
+{
+  "valid" : false,
+  "errors" : 
+  [    
+    {                        
+      "schemaPath"   : "$",
+      "instancePath" : "$",
+      "code"         : "JZN-00501",
+      "error"        : "JSON schema validation failed"
+    },
+    {
+      "schemaPath"   : "$.required",
+      "instancePath" : "$",
+      "code"         : "JZN-00515",
+      "error"        : "required properties not found: 'floating_req', 'above_req', 'left_req', 'hidden_req'"
+    }                          
+  ]                        
+}
+```
+or
+```
+RESULT
+-------------------------------------------------------------------------
+{  "valid" : false,                                                   
+   "errors" :                        
+   [                                                     
+    {  
+      "schemaPath" : "$",                        
+      "code"       : "JZN-00500",                      
+      "error"      : "invalid JSON schema document"   
+    }, 
+    {  
+      "schemaPath" : "$.properties",             
+      "code"       : "JZN-00500",                      
+      "error"      : "invalid JSON schema document"   
+    }, 
+    {  
+      "schemaPath" : "$.properties.email.format",
+      "code"       : "JZN-00505",                      
+      "error"      : "element was not equal to any of the enumerated values"                                             
+    }  
+  ]
+}
+```
+
+### JSON-schema attributes limitations in Oracle23ai JSON-validate
+
+Oracle23ai does not fully support all keywords/values when validating JSON-data with a JSON-schema with **DBMS_JSON_SCHEMA.IS_VALID** or **DBMS_JSON_SCHEMA.VALIDATE_REPORT**. Some values/keywords are ignored, for others the validation returns errors.
+
+| keyword | comment |
+| ------- | ------- |
+| format | JSON-schema-values **email**, **uri**, **uuid**, **ipv4**, **ipv6** return an error. Workaround use **format** below **"apex"** like: ```"apex": {"format": "uuid"}```. Values **date**, **date-time**, **time** are ignored/not validated  |
+| maximum, minimum | Are defined in JSON-schema for numeric types only. To make it usable for strings too like date, time, ... - which is quite useful - use ```"apex": {"minimum": "AA", "maximum": "Zz"}```|
+| contentEncoding |  ignored/not validated |
+| contentMediaType |  ignored/not validated |
+| $ref       | ignored/not validated |
+| dependentSchemas | ignored/not validated |
+| if, then, else | ignored/not validated |
 
 ### Import
 
-To use the features of APEX23.2 or newer, for example the new combobox, don't forget to refresh your theme (shared-components->themes), otherwith the combobox doesn't look as expected. 
+To use the features of APEX23.2 or newer, for example the new combobox, don't forget to refresh your theme (shared-components->themes), otherwise the combobox doesn't look as expected. 
 
 ### Useful other stuff
 
@@ -671,14 +765,16 @@ How it works:
 
 - The JSON-schema **duration** is not supported
 - **allOf**, **anyOf** and **not** are only supported for **if**
+- Support of **allOf** only on object level.
 - Because the default validation of Oracle-APEX is used, the UI-item in the Plugin has the same "misbehaviour" the APEX-UI-items.
-  - **YES/NO** radio-buttons for boolean: required is ignored
-  - **switch** for Booleans: required is ignored (checkbox works)
-  - **star rating** for integer/number: required is ignored (0 used)
+  - **YES/NO** radio-buttons for **boolean**: **required** is ignored
+  - **switch** for **boolean**: **required** is ignored (**checkbox** works)
+  - **star rating** for integer/number: **required** is ignored (0 used)
 - In SQL-Workshop in APEX-Oracle-Cloud (Oracle19c) you can not create JSON-Columns (trying this returns ORA-00002 invalid datatype). Here you have to use CLOB columns. 
-- When using a CLOB for the JSONs use check constraint **IS JSON(STRICT)** to enforce that the JSON is returned wth **"** enclosed keys..
+- When using a CLOB for the JSONs use check constraint **IS JSON(STRICT)** to enforce that the JSON is returned with **"** enclosed keys..
 - In APEX 22.1 there is a general issue (with plugin and without) with "**Modal Dialog** with template **Drawer**", this causes a jquery-error (looks like a datepicker issue). Without "Drawer" all work fine. 
-- In APEX 20.2 the validation for **integer**/**number** doesn't show any errormessages - invalid entires are converted to **null**.
+- In APEX 20.2 the validation for **integer**/**number** doesn't show any errormessages - invalid entries are converted to **null**.
+- Invalid keys/values are ignoered, no message in log
 
 ## Next steps
 

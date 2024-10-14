@@ -1,7 +1,19 @@
+# 0.9.6 2024-10-11
+
+## Fixed Issues
+- #144 dbms_json_schema.is_valid return error when json-data IS NULL 
+- #143 Javascript error when Popup-LOV exists outside of JSON-regon
+- #142 Oracle23ai: validation-error on JSON-schema at minumum, maximum for non numeric types
+- #141 Testautomation with Selenium (1st tests)
+
+## New Features
+
+- #146 Support of Color-Picker (APEX >=23.01)
+
 # 0.9.5 2024-08-30
 ## Fixed Issues
 - #129 placeholder not shown for 23.2 combo-item
-- #139 "const": "..." causes Errormessage in console log
+- #139 "const": "..." causes errormessage in console log
 
 ## New Features
 - #133 Permissions for "type": "array"
