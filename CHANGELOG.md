@@ -1,3 +1,13 @@
+# 0.9.7 2024-??-??
+
+## Fixed Issues
+
+## New Features
+
+- #148 Logging of unknown key/values in JSON-schema
+- #145 Support of shuttle for multiple selection
+- #141 Testautomation with Selenium 
+
 # 0.9.6 2024-10-11
 
 ## Fixed Issues

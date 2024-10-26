@@ -88,7 +88,7 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
   const C_JSON_IMAGE_PNG        = 'image/png';
   const C_JSON_IMAGE_JPG        = 'image/jpg';
   const C_JSON_IMAGE_GIF        = 'image/gif';
-  const C_JSON_BASE64           = 'base64';
+  const C_JSON_ENCODING_BASE64  = 'base64';
 
   const C_DELIMITER         = '_'                  // delimiter for path of nested objects
                                                    // "apex": {"itemtype": "...", ...} 
@@ -131,6 +131,17 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
 
   const C_VALUESEPARATOR    = '|';
 
+    // the valid values for some keys
+  const validValues = {
+    "type":             [C_JSON_OBJECT, C_JSON_ARRAY, C_JSON_STRING, C_JSON_NUMBER, C_JSON_INTEGER, C_JSON_BOOLEAN],
+    "extendedType":     [C_JSON_STRING, C_JSON_NUMBER],
+    "contentMediaType": [C_JSON_IMAGE_GIF, C_JSON_IMAGE_JPG, C_JSON_IMAGE_PNG],
+    "contentEncoding":  [C_JSON_ENCODING_BASE64],
+    "apex": {
+      "itemtype": [C_APEX_COMBO, C_APEX_CHECKBOX, C_APEX_COLOR, C_APEX_CURRENCY, C_APEX_IMAGE, C_APEX_QRCODE, C_APEX_PASSWORD, C_APEX_PCTGRAPH, C_APEX_STARRATING, C_APEX_RADIO, C_APEX_RICHTEXT,C_APEX_SELECT, C_APEX_SELECTMANY, C_APEX_SELECTONE, C_APEX_SHUTTLE, C_APEX_SWITCH,],
+      "template": [C_APEX_TEMPLATE_LABEL_ABOVE, C_APEX_TEMPLATE_LABEL_FLOATING, C_APEX_TEMPLATE_LABEL_HIDDEN, C_APEX_TEMPLATE_LABEL_LEFT]
+    }
+  }
         // get the datat-template-id for inline errors from another input field
 // console.error(JSON.stringify(pOptions));
   let gData = {};  // holds the JSON-data as an object hierarchie
@@ -773,8 +784,8 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
     if(Array.isArray(item.enum)){  //[C_JSON_STRING, C_JSON_INTEGER, C_JSON_NUMBER].includes(item.type)){
       if(schema.apex.itemtype==C_APEX_SELECTMANY){
         apex.item.create(dataitem, {item_type: 'selectmany'});
-      } else if(pOptions.apex_version >=C_APEX_VERSION_2302 && (schema.apex.itemtype == C_APEX_COMBO || (item.apex && item.apex.itemtype == C_APEX_COMBO))){
-        apex.item.create(dataitem, {item_type: C_APEX_COMBO});
+      } else if(schema.apex.itemtype==C_APEX_SHUTTLE){
+        apex.widget.shuttle('#' + dataitem, {});
       } else {
         apex.widget.checkboxAndRadio('#'+ dataitem, C_APEX_CHECKBOX);
       };
@@ -1296,16 +1307,23 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
    * Set some properties depending on others
    * Set missing properties to reasonable values to avoid errors in later stages
   */
-  function propagateProperties(schema, level, readonly, writeonly, additionalProperties, conditional){ 
+  function propagateProperties(schema, level, readonly, writeonly, additionalProperties, conditional, name){ 
     schema = schema || {};
     schema.apex = schema.apex||{};
     schema.apex.conditional = conditional;
-    apex.debug.trace(">>jsonRegion.propagateProperties", level, schema, readonly, writeonly, additionalProperties, conditional);
+    apex.debug.trace(">>jsonRegion.propagateProperties", level, schema, readonly, writeonly, additionalProperties, conditional, name);
     level++;
     if(level>20){
       apex.debug.error('propagateProperties recursion', level, 'to deep')
       return;
     }
+
+      // check for valid values
+    if(schema.extendedType && !validValues.extendedType.includes(schema.extendedType))            { apex.debug.error('JSON-schema:', name, 'invalid extendedtype', schema.extendedType)}
+    if(!schema.extendedType && name && !name.startsWith('_') && !validValues.type.includes(schema.type)) 
+      { apex.debug.error('JSON-schema:', name, 'invalid type', schema.type)}
+    if(schema.apex.itemtype && !validValues.apex.itemtype.includes(schema.apex.itemtype)) { apex.debug.error('JSON-schema:', name, 'invalid itemtype', schema.apex.itemtype)}
+    if(schema.apex.template && !validValues.apex.template.includes(schema.apex.template)) { apex.debug.error('JSON-schema:', name, 'invalid template', schema.apex.template)}
 
       // harmonize
     if(schema.apex.format)  { schema.format = schema.apex.format}
@@ -1449,13 +1467,13 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
         }
       break;
       case C_JSON_STRING:
-        if([C_APEX_QRCODE, C_APEX_IMAGE].includes(schema.apex.itemtype) || schema.contentEncoding == C_JSON_BASE64){
+        if([C_APEX_QRCODE, C_APEX_IMAGE].includes(schema.apex.itemtype) || schema.contentEncoding == C_JSON_ENCODING_BASE64){
           schema.readOnly   = true;  // can not be changed
           schema.isRequired = false; // not required
         };
 
         if(schema.contentEncoding){   // encoded string
-          if(schema.contentEncoding== C_JSON_BASE64){
+          if(schema.contentEncoding== C_JSON_ENCODING_BASE64){
             schema.apex.image=schema.contentMediaType;
             schema.apex.itemtype = C_APEX_IMAGE;
             if(![C_JSON_IMAGE_GIF, C_JSON_IMAGE_JPG, C_JSON_IMAGE_PNG].includes(schema.contentMediaType)){  //
@@ -1465,7 +1483,7 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
             }
           } else {
             apex.debug.error('unknown string encoding "%s"', schema.contentEncoding);  
-            schema.contentEncoding = C_JSON_BASE64;
+            schema.contentEncoding = C_JSON_ENCODING_BASE64;
           }
         } else {  // plain string, check formats
           switch(schema.format){
@@ -1535,37 +1553,38 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
     }
 
     if(schema.then){
-      propagateProperties({type: C_JSON_OBJECT, required: schema.then.required||[], properties: schema.then.properties}, level, schema.readOnly, schema.writeOnly, schema.additionalProperties, true);
+      propagateProperties({type: C_JSON_OBJECT, required: schema.then.required||[], properties: schema.then.properties}, level, schema.readOnly, schema.writeOnly, schema.additionalProperties, true, 'then');
     }
 
     if(schema.else){
-      propagateProperties({type: C_JSON_OBJECT, required: schema.else.required||[], properties: schema.else.properties}, level, schema.readOnly, schema.writeOnly, schema.additionalProperties, true);
+      propagateProperties({type: C_JSON_OBJECT, required: schema.else.required||[], properties: schema.else.properties}, level, schema.readOnly, schema.writeOnly, schema.additionalProperties, true, 'else');
     }
 
     for(let [l_name, l_schema] of Object.entries(schema.properties||{})){
-      propagateProperties(l_schema, level, schema.readOnly, schema.writeOnly, schema.additionalProperties, false);
+      propagateProperties(l_schema, level, schema.readOnly, schema.writeOnly, schema.additionalProperties, false, l_name);
     }
 
     if(schema.items){  // there is an item definition, process this
       schema.apex.hasDelete = booleanIfNotSet(schema.apex.hasDelete, !schema.readOnly);
       schema.items.additionalProperties = booleanIfNotSet(schema.items.additionalProperties, additionalProperties);
-      propagateProperties(schema.items, level, schema.readOnly, schema.writeOnly, schema.additionalProperties, false);
+      propagateProperties(schema.items, level, schema.readOnly, schema.writeOnly, schema.additionalProperties, false, null);
     }
 
     apex.debug.trace("<<jsonRegion.propagateProperties", level);
   }
 
   /*
-   * generate the UI HTML for 23.2 Combobox 
-   * returns {items: 0, wrappertype: "xxx", html: "xxx"}
+   * generate the UI HTML for Shuttle widget 
+   * returns {items: 0, wrappertype: "apex-item-wrapper--shuttle", html: "xxx"}
   */
   function generateForShuttle(schema, data, prefix, name, startend, itemtype, schemaApex){
     let l_generated = {items: 0, wrappertype: null, html: ''};
     let l_values = (data||[]).join(C_VALUESEPARATOR);
+    schema.apex.enum=[];
     apex.debug.trace(">>jsonRegion.generateForShuttle", schema, data, prefix, name, startend, itemtype);
     l_generated = {
         items:       1,
-        wrappertype: '',
+        wrappertype: 'apex-item-wrapper--shuttle',
         html:        apex.util.applyTemplate(`
 <div class="apex-item-group apex-item-group--shuttle" role="group" id="#ID#" aria-labelledby="#ID#_LABEL" tabindex="-1">
   <table cellpadding="0" cellspacing="0" border="0" role="presentation" class="shuttle">
@@ -1573,17 +1592,54 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
       <tr>
 <td class="shuttleSelect1">
 <select title="Move from" multiple="multiple" id="#ID#_LEFT" size="5" class="shuttle_left apex-item-select">
-<option value="Return1">Display1</option>
-<option value="Return2">Display2</option>
+`,
+                                                {
+                                                    placeholders: {
+                                                      "VALUES": l_values,
+                                                      "VALUESEPARATOR": C_VALUESEPARATOR
+                                                   }
+                                                })
+    };
+    for(const l_option of schema.enum ||[]){
+      l_generated.html += apex.util.applyTemplate(`
+  <option value="#OPTION#">#DISPLAYVALUE#</option>
+`,                                                 {
+                                                    placeholders: {
+                                                      "OPTION": apex.util.escapeHTML(''+l_option),
+                                                      "DISPLAYVALUE": ['boolean', 'number'].includes(typeof schema.apex.enum[l_option])?jsonValue2Item(schema, schema.apex.enum[l_option]):(schema.apex.enum[l_option]||l_option)
+                                                   }
+                                                });
+    }
+
+    l_generated.html += apex.util.applyTemplate(`
 </select></td>
 <td align="center" class="shuttleControl">
-<button id="#ID#_RESET" class="a-Button a-Button--noLabel a-Button--withIcon a-Button--small a-Button--noUI a-Button--shuttle" type="button" title="Reset" aria-label="Reset"> <span class="a-Icon icon-shuttle-reset" aria-hidden="true"></span></button><button id="#ID#_MOVE_ALL" class="a-Button a-Button--noLabel a-Button--withIcon a-Button--small a-Button--noUI a-Button--shuttle" type="button" title="Move All" aria-label="Move All"> <span class="a-Icon icon-shuttle-move-all" aria-hidden="true"></span></button><button id="#ID#_MOVE" class="a-Button a-Button--noLabel a-Button--withIcon a-Button--small a-Button--noUI a-Button--shuttle" type="button" title="Move" aria-label="Move"> <span class="a-Icon icon-shuttle-move" aria-hidden="true"></span></button><button id="#ID#_REMOVE" class="a-Button a-Button--noLabel a-Button--withIcon a-Button--small a-Button--noUI a-Button--shuttle" type="button" title="Remove" aria-label="Remove"> <span class="a-Icon icon-shuttle-remove" aria-hidden="true"></span></button><button id="#ID#_REMOVE_ALL" class="a-Button a-Button--noLabel a-Button--withIcon a-Button--small a-Button--noUI a-Button--shuttle" type="button" title="Remove All" aria-label="Remove All"> <span class="a-Icon icon-shuttle-remove-all" aria-hidden="true"></span></button></td>
+  <button id="#ID#_RESET" class="a-Button a-Button--noLabel a-Button--withIcon a-Button--small a-Button--noUI a-Button--shuttle" type="button" title="Reset" aria-label="Reset"> 
+    <span class="a-Icon icon-shuttle-reset" aria-hidden="true"></span>
+  </button>
+  <button id="#ID#_MOVE_ALL" class="a-Button a-Button--noLabel a-Button--withIcon a-Button--small a-Button--noUI a-Button--shuttle" type="button" title="Move All" aria-label="Move All"> 
+    <span class="a-Icon icon-shuttle-move-all" aria-hidden="true"></span>
+  </button>
+  <button id="#ID#_MOVE" class="a-Button a-Button--noLabel a-Button--withIcon a-Button--small a-Button--noUI a-Button--shuttle" type="button" title="Move" aria-label="Move"> 
+    <span class="a-Icon icon-shuttle-move" aria-hidden="true"></span>
+  </button>
+  <button id="#ID#_REMOVE" class="a-Button a-Button--noLabel a-Button--withIcon a-Button--small a-Button--noUI a-Button--shuttle" type="button" title="Remove" aria-label="Remove"> 
+    <span class="a-Icon icon-shuttle-remove" aria-hidden="true"></span>
+  </button>
+  <button id="#ID#_REMOVE_ALL" class="a-Button a-Button--noLabel a-Button--withIcon a-Button--small a-Button--noUI a-Button--shuttle" type="button" title="Remove All" aria-label="Remove All"> 
+    <span class="a-Icon icon-shuttle-remove-all" aria-hidden="true"></span>
+  </button>
+</td>
 <td class="shuttleSelect2">
-<select title="Move to" multiple="multiple" id="#ID#_RIGHT" size="5" name="#ID#" class="shuttle_right apex-item-select">
-<option value="A">A</option>
-<option value="B">B</option>
-<option value="C">C</option>
-<option value="D">D</option>
+<select title="Move to" multiple="multiple" id="#ID#_RIGHT" size="5" name="#ID#" class="shuttle_right" #REQUIRED# apex-item-select">
+`,
+                                                {
+                                                    placeholders: {
+                                                      "VALUES": l_values,
+                                                      "VALUESEPARATOR": C_VALUESEPARATOR
+                                                   }
+                                                });
+    l_generated.html += apex.util.applyTemplate(`
 </select></td>
 <td align="center" class="shuttleSort2">
 <button id="#ID#_TOP" class="a-Button a-Button--noLabel a-Button--withIcon a-Button--small a-Button--noUI a-Button--shuttle" type="button" title="Top" aria-label="Top"> <span class="a-Icon icon-shuttle-top" aria-hidden="true"></span></button><button id="#ID#_UP" class="a-Button a-Button--noLabel a-Button--withIcon a-Button--small a-Button--noUI a-Button--shuttle" type="button" title="Up" aria-label="Up"> <span class="a-Icon icon-shuttle-up" aria-hidden="true"></span></button><button id="#ID#_DOWN" class="a-Button a-Button--noLabel a-Button--withIcon a-Button--small a-Button--noUI a-Button--shuttle" type="button" title="Down" aria-label="Down"> <span class="a-Icon icon-shuttle-down" aria-hidden="true"></span></button><button id="#ID#_BOTTOM" class="a-Button a-Button--noLabel a-Button--withIcon a-Button--small a-Button--noUI a-Button--shuttle" type="button" title="Bottom" aria-label="Bottom"> <span class="a-Icon icon-shuttle-bottom" aria-hidden="true"></span></button></td>
@@ -1596,8 +1652,7 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
                                                       "VALUES": l_values,
                                                       "VALUESEPARATOR": C_VALUESEPARATOR
                                                    }
-                                                })
-    };
+                                                });
 
     apex.debug.trace("<<jsonRegion.generateForShuttle", l_generated);
     return(l_generated);
@@ -1605,7 +1660,7 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
 
   /*
    * generate the UI HTML for 23.2 Combobox 
-   * returns {items: 0, wrappertype: "xxx", html: "xxx"}
+   * returns {items: 0, wrappertype: "apex-item-wrapper--combobox apex-item-wrapper--combobox-many", html: "xxx"}
   */
   function generateForCombo(schema, data, prefix, name, startend, itemtype, schemaApex){
     let l_generated = {items: 0, wrappertype: null, html: ''};
@@ -1660,7 +1715,7 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
 
   /*
    * generate the UI-item for selectOne/selectMany items depending on itemtype
-   * returns {items: 0, wrappertype: "xxx", html: "xxx"}
+   * returns {items: 0, wrappertype: "apex-item-wrapper--select-one or -many", html: "xxx"}
   */
   function generateForSelectOneMany(schema, data, prefix, name, startend, itemtype, schemaApex){
     let l_generated = { items:0, wrappertype: null, html: ''};
@@ -2598,6 +2653,9 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
       if(!customElements.get('a-color-picker')  && itemtypes.itemtype.color){ // colorpicker is used, so load files for colorpicker
         l_scripts.push('libraries/apex/minified/item.Colorpicker.min.js');
       }
+      if(!apex.widget.shuttle  && itemtypes.itemtype.shuttle){ // shuttle is used, so load files for shuttle
+        l_scripts.push('libraries/apex/minified/widget.shuttle.min.js');
+      }
     }
 
 
@@ -2775,7 +2833,7 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
 
     // resolve all $refs
   pOptions.schema = propagateRefs(pOptions.schema);
-  propagateProperties(pOptions.schema, 0, pOptions.readonly, false, pOptions.keepAttributes, false);
+  propagateProperties(pOptions.schema, 0, pOptions.readonly, false, pOptions.keepAttributes, false, null);
 
     // adjust differences in 
   gData = reformatValues(pOptions.schema, gData, true);
@@ -2825,7 +2883,7 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
                 pOptions.schema = data;
                 pOptions = adjustOptions(pOptions);
                 pOptions.schema = propagateRefs(pOptions.schema);
-                propagateProperties(pOptions.schema, 0, pOptions.readonly, false, pOptions.keepAttributes, false);
+                propagateProperties(pOptions.schema, 0, pOptions.readonly, false, pOptions.keepAttributes, false, null);
                 let l_itemtypes = null;
                 l_itemtypes = getItemtypes(pOptions.schema, l_itemtypes);
                 apex.debug.trace('pOptions:', pOptions);
