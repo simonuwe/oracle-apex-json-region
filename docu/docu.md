@@ -260,7 +260,17 @@ Currently supported are
     "properties": {
       "prop1b": { "type": "string", "format": "date" }
     }
-  }
+  },
+  "allOf": [
+    {"properties": {....},
+    "required": [...],
+     "if": {...},
+     "then": {...},
+     "else": {...}
+    }, {
+      ,,,
+    }
+  ]
 
 }
 ```
@@ -353,7 +363,7 @@ The supported Identification types
 | Select List: List of Values: Type: Static Values | {"field1": {"type": "string", "enum": ["val1", "val2", ...]}} | Support for types "string", "integer", "number" |
 | SelectOne: List of Values: Type: Static Values | {"field1": {"type": "string", "enum": ["val1", "val2", ...], "apex":{"itemtype": "selectone"}}} | Support for types "string", "integer", "number" |
 | SelectMany | {"field1": "type": "array", "apex": {"itemtype": "selectmany", "asChips": true}, "items": {"type": "string", "enum": ["val1", "val2", ...], "apex"{"enum": {"val1": "disp1", "val2": "disp2, ...}}}} |
-| Shuffle | --- | |
+| Shuttle | {"field1": "type": "array", "items": {"type": "string", "enum": ["val1", "val2", ...]}, "apex": {"itemtype": "shuttle"}} | |
 | Star Rating | {"field1": {"type": "integer", "maxValue": 5, "apex": {"itemtype": "starrating"}}} | Supported types "integer" and "number" |
 | Switch | {"field1": {"type": "boolean", "apex": {"itemtype": "switch"}} |
 | Text Field | {"field1": {"type": "string"}} |
@@ -764,7 +774,7 @@ How it works:
 ## Know issues
 
 - The JSON-schema **duration** is not supported
-- **allOf**, **anyOf** and **not** are only supported for **if**
+- **anyOf** and **not** are only supported for **if**
 - Support of **allOf** only on object level.
 - Because the default validation of Oracle-APEX is used, the UI-item in the Plugin has the same "misbehaviour" the APEX-UI-items.
   - **YES/NO** radio-buttons for **boolean**: **required** is ignored
