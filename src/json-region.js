@@ -1,6 +1,9 @@
 "use strict"
 
 /*
+ * JSON-region
+ * Supports Oracle-APEX >=20.2
+ * 
  * APEX JSON-region plugin
  * (c) Uwe Simon 2023,2024
  * Apache License Version 2.0
@@ -12,9 +15,10 @@ apex.locale.toNumber = apex.locale.toNumber || function(pValue, pFormat) {
   pValue = ('' + pValue).replace(apex.locale.getCurrency(), '');  // remove currency $€...
   pValue = ('' + pValue).replace(apex.locale.getISOCurrency(), ''); // remove EUR/USD/...
   pValue = ('' + pValue).replace(apex.locale.getGroupSeparator(), '');  // remove Groupseperator
-  pValue = ('' + pValue).replace(apex.locale.getDecimalSeparator(), '.');  // remove conver DecimalSeperator to .
+  pValue = ('' + pValue).replace(apex.locale.getDecimalSeparator(), '.');  // convert DecimalSeperator to .
   return Number(pValue)
 }; 
+
 apex.date = apex.date||{
   parse: function(pDate, pFormat) {
     let l_ret =null;
@@ -65,6 +69,7 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
   const C_JSON_OBJECT           = 'object';
   const C_JSON_ARRAY            = 'array';
   const C_JSON_PROPERTIES       = 'properties';
+  const C_JSON_ITEMS            = 'items';
   const C_JSON_REQUIRED         = 'required';
   const C_JSON_REF              = '$ref';
   const C_JSON_STRING           = 'string';
@@ -84,8 +89,11 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
                                             // conditional keywords
   const C_JSON_COND_ALL_OF      = 'allOf';
   const C_JSON_COND_ANY_OF      = 'anyOf';
+  const C_JSON_COND_ONE_OF      = 'oneOf';
   const C_JSON_COND_NOT         = 'not';
-  
+  const C_JSON_COND_IF          = 'if';
+  const C_JSON_COND_ELSE        = 'else';
+  const C_JSON_COND_THEN        = 'then';
                                                    // JSON encoded strings
   const C_JSON_IMAGE_PNG        = 'image/png';
   const C_JSON_IMAGE_JPG        = 'image/jpg';
@@ -121,6 +129,7 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
   const C_APEX_RIGHT        = 'right';
   const C_APEX_UPPER        = 'upper';
   const C_APEX_LOWER        = 'lower';
+  const C_APEX_BEGiN        = 'begin';
 
   const C_APEX_NOW          = 'now';
 
@@ -147,6 +156,7 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
       "template": [C_APEX_TEMPLATE_LABEL_ABOVE, C_APEX_TEMPLATE_LABEL_FLOATING, C_APEX_TEMPLATE_LABEL_HIDDEN, C_APEX_TEMPLATE_LABEL_LEFT]
     }
   }
+
         // get the datat-template-id for inline errors from another input field
 // console.error(JSON.stringify(pOptions));
   let gData = null;  // holds the JSON-data as an object hierarchie
@@ -174,6 +184,25 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
 
   pOptions.apex_version = pOptions.apex_version.match(/\d+\.\d+/)[0];  // only first 2 numbers of version
   pOptions.datatemplateET = $($('.a-Form-error[data-template-id]')[0]).attr('data-template-id') || 'xx_ET';
+
+
+
+  const tempObjectAttributes = [C_JSON_ITEMS, C_JSON_PROPERTIES, C_JSON_REQUIRED, C_JSON_COND_IF, C_JSON_COND_ELSE, C_JSON_COND_THEN, C_JSON_COND_ALL_OF, C_JSON_COND_ANY_OF, C_JSON_COND_ONE_OF]
+
+  /*  
+   * create a temporary object by copying data
+  */
+  function createTempObject(type, obj){
+    const l_obj = obj||{}
+    let l_ret = {type: type}
+    for(const l_prop of tempObjectAttributes){
+        if(l_prop in l_obj){
+          l_ret[l_prop] = l_obj[l_prop]
+        }
+    }
+    return l_ret;
+  }
+
 
   /*
    *  set boolean val1 wo val2 when val1 is not set
@@ -382,12 +411,13 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
       let l_name = '';
       if(dataitem) {
         l_name = dataitem;
-        if(field){
-          l_name += C_DELIMITER + field;
+        if(field != null){
+          l_name += C_DELIMITER + ('' + field);
         }
       } else {
         l_name=field;
       }
+      l_name = l_name.replace(/\W+/g, "_")
       return l_name;
   }
 
@@ -492,7 +522,8 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
   */
   function propagateShow(dataitem, schema, mode){
     apex.debug.trace(">>jsonRegion.propagateShow", dataitem, schema, mode);
-    if(schema.type==C_JSON_OBJECT){
+    switch(schema.type){
+    case C_JSON_OBJECT:
       for(let [l_name, l_item] of Object.entries(schema.properties)){
         if(pOptions.headers){
             // console.log('switch headers', dataitem);
@@ -505,19 +536,58 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
         }
         propagateShow(genItemname(dataitem, l_name), l_item, mode);
       }
-    } else {
-      const container = '#' + dataitem + '_CONTAINER'; 
-      if(mode==true)  { 
-        $(container).show(); 
-        $(container).parent().attr('style', '');          
-        $('#' + dataitem).prop('required',schema.isRequired);
+    break;
+    case C_JSON_ARRAY:{
+        const l_items=$('[id^="'+ dataitem + '_"].row')
+        console.dir(l_items)
+        l_items.each(function(i, l_item) {
+          apex.debug.trace('propagateShow:', i, l_item)
+          const l_name = l_item.id.replace(/_CONTAINER$/, '')
+          const l_container = '#' + l_item.id; 
+          if(mode==true)  { 
+            $(l_container).show();      
+          } else {
+            $(l_container).hide();
+          }
+          if(i>0){  // row 0 is the header which has no items, so no propagate 
+            propagateShow(l_name, createTempObject(C_JSON_OBJECT, schema.items), mode);
+          }
+        })
+
       }
-      if(mode==false) { 
-        $(container).hide();
-        $(container).parent().attr('style', 'display:none'); 
-        $('#' + dataitem).prop('required',false);
+    break;
+    default:{
+        const container = '#' + dataitem + '_CONTAINER'; 
+        if(mode==true)  { 
+          $(container).show(); 
+          $(container).parent().attr('style', '');          
+          $('#' + dataitem).prop('required',schema.isRequired);
+        }
+        if(mode==false) { 
+          $(container).hide();
+          $(container).parent().attr('style', 'display:none'); 
+          $('#' + dataitem).prop('required',false);
+        }
       }
     }
+
+    if(schema.allOf){
+console.error('propagateShow allOf: not implemented', schema.allOf)
+    }
+    if(schema.anyOf){
+console.error('propagateShow anyOf: not implemented', schema.anyOf)
+    }
+    if(schema.oneOf){
+console.error('propagateShow oneOf: not implemented', schema.oneOf)
+    }
+    if(schema.if){
+console.error('propagateShow if: not implemented', schema.if)
+    }
+
+    if(mode==false){
+      setObjectValues(dataitem, dataitem, schema, false, null);
+    }
+
     apex.debug.trace("<<jsonRegion.propagateShow");
   }
 
@@ -782,14 +852,14 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
     )+1;    
     // console.error(dataitem, l_newId);
     propagateReadOnly(schema.items, false);  // when add is permitted, add row with 
-    let l_generated = generateForArrayEntry(schema.items, null, dataitem + C_DELIMITER + l_newId, 0, true);
+    let l_generated = generateForArrayEntry(schema.items, null, genItemname(dataitem, l_newId), 0, true);
 
     if(atLast){  // l_item is not unique when Array is toplevel
       $('#' + l_item +'.row').after(l_generated.html);
     } else {
       $('#' + l_item + '.row').before(l_generated.html);
     }
-    attachObject(dataitem + '_' + l_newId, '', schema.items, false, {}, true, schema.items);
+    attachObject(genItemname(dataitem, l_newId), null, schema.items, false, {}, true, schema.items, dataitem);
     apex.item.attach($('#' + pRegionId));
     addArrayDeleteEvent();
     apexHacks();
@@ -816,10 +886,11 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
       data = data || [];
       if(Array.isArray(data)){
         if(schema.apex.hasInsert != 'none'){
-          $('#' + dataitem + '_CREATE').on('click', function(ev){ addArrayRow(dataitem, schema, schema.apex.hasInsert!='begin');});
+          $('#' + dataitem + '_CREATE').on('click', function(ev){ addArrayRow(dataitem, schema, schema.apex.hasInsert!=C_APEX_BEGiN);});
         }
         for(const i in data){
-          attachObject(dataitem + C_DELIMITER + i , previtem, item, readonly, data[i], newItem, item) 
+          const l_item = genItemname(dataitem, i)
+          attachObject(l_item, previtem, item, readonly, data[i], newItem, item, l_item) 
         }
       }
     }
@@ -850,7 +921,7 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
         }
       } else {
         for(const i in data){
-          setObjectValues(dataitem + C_DELIMITER + i, previtem, item, readonly, data[i]);
+          setObjectValues(genItemname(dataitem, i), previtem, item, readonly, data[i]);
         }
       }
     } else {
@@ -931,38 +1002,41 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
     }
 
     if(Array.isArray(schema.allOf)){
+      let nr = 0;
       for(const l_schema of schema.allOf){
         const l_obj = {...l_schema};
         l_obj.type = C_JSON_OBJECT;
-        setObjectValues(dataitem, dataitem, l_obj, schema.readOnly, data);
+        setObjectValues(genItemname(dataitem, nr++), dataitem, l_obj, schema.readOnly, data);
       }
     }
 
     if(Array.isArray(schema.anyOf)){
+      let nr = 0;
       for(const l_schema of schema.anyOf){
         const l_obj = {...l_schema};
         l_obj.type = C_JSON_OBJECT;
-        setObjectValues(dataitem, dataitem, l_obj, schema.readOnly, data);
+        setObjectValues(genItemname(dataitem, nr++), dataitem, l_obj, schema.readOnly, data);
       }
     }
 
     if(Array.isArray(schema.oneOf)){
+      let nr = 0;
       for(const l_schema of schema.anyOf){
         const l_obj = {...l_schema};
         l_obj.type = C_JSON_OBJECT;
-        setObjectValues(dataitem, dataitem, l_obj, schema.readOnly, data);
+        setObjectValues(genItemname(dataitem , nr++), dataitem, l_obj, schema.readOnly, data);
       }
     }
 
     if(schema.if){
       if(schema.then) {  // conditional schema then
         let properties = schema.then.properties||{};
-        setObjectValues(dataitem, dataitem, {type: C_JSON_OBJECT, properties: properties}, schema.readOnly, data);
+        setObjectValues(genItemname(dataitem, 0), dataitem, createTempObject(C_JSON_OBJECT, schema.then), schema.readOnly, data);
       }
 
       if(schema.else) { // conditional schema else
         let properties = schema.else.properties||{};
-        setObjectValues(dataitem, dataitem, {type: C_JSON_OBJECT, properties: properties}, schema.readOnly, data);
+        setObjectValues(genItemname(dataitem, 1), dataitem, createTempObject(C_JSON_OBJECT, schema.else), schema.readOnly, data);
       }
     }
 
@@ -987,6 +1061,8 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
       break;
       case C_JSON_COND_ALL_OF:
       case C_JSON_COND_ANY_OF:
+      case C_JSON_COND_ONE_OF:
+        let nr = 0;
         for(const l_schema of l_comp){
           l_items = l_items.concat(getConditionalItems(l_schema));
         }
@@ -1008,8 +1084,8 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
   /*
    * attach the generated fields of the JSON-schma to APEX
   */
-  function attachObject(dataitem, previtem, schema, readonly, data, newItem, baseSchema){ 
-    apex.debug.trace(">>jsonRegion.attachObject", dataitem, previtem, schema, readonly, data, newItem, baseSchema);
+  function attachObject(dataitem, previtem, schema, readonly, data, newItem, baseSchema, conditionalItem){ 
+    apex.debug.trace(">>jsonRegion.attachObject", dataitem, previtem, schema, readonly, data, newItem, baseSchema, conditionalItem);
     schema = schema||{};
     schema.apex = schema.apex || {};
 
@@ -1025,7 +1101,8 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
         data = data ||{};
         for(let [l_name, l_schema] of Object.entries(schema.properties)){
           if(!(''+l_name).startsWith('_')){   // ignore properties having names starting with "_"
-            attachObject(genItemname(dataitem, l_name), dataitem, l_schema, schema.readOnly, data[l_name], newItem, l_schema);
+            const l_item = genItemname(dataitem, l_name)
+            attachObject(l_item, dataitem, l_schema, schema.readOnly, data[l_name], newItem, l_schema, l_item);
           }
         }
       }
@@ -1122,26 +1199,31 @@ function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
     }
 
     if(Array.isArray(schema.allOf)){
-console.log('attach allOf', schema.allOf);
+      apex.debug.trace('attach allOf', schema.allOf);
+      let nr = 0;
       for(let l_schema of schema.allOf){
-        attachObject(dataitem, dataitem, l_schema, schema.readOnly, data, newItem, schema);
+        attachObject(genItemname(dataitem, nr++), dataitem, l_schema, schema.readOnly, data, newItem, schema, dataitem);
       }
     }
 
     if(schema.if){
-console.log('attach if', schema.if);
+      apex.debug.trace('attach if', schema.if);
       let l_eval = evalExpression(schema.if, data);
       if(schema.then) {  // conditional schema then
+      apex.debug.trace('attach then', schema.then);
         let properties = schema.then.properties||{};
-        attachObject(dataitem, dataitem, {type: C_JSON_OBJECT, properties: properties}, schema.readOnly, data, newItem, schema);
+        const l_item = genItemname(dataitem, 0)
+        attachObject(l_item, null, createTempObject(C_JSON_OBJECT, schema.then), schema.readOnly, data, newItem, schema.then, l_item);
         for(const [l_name, l_item] of Object.entries(properties)){
           propagateShow(genItemname(dataitem, l_name), l_item, l_eval===true);
         }
       }
 
       if(schema.else) { // conditional schema else
+        console.log('attach else', schema.else);
         let properties = schema.else.properties||{};
-        attachObject(dataitem, dataitem, {type: C_JSON_OBJECT, properties: properties}, schema.readOnly, data, newItem, schema);
+        const l_item = genItemname(dataitem, 1);
+        attachObject(l_item, null, createTempObject(C_JSON_OBJECT, schema.else), schema.readOnly, data, newItem, schema.else, l_item);
         for(const [l_name, l_item] of Object.entries(properties)){
           propagateShow(genItemname(dataitem, l_name), l_item, l_eval===false);
         }
@@ -1150,26 +1232,27 @@ console.log('attach if', schema.if);
 
     if(schema.if){  // conditional schema, add event on items
       let l_dependOn = getConditionalItems(schema.if);
-console.log('attach dependsOn', dataitem, l_dependOn, baseSchema);
+      const l_item = conditionalItem||dataitem
+      apex.debug.trace('attach dependsOn', l_item, l_dependOn, baseSchema, conditionalItem, dataitem, previtem);
       for(let l_name of l_dependOn){
-        console.log('onChange', dataitem, l_name);
-        $("#" + genItemname(dataitem, l_name)).on('change', function(){
-          console.log('clicked on', dataitem, l_name, baseSchema);
+        apex.debug.trace('onChange', l_item, l_name);
+        $("#" + genItemname(l_item, l_name)).on('change', function(){
+          apex.debug.trace('clicked on', l_item, l_name, schema, baseSchema);
           if(schema.if){  // click on a conditional item
-            let l_json = getObjectValues(dataitem, '', baseSchema, null, {});
-            console.log('EVAL', l_json);
+            let l_json = getObjectValues(l_item, '', createTempObject(C_JSON_OBJECT, baseSchema), null, null);
+            apex.debug.trace('EVAL', l_json);
             let l_eval = evalExpression(schema.if, l_json);
             if(schema.then){ 
               let properties = schema.then.properties||{};
               for(const [l_name,l_item] of Object.entries(properties)){
-                propagateShow(genItemname(dataitem, l_name), l_item, l_eval==true);
+                propagateShow(genItemname(dataitem, '0_' + l_name), l_item, l_eval==true);
               }
             }
 
             if(schema.else){ 
               let properties = schema.else.properties||{};
               for(const [l_name, l_item] of Object.entries(properties)){
-                propagateShow(genItemname(dataitem, l_name), l_item, l_eval==false);
+                propagateShow(genItemname(dataitem, '1_' + l_name), l_item, l_eval==false);
               }
             }                              
           }
@@ -1184,9 +1267,10 @@ console.log('attach dependsOn', dataitem, l_dependOn, baseSchema);
           let l_value = data;
           propagateRequired(l_item, schema[item], l_value && l_value.length>0);
         }
+        apex.debug.trace('dependentRequired:', dataitem)
         $("#" + dataitem).on('change', function(){
           for(const item of schema.dependentRequired) {
-            let l_item = genItemname(previtem, item)
+            let l_item = genItemname(previtem||dataitem, item)
             let l_value = $(this).val();
             console.warn('depends', schema[item], l_value);
             propagateRequired(l_item, schema[item], l_value && l_value.length>0);
@@ -1208,18 +1292,16 @@ console.log('attach dependsOn', dataitem, l_dependOn, baseSchema);
     } else {
       l_json = schema.additionalProperties?oldJson:{};  // when there are additionalProperties, keep there values
       if(typeof curJson == 'object'){
-        l_json = {...curJson, l_json};
+        l_json = {...curJson, ...l_json};
       }
       switch(schema.type){
       case C_JSON_OBJECT:
-        if(!(oldJson instanceof Object)) {
-          logDataError('Schema mismatch:', schema.type, 'JSON:', oldJson, 'must be an object');
-          l_json = {};
-          oldJson ={};
-        }
+        oldJson = oldJson||{};
         if(schema.properties){
           for(let [l_name, l_schema] of Object.entries(schema.properties)){
-            l_json[l_name]=getObjectValues(genItemname(dataitem, l_name), l_name, l_schema, null, oldJson[l_name]);
+            const l_itemname = genItemname(dataitem, l_name);
+            const l_propertyname = $('#' + l_itemname + '_CONTAINER').attr('json-property');
+            l_json[l_propertyname]=getObjectValues(l_itemname, l_name, l_schema, null, oldJson[l_name]);
           }
         }
       break;
@@ -1248,7 +1330,7 @@ console.log('attach dependsOn', dataitem, l_dependOn, baseSchema);
             }
           }
           if(schema.readOnly) {  // array is readOnly
-            if(schema.apex.hasInsert == 'begin') {  // inserts at the begin, so array = new + old
+            if(schema.apex.hasInsert == C_APEX_BEGiN) {  // inserts at the begin, so array = new + old
               l_json = l_json.concat(oldJson);
             } else { // inserts at the end, so array = old + new
               l_json = oldJson.concat(l_json);
@@ -1283,28 +1365,31 @@ console.log('attach dependsOn', dataitem, l_dependOn, baseSchema);
     }
 
     if(Array.isArray(schema.allOf)){
+      let nr = 0;
       for(const l_schema of schema.allOf){
         const l_obj = {...l_schema};
         l_obj.type = C_JSON_OBJECT;
-        const l_newJson = getObjectValues(dataitem, '', l_obj, l_json, oldJson);
+        const l_newJson = getObjectValues(genItemname(dataitem, nr++), '', l_obj, l_json, oldJson);
         l_json = {...l_json, ...l_newJson};
       } 
     }
 
     if(Array.isArray(schema.anyOf)){
+      let nr = 0;
       for(const l_schema of schema.anyOf){
         const l_obj = {...l_schema};
         l_obj.type = C_JSON_OBJECT;
-        const l_newJson = getObjectValues(dataitem, '', l_obk, l_json, oldJson);
+        const l_newJson = getObjectValues(genItemname(dataitem, nr++), '', l_obk, l_json, oldJson);
         l_json = {...l_json, ...l_newJson};
       } 
     }
 
     if(Array.isArray(schema.oneOf)){
+      let nr = 0;
       for(const l_schema of schema.allOf){
         const l_obj = {...l_schema};
         l_obj.type = C_JSON_OBJECT;
-        const l_newJson = getObjectValues(dataitem, '', l_obj, l_json, oldJson);
+        const l_newJson = getObjectValues(genItemname(dataitem, nr++), '', l_obj, l_json, oldJson);
         l_json = {...l_json, ...l_newJson};
       } 
     }
@@ -1314,7 +1399,7 @@ console.log('attach dependsOn', dataitem, l_dependOn, baseSchema);
       let l_eval = evalExpression(schema.if, l_json);
       if(schema.then && l_eval==true){
         let properties = schema.then.properties||{};
-        let l_newJson = getObjectValues(dataitem, '', {type: C_JSON_OBJECT, properties: properties}, l_json, oldJson);
+        let l_newJson = getObjectValues(genItemname(dataitem, 0), '', createTempObject(C_JSON_OBJECT, schema.then), l_json, oldJson);
         // console.dir(l_newJson);
         // merge conditional input into current result
         l_json = {...l_json, ...l_newJson};
@@ -1322,7 +1407,7 @@ console.log('attach dependsOn', dataitem, l_dependOn, baseSchema);
 
       if(schema.else && l_eval==false){
         let properties = schema.else.properties||{};
-        let l_newJson = getObjectValues(dataitem, '', {type: C_JSON_OBJECT, properties: properties}, l_json, oldJson);
+        let l_newJson = getObjectValues(genItemname(dataitem, 1), '', createTempObject(C_JSON_OBJECT, schema.else), l_json, oldJson);
         // console.dir(l_newJson);
         // merge conditional input into current result
         l_json = {...l_json, ...l_newJson};
@@ -1499,9 +1584,9 @@ console.log('attach dependsOn', dataitem, l_dependOn, baseSchema);
         // propagate the dependentRequired directly to the properties 
     if(schema.type==C_JSON_OBJECT){ 
       if(schema.properties){
-        if(Object.keys(schema.properties).length==0){  // items should have at least one entry
-          apex.debug.warn('object should have at least 1 property')
-        }
+        // if(Object.keys(schema.properties).length==0){  // items should have at least one entry
+        //  apex.debug.warn('object should have at least 1 property')
+        //}
       } else {
         logSchemaError('missing "properties" for "type": "object"');
         schema.properties={}; 
@@ -1692,16 +1777,17 @@ console.log('attach dependsOn', dataitem, l_dependOn, baseSchema);
 
     if(Array.isArray(schema.allOf)){
       let l_name = name;
+      let nr     = 0;
       for(let l_schema of schema.allOf){
-        propagateProperties(l_schema, level, schema.readOnly, schema.writeOnly, schema.additionalProperties, false, l_name, schema.id);
+        propagateProperties(l_schema, level, schema.readOnly, schema.writeOnly, schema.additionalProperties, false, l_name, genItemname(prefix, nr++));
       }
     }
     if(schema.then){
-      propagateProperties({type: C_JSON_OBJECT, required: schema.then.required||[], properties: schema.then.properties}, level, schema.readOnly, schema.writeOnly, schema.additionalProperties, true, 'then', schema.id);
+      propagateProperties(createTempObject(C_JSON_OBJECT, schema.then), level, schema.readOnly, schema.writeOnly, schema.additionalProperties, true, 'then', schema.id);
     }
 
     if(schema.else){
-      propagateProperties({type: C_JSON_OBJECT, required: schema.else.required||[], properties: schema.else.properties}, level, schema.readOnly, schema.writeOnly, schema.additionalProperties, true, 'else', schema.id);
+      propagateProperties(createTempObject(C_JSON_OBJECT, schema.else), level, schema.readOnly, schema.writeOnly, schema.additionalProperties, true, 'else', schema.id);
     }
 
     for(let [l_name, l_schema] of Object.entries(schema.properties||{})){
@@ -2337,7 +2423,7 @@ console.log('attach dependsOn', dataitem, l_dependOn, baseSchema);
     let l_generated = {items: 0, wrappertype: null, html: ''};
     apex.debug.trace(">>jsonRegion.generateForArrayEntry", schema, data, id, startend, newItem);
     if(schema.type == C_JSON_OBJECT){
-      l_generated = generateForItems(schema.properties, data||{}, id, startend, newItem);
+      l_generated = generateForItems(schema, data||{}, id, startend, newItem);
     } else {
       l_generated = generateForItem(schema, data, id, startend, newItem);
     }
@@ -2352,8 +2438,8 @@ console.log('attach dependsOn', dataitem, l_dependOn, baseSchema);
 `,
                                       { 
                                         placeholders: {
-                                          "ID":   id,
-                                          "HTML": l_generated.html
+                                          "ID":           id,
+                                          "HTML":         l_generated.html
                                         }
                                       });
 
@@ -2394,12 +2480,12 @@ console.log('attach dependsOn', dataitem, l_dependOn, baseSchema);
         }
       } else {  // loop through the array and generate an object for each row
         if(pOptions.headers){
-          l_generated.html = generateSeparator(schema, generateLabel(schema.name, schema), id, false, 'CREATE');
+          l_generated.html = generateArraySeparator(schema, generateLabel(schema.name, schema), id);
         }
         for(const  i in data) {
           let l_item = {...item};
           l_item.name = i;
-          const l_gen = generateForArrayEntry(l_item, data[i], id + '_' + i, startend, newItem);
+          const l_gen = generateForArrayEntry(l_item, data[i], genItemname(id, i), startend, newItem);
           l_generated.html += l_gen.html;
         }
       }
@@ -2484,9 +2570,10 @@ console.log('attach dependsOn', dataitem, l_dependOn, baseSchema);
   function generateForAllOf(allOf, data, prefix, name, startend, newItem){
     let l_generated = {items: 0, wrappertype: null, html: ''};
     apex.debug.trace(">>jsonRegion.generateForAllOf", allOf, data, prefix, name, startend, newItem);
+    let nr = 0;
     for(const l_schema of allOf){
       if(l_schema.properties){
-        let l_gen = generateForItems(l_schema.properties, data, name, startend, newItem);
+        let l_gen = generateForItems(l_schema, data, genItemname(name, nr++), startend, newItem);
         l_generated.html += l_gen.html;
         l_generated.items += l_gen.items;
       }
@@ -2505,33 +2592,45 @@ console.log('attach dependsOn', dataitem, l_dependOn, baseSchema);
     apex.debug.trace(">>jsonRegion.generateForConditional", schema, data, prefix, name, inArray, startend);
 
     if(Array.isArray(schema.allOf)){
+      let nr = 0;
       for(const l_schema of schema.allOf){
         apex.debug.trace('Conditional: allOf', l_schema);
-        let l_gen = generateForConditional(l_schema, data, '', name, startend, false, false, newItem);
+//        let l_gen = generateForConditional(createTempObject(C_JSON_OBJECT, l_schema), data, prefix, genItemname(name, nr++), startend, false, false, newItem);
+        let l_gen = generateForItems(createTempObject(C_JSON_OBJECT, l_schema), data, genItemname(name, nr++), startend, newItem)
+ 
         l_generated.item ++;
         l_generated.html += l_gen.html;
       }
-    } else if(Array.isArray(schema.anyOf)){
-      for(const l_condition  of schema.allOf){
+    }
+
+    if(Array.isArray(schema.anyOf)){
+      for(const l_condition  of schema.anyOf){
         apex.debug.trace('Conditional: anyOff', l_condition);
       }
-    } else if(Array.isArray(schema.oneOf)){
+    }
+
+    if(Array.isArray(schema.oneOf)){
       for(const l_condition  of schema.oneOf){
         apex.debug.trace('Conditional: oneOf', l_condition);
       }
-    } else if(typeof schema.if == 'object'){  // there is a conditional schema
+    }
+    
+    if(typeof schema.if == 'object'){  // there is a conditional schema
       apex.debug.trace('Conditional: if');
       // UI is generated for THEN and ELSE, set to hidden depending on if-clause
       if(schema.if){
+        // xxxxxxx
         if(schema.then && schema.then.properties){
-          let l_gen = generateForItems(schema.then.properties, data, name, startend, newItem)
+          let l_gen = generateForItems(createTempObject(C_JSON_OBJECT, schema.then), data, genItemname(name, 0), startend, newItem)
+          //let l_gen = generateForObject(createTempObject(C_JSON_OBJECT, schema.then), data, prefix, genItemname(name, 0), startend, newItem);
           l_generated.html += l_gen.html;
           l_generated.items += l_gen.items;
         }
 
         if(schema.else && schema.else.properties){
-          let l_gen = generateForItems(schema.else.properties, data, name, startend, newItem)
-          l_generated.html += l_gen.html;
+          let l_gen = generateForItems(createTempObject(C_JSON_OBJECT, schema.else), data, genItemname(name, 1), startend, newItem)
+          //let l_gen = generateForObject(createTempObject(C_JSON_OBJECT, schema.else), data, prefix, genItemname(name, 1), startend, newItem);
+           l_generated.html += l_gen.html;
           l_generated.items += l_gen.items;
         }
       }
@@ -2546,8 +2645,8 @@ console.log('attach dependsOn', dataitem, l_dependOn, baseSchema);
    * The id is required to show/hide the content of the row for conditional schema
    * returns the html 
   */
-  function generateSeparator(schema, label, id, inArray, button){
-    apex.debug.trace(">>jsonRegion.generateSeparator", schema, label, id, inArray, button); 
+  function generateSeparator(schema, label, id, inArray){
+    apex.debug.trace(">>jsonRegion.generateSeparator", schema, label, id, inArray); 
     let l_html ='';
     if(!inArray && label) {    // There is a label, put a line with the text
       l_html += `
@@ -2557,10 +2656,48 @@ console.log('attach dependsOn', dataitem, l_dependOn, baseSchema);
     <div class="t-Region-headerItems t-Region-headerItems--title">
       <h2 class="t-Region-title" id="#ID#_heading" data-apex-heading="">#LABEL#</h2>
     </div>
+  </div>
+</div>
+<div #DIVID# class="row jsonregion #CSS#" json-property="#JSONPROPERTY#">
  `;
+    } else {
+      l_html +=`
+</div>
+<div class="row jsonregion" #DIVID#>
+`  
     }
- 
-    if(button && schema.apex.hasInsert != 'none'){  // 
+
+    l_html = apex.util.applyTemplate(l_html, 
+                                      { 
+                                        placeholders: {
+                                          "LABEL": label,
+                                          "ID":    id,
+                                          "DIVID": id?'id="'+id+'_CONTAINER"':'',
+                                          "JSONPROPERTY": schema.name,
+                                          "CSS":   (schema.type==C_JSON_OBJECT)?(schema.apex.css||''):''
+                                        }
+                                      });
+
+    apex.debug.trace("<<jsonRegion.generateSeparator"); 
+    return(l_html);
+  }
+
+  /*
+   * Generate a separator line for an array (if required with a "create" button 
+   * The id is required to show/hide the content of the row for conditional schema
+   * returns the html 
+  */
+  function generateArraySeparator(schema, label, id){
+    apex.debug.trace(">>jsonRegion.generateArraySeparator", schema, label, id); 
+    let l_html =`
+    </div>
+<div id="#ID#_CONTAINER" class="row jsonregion" json-property="#JSONPROPERTY#">
+  <div class="t-Region-header">
+    <div class="t-Region-headerItems t-Region-headerItems--title">
+      <h2 class="t-Region-title" id="#ID#_heading" data-apex-heading="">#LABEL#</h2>
+    </div>
+ `;
+    if(schema.apex.hasInsert != 'none'){  // 
       l_html += `
     <div class="t-Region-headerItems t-Region-headerItems--buttons">
       <button id="#ID#_CREATE" type="button" class="t-Button t-Button--noLabel t-Button--icon js-ignoreChange lto33153869848604592_0" title="Create" aria-label="Create">
@@ -2575,23 +2712,20 @@ console.log('attach dependsOn', dataitem, l_dependOn, baseSchema);
 `;
     }
 
-    l_html += `
-</div>
-<div id="#ID#_CONTAINER" class="row jsonregion #CSS#">
- `;
-
     l_html = apex.util.applyTemplate(l_html, 
                                       { 
                                         placeholders: {
-                                          "LABEL": label,
-                                          "ID":    id,
-                                          "CSS":   (schema.type==C_JSON_OBJECT)?(schema.apex.css||''):''
+                                          "LABEL":        label,
+                                          "ID":           id,
+                                          "JSONPROPERTY": schema.name
                                         }
                                       });
 
-    apex.debug.trace("<<jsonRegion.generateSeparator"); 
+    apex.debug.trace("<<jsonRegion.generateArraySeparator"); 
     return(l_html);
   }
+
+
 
   function addArrayDeleteEvent(){
     $('button.json_region_del_row').on('click', function(ev){ delArrayRow($(this)[0].id); });
@@ -2724,7 +2858,7 @@ console.log('attach dependsOn', dataitem, l_dependOn, baseSchema);
           html:        apex.util.applyTemplate(
 `
   <div class="col col-#COLWIDTH# apex-col-auto #COLSTARTEND#">
-    <div  id="#ID#_CONTAINER" class="t-Form-fieldContainer #FIELDTEMPLATE# #ISREQUIRED# #CSS# i_112918109_0 apex-item-wrapper #WRAPPERTYPE#" >
+    <div id="#ID#_CONTAINER" class="t-Form-fieldContainer #FIELDTEMPLATE# #ISREQUIRED# #CSS# i_112918109_0 apex-item-wrapper #WRAPPERTYPE#" json-property="#JSONPROPERTY#">
       <div class="t-Form-labelContainer #LABELTEMPLATE#">
         <label for="#ID#" id="#ID#_LABEL" class="t-Form-label #LABELHIDDEN#">#TOPLABEL#</label>
       </div>
@@ -2772,7 +2906,8 @@ console.log('attach dependsOn', dataitem, l_dependOn, baseSchema);
                                                      "VALUE":        l_value,
                                                      "QUOTEVALUE":   (item.type== C_JSON_STRING)?apex.util.escapeHTML(''+l_value):l_value,
                                                      "COLORMODE":    item.apex.colormode||'HEX',
-                                                     "IMAGE":        item.apex.image||""
+                                                     "IMAGE":        item.apex.image||"",
+                                                     "JSONPROPERTY": item.name
                                                     }
                                     })
       }
@@ -2783,18 +2918,45 @@ console.log('attach dependsOn', dataitem, l_dependOn, baseSchema);
 
 
   /*
-   * generate UI for a all items of "properties" / "items" 
+   * generate UI for a all items of "properties"
    * returns {items:0, wrappertype: "xxx", html: "xxx"}
   */
-  function generateForItems(items, data, id, startend, newItem){
+  function generateForItems(schema, data, id, startend, newItem){
+    apex.debug.trace(">>jsonRegion.generateForItems", schema, data, id, startend, newItem);
     let l_generated = {items: 0, wrappertype: null, html: ''};
-    items = items ||{};
-    apex.debug.trace(">>jsonRegion.generateForItems", items, data, id, startend, newItem);
+    const items = schema.properties ||{};
     for(let [l_name, l_item] of Object.entries(items)){
-      const l_gen = generateForItem(l_item, data[l_name], id + C_DELIMITER + l_name, startend, newItem);
+      const l_gen = generateForItem(l_item, data[l_name], genItemname(id, l_name), startend, newItem);
+      if(l_item.apex.textBefore|| l_item.apex.newRow) {
+        l_generated.html += generateSeparator(l_item, l_item.apex.textBefore, null, false);
+      }
       l_generated.html += l_gen.html;
       l_generated.items += l_gen.items;
     }
+
+    let l_gen = generateForConditional(schema, data, '', id, startend, false, newItem);
+    l_generated.html += l_gen.html;
+    l_generated.items += l_gen.items;
+
+/*
+    if('allOf' in schema) {
+      const l_gen = generateForAllOf(schema.allOf, data, '', id, startend, newItem)
+      l_generated.html += l_gen.html;
+      l_generated.items += l_gen.items;
+    }
+
+    if('anyOf' in schema) {
+      const l_gen = generateForAnyOf(schema.anyOf, data, '', id, startend, newItem)
+      l_generated.html += l_gen.html;
+      l_generated.items += l_gen.items;
+    }
+      
+    if('oneOf' in schema) {
+      const l_gen = generateForOneOf(schema.oneOf, data, '', id, startend, newItem)
+      l_generated.html += l_gen.html;
+      l_generated.items += l_gen.items;
+    }
+*/
     apex.debug.trace("<<jsonRegion.generateForItems", l_generated);
     return(l_generated);
   }
@@ -2817,15 +2979,16 @@ console.log('attach dependsOn', dataitem, l_dependOn, baseSchema);
         case "object": // an object, so generate all of its properties
           data = data ||'{}';
           if(pOptions.headers){
-            l_generated.html = generateSeparator(schema, generateLabel(schema.name, schema), schema.id, false, null);
+            l_generated.html = generateSeparator(schema, generateLabel(schema.name, schema), name, false);
           }
-          let l_gen = generateForItems(schema.properties, data, name, startend, newItem);
+          let l_gen = generateForItems(schema, data, name, startend, newItem);
           l_generated.html += l_gen.html;
           l_generated.items += l_gen.items;
-
+/*
           l_gen = generateForConditional(schema, data, prefix, name, startend, false, newItem);
           l_generated.html += l_gen.html;
           l_generated.items += l_gen.items;
+*/
         break;
         case C_JSON_STRING:
           l_generated = generateForString(schema, data, startend);
@@ -2849,7 +3012,7 @@ console.log('attach dependsOn', dataitem, l_dependOn, baseSchema);
           logSchemaError('"type": not implemented', schema.type);
         break;
       }
-
+/*
       if('allOf' in schema) {
         const l_gen = generateForAllOf(schema.allOf, data, prefix, name, startend, newItem)
         l_generated.html += l_gen.html;
@@ -2857,22 +3020,17 @@ console.log('attach dependsOn', dataitem, l_dependOn, baseSchema);
       }
 
       if('anyOf' in schema) {
-        const l_gen = generateForAnyOf(schema.allOf, data, prefix, name, startend, newItem)
+        const l_gen = generateForAnyOf(schema.aanyOf, data, prefix, name, startend, newItem)
         l_generated.html += l_gen.html;
         l_generated.items += l_gen.items;
       }
       
       if('oneOf' in schema) {
-        const l_gen = generateForOneOf(schema.allOf, data, prefix, name, startend, newItem)
+        const l_gen = generateForOneOf(schema.oneOf, data, prefix, name, startend, newItem)
         l_generated.html += l_gen.html;
         l_generated.items += l_gen.items;
       }
-      
-
-
-    if((schema.apex.textBefore || schema.apex.newRow)) { // current field should start at a new row
-      l_generated.html = generateSeparator(schema, schema.apex.textBefore, schema.id + '_OBJ', false, null) + l_generated.html;
-    }
+*/
     apex.debug.trace("<<jsonRegion.generateForObject", l_generated);
     return(l_generated);
   }
@@ -3024,7 +3182,7 @@ console.log('attach dependsOn', dataitem, l_dependOn, baseSchema);
       removeNulls(gData);
     }
 */
-    attachObject(pOptions.dataitem, '', pOptions.schema, pOptions.readonly, gData, newItem, pOptions.schema);
+    attachObject(pOptions.dataitem, null, pOptions.schema, pOptions.readonly, gData, newItem, pOptions.schema, pOptions.dataitem);
     addArrayDeleteEvent();
     apexHacks();
     apex.debug.trace("<<jsonRegion.refresh");
@@ -3082,7 +3240,7 @@ console.log('attach dependsOn', dataitem, l_dependOn, baseSchema);
       break;
       } 
 
-      if(schema.if){  // conditional schema, add event on items
+      if(schema.if){  // conditional schema
         if(schema.then){ 
           for(const [l_name, l_item] of Object.entries(schema.then.properties)){
             reformatValues(l_item, data[l_name], read);
@@ -3209,7 +3367,7 @@ console.log('attach dependsOn', dataitem, l_dependOn, baseSchema);
                 gData = null;
 //                gData = defaultValues(pOptions.schema);
 //                removeNulls(gData);
-                attachObject(pOptions.dataitem, '', pOptions.schema, pOptions.readonly, gData, l_newitem, pOptions.schema);
+                attachObject(pOptions.dataitem, null, pOptions.schema, pOptions.readonly, gData, l_newitem, pOptions.schema, pOptions.dataitem);
                 addArrayDeleteEvent();
                 apexHacks();
                 setObjectValues(pOptions.dataitem, '', pOptions.schema, pOptions.readonly, gData)

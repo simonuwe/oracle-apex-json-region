@@ -1,12 +1,21 @@
-# 0.9.7 2024-??-??
+# 0.9.7 2024-10-11
 
 ## Fixed Issues
 
+- #157 "if", "then", "else" does not work, when then and else contain same property 
+- #157 "if", "then" doesn't work if "then" part is an array-property
+- #155 wrong logging when JSON-data contains a null object 
+- #154 Toplevel "type": "array" does not work
+- #153 wrong size of label for itemtype: "switch"
+
 ## New Features
 
+- #151 Cascading Select list
+- #152 support of JSON-schema's "allOf" 
 - #148 Logging of unknown key/values in JSON-schema
 - #145 Support of shuttle for multiple selection
 - #141 Testautomation with Selenium 
+- #90  Better error-logs for errors in JSON-schema
 
 # 0.9.6 2024-10-11
 
