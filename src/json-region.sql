@@ -4,6 +4,23 @@
  * Apache License Version 2.0
 */
 
+/* 
+ * READ a schema from ref-schema-query with column path, schema, sqlquery 
+*/
+FUNCTION generate_schema(p_refquery IN VARCHAR2 , p_path IN VARCHAR2) RETURN CLOB IS
+    l_data     json_region_schema%ROWTYPE;
+    l_json     CLOB;
+    l_sqlquery VARCHAR2(4000);
+BEGIN
+    APEX_DEBUG.INFO('generate_schema %s: "%s"', p_path, p_refquery);
+    EXECUTE IMMEDIATE p_refquery INTO l_json, l_sqlquery USING p_path;
+    IF l_json IS NULL THEN
+      EXECUTE IMMEDIATE l_sqlquery INTO l_json;
+    END IF;
+
+    RETURN(l_json);
+ END;
+
 /*
  * Read the JSON-schema from database. The query must return a single row and the first column must be the JSON-schema.
  */ 
@@ -16,10 +33,10 @@ BEGIN
             p_sql_statement    => pQuery,
             p_min_columns      => 1,
             p_max_columns      => 1,
-            p_component_name   => '1');
+            p_component_name   => 'json-region-plugin');
   IF(l_column_value_list.count=1 AND l_column_value_list(1).count=1 AND l_column_value_list(1)(1) IS NOT NULL) THEN
-    APEX_DEBUG.INFO('readschema: %s %s', l_column_value_list(1).count, l_column_value_list(1)(1));
     l_json := l_column_value_list(1)(1);
+    APEX_DEBUG.INFO('readschema: %s', l_json);
   END IF;
   RETURN l_json;
 END readschema;
@@ -32,7 +49,7 @@ END readschema;
  */
 FUNCTION readschemafromdictionary(pItem IN VARCHAR2) 
   RETURN CLOB IS 
-  l_json                CLOB;
+  l_json                CLOB :=NULL;
   l_table_name          all_tab_columns.table_name%TYPE;
   l_owner               all_tab_columns.owner%TYPE;
   l_column_name         all_tab_columns.column_name%TYPE;
@@ -44,10 +61,10 @@ BEGIN
       SELECT table_name, item_source
       INTO l_table_name, l_column_name
       FROM apex_application_page_items i 
-      JOIN apex_application_page_regions r ON (r.region_id=i.region_id)
+      LEFT OUTER JOIN apex_application_page_regions r ON (r.region_id=i.region_id)
       WHERE i.application_id=NV('APP_ID') AND item_name=pItem;
 
-      APEX_DEBUG.INFO('readschemafromdictionary: %s %s %s', l_owner, l_table_name, l_column_name);
+      APEX_DEBUG.INFO('readschemafromdictionary: %s %s.%s', l_owner, l_table_name, l_column_name);
 
       SELECT REGEXP_SUBSTR(text, '({.+})',1,1,'n',1) AS json_schema
       INTO l_json
@@ -59,10 +76,13 @@ BEGIN
       JOIN user_cons_columns cc ON(c.table_name=cc.table_name AND c.constraint_name=cc.constraint_name)
       WHERE c.table_name=l_table_name AND column_name=l_column_name;
     EXCEPTION WHEN NO_DATA_FOUND THEN
-    SELECT json_serialize(DBMS_JSON_SCHEMA.describe(l_table_name, l_owner))
-      INTO l_json;
+      IF(l_table_name IS NOT NULL) THEN
+        l_json := json_serialize(DBMS_JSON_SCHEMA.describe(l_table_name, l_owner));
+      ELSE
+        APEX_DEBUG.ERROR('readschemafromdictionary JSON-item "%s not connected to database source, no JSON-schema found for database column', pItem);
+      END IF;
     END;
-    APEX_DEBUG.INFO('JSON %s', substr(l_json,1,1000));
+    APEX_DEBUG.INFO('readschemafromdictionary JSON %s', substr(l_json,1,1000));
   $ELSE
     APEX_DEBUG.ERROR('readschemafromdictionary not supported for database version %d', DBMS_DB_VERSION.VERSION);
   $END
@@ -88,10 +108,10 @@ FUNCTION render_region(p_region              IN apex_plugin.t_region,
   l_textareawidth       p_region.attribute_01%TYPE :=  NVL(p_region.attribute_01, 250);                 -- The limit when textarea is used for long tex inputs
   l_keepattributes      p_region.attribute_06%TYPE :=  NVL(p_region.attribute_06, 'N');                 -- keep additional attributes not mentioned in JSON-schema
   l_headers             p_region.attribute_07%TYPE :=  NVL(p_region.attribute_07, 'N');                 -- Show headers when sub-objects are in the JSON-schema
-  l_hide                boolean                    :=  NVL(p_region.attribute_08, 'Y')='Y';             -- Hide the JSON-field (default is true)
+  l_hide                BOOLEAN                    :=  NVL(p_region.attribute_08, 'Y')='Y';             -- Hide the JSON-field (default is true)
   l_removenulls         BOOLEAN                    :=  NVL(p_region.attribute_09, 'Y')='Y';             -- Remove attributed from JSON with a NULL-value  
-  l_queryitems          varchar2(4000);
-  l_delimiter           varchar2(1);
+  l_queryitems          VARCHAR2(4000);
+  l_delimiter           VARCHAR2(1);
   l_binds               DBMS_SQL.varchar2_table;
 --  l_columun     apex_plugin.t_region_column := p_region.region_columns(0);
   l_readonly    BOOLEAN;
@@ -110,8 +130,13 @@ BEGIN
       END LOOP;
     END IF;
 
-    IF(l_schema IS NULL OR LENGTH(l_schema)=0) THEN
-      l_schema:=readschemafromdictionary(l_dataitem);
+    IF(l_source='1') THEN  -- Static source
+      IF(l_schema IS NULL OR LENGTH(l_schema)=0) THEN
+        l_schema:=readschemafromdictionary(l_dataitem);
+        IF(l_schema IS NULL OR LENGTH(l_schema)=0) THEN
+        l_schema:= NULL;
+        END IF;
+      END IF;
     END IF;
 
     EXCEPTION WHEN NO_DATA_FOUND THEN
@@ -166,32 +191,80 @@ END render_region;
 FUNCTION ajax_region(p_region IN apex_plugin.t_region,
                      p_plugin IN apex_plugin.t_plugin)
   RETURN apex_plugin.t_region_ajax_result IS
-  l_sqlquery p_region.attribute_04%TYPE :=p_region.attribute_04;  -- the SQLquery entered in page designer is passed in attribute_04;
-  l_result   apex_plugin.t_region_ajax_result;
-  l_json     VARCHAR2(32000);
-  l_j        APEX_JSON.T_VALUES;
-  l_svg      clob;
+  l_sqlquery  p_region.attribute_04%TYPE := p_region.attribute_04;  -- the SQLquery entered in page designer is passed in attribute_04;
+  l_refquery  p_region.attribute_12%TYPE := p_region.attribute_12; -- The query to retreive the schema reference column
+  l_result    apex_plugin.t_region_ajax_result;
+  l_function  APEX_APPLICATION.g_x04%TYPE := APEX_APPLICATION.g_x04;
+  l_param1    APEX_APPLICATION.g_x05%TYPE := APEX_APPLICATION.g_x05;
+  l_json      VARCHAR2(32000);
+  l_j         APEX_JSON.T_VALUES;
+  l_svg       CLOB;
 BEGIN
-  APEX_DEBUG.TRACE('ajax_region %s', APEX_APPLICATION.g_x01);
   apex_plugin_util.debug_region(p_plugin => p_plugin, p_region => p_region);
   BEGIN
-    IF(APEX_APPLICATION.g_x01 IS NOT NULL) THEN  -- generate a QR-code 
-$if wwv_flow_api.c_current>=20231031 $then   -- apex_barcode is only available in APEX >=23.2 (20231031), so conditional compile
+        -- x01-x03 used by QRCode callback
+    APEX_DEBUG.TRACE('ajax_region pplugin %s', p_plugin.attribute_01);
+    APEX_DEBUG.TRACE('ajax_region source %s', p_region.source);
+    APEX_DEBUG.TRACE('ajax_region items %s', p_region.ajax_items_to_submit);
+    APEX_DEBUG.TRACE('ajax_region g_x01 %s', APEX_APPLICATION.g_x01);
+    IF(APEX_APPLICATION.g_x01 IS NOT NULL AND LENGTH(APEX_APPLICATION.g_x01)>0) THEN  
+        -- generate a QR-code  QC-code callback uses x01-x03
+$if wwv_flow_api.c_current>=20231031 $then
+        -- apex_barcode is only available in APEX >=23.2 (20231031), so conditional compile
       l_svg := apex_barcode.get_qrcode_svg(p_value => APEX_APPLICATION.g_x01); 
       apex_json.open_object;
       apex_json.write('QR', l_svg);
-      apex_json.close_all();
 $else
       apex_json.open_object;
+      apex_json.write('{}');
 $end
-    ELSE   -- read JSON-schema
-      l_json := readschema(l_sqlquery);
-      apex_json.parse(l_j , l_json);
-      apex_json.write(l_j);
+    ELSE
+      APEX_DEBUG.TRACE('ajax_region g_x04 %s', l_function);
+      APEX_DEBUG.TRACE('ajax_region g_x05 %s', l_param1);
+      CASE APEX_APPLICATION.g_x04
+        WHEN 'getSubschema' THEN  -- x05 contains the JSON-schema requested schema path
+          l_json := generate_schema(l_refquery, l_param1);
+          apex_json.parse(l_j , l_json);
+          apex_json.write(l_j);
+        WHEN 'getSchema' THEN  -- the names of the search items for requested JSON-schema is in pageItems
+          APEX_DEBUG.TRACE('ajax_region others');
+          l_json := readschema(l_sqlquery);
+          apex_json.parse(l_j , l_json);
+          apex_json.write(l_j);
+        ELSE 
+          apex_json.open_object;
+      END CASE;
     END IF;
+  apex_json.close_all();
   EXCEPTION WHEN NO_DATA_FOUND THEN
     apex_json.open_object();
-    apex_json.close_all();  
+    apex_json.close_all(); 
+    RAISE; 
   END;
   RETURN l_result;
 END ajax_region;
+
+PROCEDURE install(
+  p_plugin_id      IN NUMBER,
+  p_plugin_version IN VARCHAR2
+)IS
+BEGIN
+  EXECUTE IMMEDIATE 'CREATE TABLE xx(id number, txt varchar2(100);';
+END install;
+
+
+PROCEDURE uninstall(
+  p_plugin_id      IN NUMBER,
+  p_plugin_version IN VARCHAR2
+)IS
+BEGIN
+  EXECUTE IMMEDIATE 'DROP TABLE xx;';
+END uninstall;
+
+PROCEDURE upgrade(
+  p_plugin_id      IN NUMBER,
+  p_plugin_version IN VARCHAR2
+)IS
+BEGIN
+  EXECUTE IMMEDIATE 'CREATE TABLE xx(id number, txt varchar2(100);';
+END upgrade;
