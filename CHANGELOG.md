@@ -1,21 +1,27 @@
-# 0.9.7 2024-10-11
-
-## Fixed Issues
-
-- #157 "if", "then", "else" does not work, when then and else contain same property 
-- #157 "if", "then" doesn't work if "then" part is an array-property
-- #155 wrong logging when JSON-data contains a null object 
-- #154 Toplevel "type": "array" does not work
-- #153 wrong size of label for itemtype: "switch"
+# 0.9.7 2024-10-17
 
 ## New Features
 
+- #160 support of dynamic subschema read from database
 - #151 Cascading Select list
 - #152 support of JSON-schema's "allOf" 
 - #148 Logging of unknown key/values in JSON-schema
 - #145 Support of shuttle for multiple selection
 - #141 Testautomation with Selenium 
 - #90  Better error-logs for errors in JSON-schema
+
+## Fixed Issues
+
+- #166 Oracle23ai: "extendedType": "date" not working
+- #164 Itemtype "selectlist" font size of floating label wrong, when value optional 
+- #163 Oracle23ai: PLSQL-error when JSON-data-item has no "Source"
+- #162 Warnings on Browser-Console when in debug-mode
+- #159 null reference when "type" property is missing
+- #157 "if", "then", "else" does not work, when then and else contain same property 
+- #157 "if", "then" doesn't work if "then" part is an array-property
+- #155 wrong logging when JSON-data contains a null object 
+- #154 Toplevel "type": "array" does not work
+- #153 wrong size of label for itemtype: "switch"
 
 # 0.9.6 2024-10-11
 

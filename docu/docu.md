@@ -1,4 +1,4 @@
-# json-region
+# JSON-Region
 
 An Oracle-APEX-plugin that provides dynamic input items for an easy way to display and edit **JSON-data** in an APEX-application. 
 The field-items are dynamically generate based on a JSON-schema. The JSON-schema could be fixed for a page or dynamically based on a JSON-schema found by a SQL_query.
@@ -8,6 +8,8 @@ So this plugin could also use the JSON-schema of the JSON-validation to **dynami
 In this way the field-items of an application always match with the format of your JSON-column.
 
 This Oracle-APEX-plugin provides a new region-type **JSON-region**. 
+
+First first steps, here is a [Tutorial](tutorial.md)
 
 ## Supported datatypes
 
@@ -471,6 +473,8 @@ Configuration of the **JSON-region**
 ![region-config-1](region-config-1.png)
 ![region-config-2](region-config-2.png)
 
+The query **SQL-Query for referenced JSON-schema** is only needed, in case a table for the handling of JSON-schema-reference is installed (see below **Server references with /defs/xyz**).
+
 ### Generated JSON-schema as a base for a fixed JSON-schema
 
 With **No fixed schema** the JSON-schema will be generated based on the JSON-data. This could be used as a base for further improvements (adding other items, change the itemtype for properties, ...). This JSON-schema could be extracted from the Browser-console.
@@ -485,6 +489,110 @@ In **browser-console** search for **+++JSON-schema+++**.
 
 ![region-config-6](region-config-6.png)
 
+### Cascading select-lists
+
+A common requirement on UI are cascading-select-lists. This means that the values of one select-list depends on a selected value in another select-list.
+
+Here is an example how this can be implemented using **allOf** and **if**, **then**. 
+It will display up to 3 select-lists **sel1**, **sel2** and **sel3**.
+
+```
+sel1:   sel2:     sel3:
+
+val1-1  val21-1
+        val21-2
+        val21-3
+val1-2  val22-1
+        val22-2
+        more1     valmore1-1
+                  valmore1-2
+                  valmore1-3
+        more2     valmore2-1
+                  valmore2-2
+                  valmore2-3
+val1-3
+```   
+So when selection **val1-2** in the select-list **sel1** a new select-list **sel2** will appear and so on.
+
+The JSON-schema for the above hierarchie is
+
+```
+{
+  "type": "object",
+  "properties": {
+    "sel1": {"type": "string", "enum": ["val1-1", "val1-2", "val1-3"]}
+  },
+  "allOf": [{
+    "if":   {"properties": {"sel1": { "const": "val1-1" } }}, 
+    "then": {
+      "properties":{ "sel2": {"type": "string", "enum": ["val21-1", "val21-2",  "val21-3"]} }
+    }
+  },{          
+    "if":   {"properties": {"sel1": { "const": "val1-2" } }}, 
+    "then": {
+      "properties":{ "sel2": {"type": "string", "enum": ["val22-1", "val22-2",  "more1", "more2"]} },
+      "allOf": [{
+        "if":  { "properties": {"sel2": { "const": "more1" } }}, 
+        "then": {
+          "properties":{ "sel3": {"type": "string", "enum": ["valmore1-1", "valmore1-2", "valmore1-3"]} }
+        }
+        },{
+        "if":  { "properties": {"sel2": { "const": "more2" } }}, 
+        "then": {
+          "properties":{ "sel3": {"type": "string", "enum": ["valmore2-1", "valmore2-2", "valmore2-3"]} }
+        }
+      }]
+    }
+  }]
+}
+```
+
+## Schema references with $ref
+
+The plugin implements 2 kinds of references.
+- #/$defs/abc
+- /defs/xyz
+
+
+## Document local references with #/defs/abc
+
+A reference locally inside the current JSON-schema looks like
+```
+  {"$ref": "#/$defs/date"}
+``` 
+is replaced with the schema found by path **$defs.date inside the document.
+```
+{
+  "type": "object",
+  "required": ["lastname"],
+  "properties": {
+    "lastname":  {"type": "string"},
+    "firstname": {"type": "string"},
+    "birthdate": {"$ref": "#/$defs/date"}
+  },
+  "$defs": {
+    "date": {"type": "string", "format": "date"}
+  }
+}
+```
+
+### Server references with /defs/xyz
+
+There are 2 kinds of server references with a configuration in a database table..
+
+- static, the JSON-schema is found in a database table
+- dynamic enums, the enum is generated with the data, retrieved by a SQL-query konfigured in a database table.
+An example configuration could be found in **examples/create-json-region-schema**, which replaces 3 references **/defs/address**, which is a fixed schema.
+**/defs/boolean**, which will include the schema **boolean** from table **object_type** and **/enums/object_type**, which generates an **enum** based on a sqlquery
+
+**Configuration table**:
+The configuration table mus have 3 columns
+- path
+- schema
+- sqlquery
+The logic behind this is when a **schema** is found to a given **path** use this.
+When there is a **sqlquery** this will be used to to select the JSON-schema. Here you can provide a function which generates the JSON-schema too (like in **/enums/objecttype**).
+
 
 ### Extending with Javascript/JQuery
 
@@ -497,6 +605,7 @@ JSON-item is named **P2_DATA** to the items in the regions have IDs like
 **P2_DATA_obj1_prop1** (property **prop1** in toplevel subobject **obj1** of the JSON-schema )
 So the generated items can be access via JQuery like **$("#P2_DATA_obj")**
 This can be used to extend or modify the item's behavior.
+The keywords **then**, **else**, **allOf** generate numbers to make identifiers unique. Here **then** adds **_0** and **else** adds  a **_1**. The list in **allOf** generates a new number for each member (**_1**, **_2**, ...).So an identifier could look like **P2_DATA_1_obj_1_props** 
 
 ### Installing the Plugin
 
@@ -770,6 +879,8 @@ How it works:
 - Copy the JSON-Schema
 - Paste it into a column of a database-table or past it as a fixed JSON-Schema in the JSON-Region-Configuration in the APEX-page-editor.
 
+### Complex example with cascading selects
+Cascading selects could be implemented using **if**, **then** ald **allOf**. This is limited to fixed hierarchies.
 
 ## Know issues
 

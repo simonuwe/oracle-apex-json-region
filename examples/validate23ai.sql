@@ -24,6 +24,7 @@ ALTER TABLE object23ai ADD CONSTRAINT object23ai_ck_1 check (data is json valida
   "required"   : ["fruit", "quantity"]
 }]');
 
+ALTER TABLE object23ai add constraint object_name_un unique(object_name); 
 
 INSERT INTO object23ai (OBJECT_NAME,DATA) values ('bananas','{"fruit":"banana","quantity":12,"orderdate":"2024-08-23"}');
 INSERT INTO object23ai (OBJECT_NAME,DATA) values ('apples','{"fruit":"apples","quantity":10,"orderdate":"2024-08-23"}');
