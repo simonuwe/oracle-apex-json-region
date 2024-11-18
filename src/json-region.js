@@ -32,11 +32,18 @@ apex.date = apex.date||{
       l_ret = $.datepicker.parseDate(pFormat, pDate);
       l_ret = new Date(l_ret.getTime() - l_ret.getTimezoneOffset()*60000);
     }
+
+    console.warn('date.parse', pDate, pFormat, l_ret);
     return(l_ret);
     // (pDate.replace('T', ' '));
   },
+  format: function(pDate, pFormat){
+    console.warn('format', pDate, pFormat);
+  },
   toISOString: function(pDate) { 
-    return (new Date(pDate).toISOString().substring(0,19));
+    let l_date = new Date(pDate).toISOString().substring(0,19);
+    console.warn('ISO', pDate, l_date);
+    return (l_date);
   }
 };
 
@@ -57,8 +64,7 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
   const C_APEX_VERSION_2301 = "23.1"
   const C_APEX_VERSION_2302 = "23.2"
   const C_APEX_VERSION_2401 = "24.1"
-
-                                                   // JSON "type": "..."
+                                              // JSON "type": "..."
   const C_JSON_OBJECT           = 'object';
   const C_JSON_ARRAY            = 'array';
   const C_JSON_PROPERTIES       = 'properties';
@@ -156,7 +162,6 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
   pOptions.apex_version = pOptions.apex_version.match(/\d+\.\d+/)[0];  // only first 2 numbers of version
 
 
-
         // get the data-template-id for inline errors from another input field
 // console.error(JSON.stringify(pOptions));
   let gData = null;  // holds the JSON-data as an object hierarchie
@@ -170,7 +175,7 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
     }
   }
 
-  if(pOptions.apex_version < C_APEX_VERSION_2201){
+  if(pOptions.apex_version >= C_APEX_VERSION_2101 && pOptions.apex_version < C_APEX_VERSION_2201){
     gDateFormat = gDateFormat.toLowerCase().replace('mm', 'MM');
   }
 
@@ -182,8 +187,6 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
   } else {
     gTimeFormat = "HH:ii";
   }
-
-console.warn(pOptions.apex_version, gDateFormat, gTimeFormat);
 
   // hack for apex.libVersions <21.1
   if(pOptions.apex_version>=C_APEX_VERSION_2101 && pOptions.apex_version<C_APEX_VERSION_2102){
@@ -652,18 +655,16 @@ console.error('propagateShow if: not implemented', schema.if)
             switch(schema.format){
               case C_JSON_FORMAT_DATE:
                 if(pOptions.apex_version==C_APEX_VERSION_2101) {
-                  l_value = apex.date.toISOString(apex.date.parse(value, gDateFormat.toLowerCase().replace(/yy/g, 'y'))).substring(0,10);
+                  l_value = apex.date.toISOString(apex.date.parse(value, gDateFormat.replace(/yy/g, 'y').toLowerCase())).substring(0,10);
                 } else {
                   l_value = apex.date.toISOString(apex.date.parse(value, gDateFormat)).substring(0,10);
                 }
               break;
               case C_JSON_FORMAT_DATETIME:
-                if(pOptions.apex_version==C_APEX_VERSION_2101) {
-                  l_value = apex.date.toISOString(apex.date.parse(value, gDateFormat.toLowerCase().replace(/yy/g, 'y') + ' ' + gTimeFormat.replace('mm','MI').replace('HH24','HH').replace('HH','HH24')));
-                } else if(pOptions.apex_version>C_APEX_VERSION_2101) {
-                  l_value = apex.date.toISOString(apex.date.parse(value, gDateFormat + ' ' + gTimeFormat.replace('mm','MI').replace('HH24','HH').replace('HH','HH24')));
+                if(pOptions.apex_version==C_APEX_VERSION_2101){
+                  l_value = apex.date.toISOString(apex.date.parse(value, gDateFormat.replace(/yy/g, 'y').toLowerCase() + ' ' + gTimeFormat.replace('mm','MI').replace('HH24','HH').replace('HH','HH24')));
                 } else {
-                  l_value = apex.date.toISOString(apex.date.parse(value, gDateFormat + ' ' + gTimeFormat));
+                  l_value = apex.date.toISOString(apex.date.parse(value, gDateFormat + ' ' + gTimeFormat.replace('mm','MI').replace('HH24','HH').replace('HH','HH24')));
                 }
               break;  
               case C_JSON_FORMAT_TIME:
@@ -769,9 +770,9 @@ console.error('propagateShow if: not implemented', schema.if)
                 switch(pOptions.apex_version){
                 case C_APEX_VERSION_2001:
                 case C_APEX_VERSION_2002:
+                case C_APEX_VERSION_2101:
                   l_value = $.datepicker.formatDate(gDateFormat, new Date(value));
                 break;
-                case C_APEX_VERSION_2101:
                 case C_APEX_VERSION_2102:
                 case C_APEX_VERSION_2202:
                 case C_APEX_VERSION_2301:
@@ -790,7 +791,7 @@ console.error('propagateShow if: not implemented', schema.if)
                 case C_APEX_VERSION_2001:
                 case C_APEX_VERSION_2002:
                 case C_APEX_VERSION_2101:
-                    value = value.replace('T', ' '); // except datetime with " " or "T" between date and time, APEX<22.1 " " delimiter
+                  value = value.replace('T', ' '); // except datetime with " " or "T" between date and time, APEX<22.1 " " delimiter
                   l_value = $.datepicker.formatDate(gDateFormat, new Date(value)) + ' ' + value.match(/[\d]{2}:[\d]{2}(:[\d]{2})?/g);
                 break;
                 case C_APEX_VERSION_2102:
