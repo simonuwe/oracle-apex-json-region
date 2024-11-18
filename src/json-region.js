@@ -10,7 +10,7 @@
 */
 
 // for Oracle < 21.1
-apex.libVersions = apex.libVersions || {};
+apex.libVersions = apex.libVersions || {oraclejet: "11.0.0"};
 // apex.env does not not exists, apex.locale only partially
 apex.locale.toNumber = apex.locale.toNumber || function(pValue, pFormat) { 
   pValue = ('' + pValue).replace(apex.locale.getCurrency(), '');  // remove currency $€...
@@ -153,32 +153,45 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
     }
   }
 
-        // get the datat-template-id for inline errors from another input field
+  pOptions.apex_version = pOptions.apex_version.match(/\d+\.\d+/)[0];  // only first 2 numbers of version
+
+
+
+        // get the data-template-id for inline errors from another input field
 // console.error(JSON.stringify(pOptions));
   let gData = null;  // holds the JSON-data as an object hierarchie
   let gDateFormat = apex.locale.getDateFormat?apex.locale.getDateFormat():null;
 
   pOptions.nls_date_format = pOptions.nls_date_format.toLowerCase().replace(/rr/g,'yy');
   if(!gDateFormat) {
-    gDateFormat = pOptions.nls_date_format.toLowerCase().replace(/yy/g,'y');
-  } else {
-    if(pOptions.apex_version < C_APEX_VERSION_2201){
-      gDateFormat = pOptions.nls_date_format.toLowerCase().replace('mm', 'MM');
+    gDateFormat = pOptions.nls_date_format.toLowerCase();
+    if(pOptions.apex_version != C_APEX_VERSION_2101){
+      gDateFormat = gDateFormat.replace(/yy/g,'y');
     }
   }
+
+  if(pOptions.apex_version < C_APEX_VERSION_2201){
+    gDateFormat = gDateFormat.toLowerCase().replace('mm', 'MM');
+  }
+
   let gTimeFormat = null;
   if(pOptions.apex_version >= C_APEX_VERSION_2201) {
     gTimeFormat = 'HH24:MI';
-  } else if(pOptions.apex_version >= C_APEX_VERSION_2102) {
+  } else if(pOptions.apex_version >= C_APEX_VERSION_2101) {
     gTimeFormat = "HH:mm";
   } else {
     gTimeFormat = "HH:ii";
   }
 
+console.warn(pOptions.apex_version, gDateFormat, gTimeFormat);
+
+  // hack for apex.libVersions <21.1
+  if(pOptions.apex_version>=C_APEX_VERSION_2101 && pOptions.apex_version<C_APEX_VERSION_2102){
+      apex.libVersions.oraclejet = '10.0.0';
+  }
   // gDateFormat = 'dd.MM.yyyy';
   // gTimeFormat = 'HH:mm';
 
-  pOptions.apex_version = pOptions.apex_version.match(/\d+\.\d+/)[0];  // only first 2 numbers of version
   pOptions.datatemplateET = $($('.a-Form-error[data-template-id]')[0]).attr('data-template-id') || 'xx_ET';
 
 
@@ -638,10 +651,16 @@ console.error('propagateShow if: not implemented', schema.if)
           case C_JSON_STRING:
             switch(schema.format){
               case C_JSON_FORMAT_DATE:
-                l_value = apex.date.toISOString(apex.date.parse(value, gDateFormat)).substring(0,10);
+                if(pOptions.apex_version==C_APEX_VERSION_2101) {
+                  l_value = apex.date.toISOString(apex.date.parse(value, gDateFormat.toLowerCase().replace(/yy/g, 'y'))).substring(0,10);
+                } else {
+                  l_value = apex.date.toISOString(apex.date.parse(value, gDateFormat)).substring(0,10);
+                }
               break;
               case C_JSON_FORMAT_DATETIME:
-                if(pOptions.apex_version>=C_APEX_VERSION_2102) {
+                if(pOptions.apex_version==C_APEX_VERSION_2101) {
+                  l_value = apex.date.toISOString(apex.date.parse(value, gDateFormat.toLowerCase().replace(/yy/g, 'y') + ' ' + gTimeFormat.replace('mm','MI').replace('HH24','HH').replace('HH','HH24')));
+                } else if(pOptions.apex_version>C_APEX_VERSION_2101) {
                   l_value = apex.date.toISOString(apex.date.parse(value, gDateFormat + ' ' + gTimeFormat.replace('mm','MI').replace('HH24','HH').replace('HH','HH24')));
                 } else {
                   l_value = apex.date.toISOString(apex.date.parse(value, gDateFormat + ' ' + gTimeFormat));
@@ -1114,7 +1133,7 @@ console.error('propagateShow if: not implemented', schema.if)
         switch (schema.format){
         case C_JSON_FORMAT_DATE:
         case C_JSON_FORMAT_DATETIME:
-          if(pOptions.apex_version <C_APEX_VERSION_2102){
+          if(pOptions.apex_version <C_APEX_VERSION_2101){
             apex.widget.datepicker('#'+ dataitem, { 
                                                   "buttonImageOnly":false,
                                                   "buttonText":"\u003Cspan class=\u0022a-Icon icon-calendar\u0022\u003E\u003C\u002Fspan\u003E\u003Cspan class=\u0022u-VisuallyHidden\u0022\u003EPopup Calendar: Created At\u003Cspan\u003E",
@@ -2249,7 +2268,7 @@ console.error('propagateShow if: not implemented', schema.if)
   </button>
 </a-date-picker>
 `};
-          } else if(pOptions.apex_version >=C_APEX_VERSION_2102){
+          } else if(pOptions.apex_version >=C_APEX_VERSION_2101){
             l_generated = {
               itmes: 1,
               wrappertype: 'apex-item-wrapper apex-item-wrapper--date-picker-jet',
@@ -2281,7 +2300,7 @@ console.error('propagateShow if: not implemented', schema.if)
   </button>
 </a-date-picker>
 `};
-          } else if(pOptions.apex_version >=C_APEX_VERSION_2102){
+          } else if(pOptions.apex_version >=C_APEX_VERSION_2101){
             l_generated = {
               items: 1,
               wrappertype: 'apex-item-wrapper apex-item-wrapper--date-picker-jet',
@@ -3121,8 +3140,9 @@ console.error('propagateShow if: not implemented', schema.if)
     apex.debug.trace('>>jsonRegion.loadRequiredFiles221', itemtypes);
     if(itemtypes.format.date || itemtypes.format["date-time"]){  //HACK for APEX <22.2, here an old datepicker is used
       l_html += '<script src="' + pOptions.apex_files + 'libraries/apex/minified/jetCommonBundle.min.js"></script>';
-      if(pOptions.apex_version>=C_APEX_VERSION_2201){ // apex <22.1 has even older datepicker
-        l_html += '<script src="' + pOptions.apex_files + 'libraries/apex/minified/jetDatePickerBundle.min.js"></script>';
+      if(pOptions.apex_version>=C_APEX_VERSION_2101 && pOptions.apex_version<=C_APEX_VERSION_2201){ // apex <22.1 has even older datepicker
+        l_html += '<link rel="stylesheet" href="' + pOptions.apex_files + 'libraries/oraclejet/' + apex.libVersions.oraclejet + '/css/libs/oj/v' + apex.libVersions.oraclejet + '/redwood/oj-redwood-notag-min.css" type="text/css"/>';
+//        l_html += '<script src="' + pOptions.apex_files + 'libraries/apex/minified/jetDatePickerBundle.min.js"></script>';
       }
     }
     apex.debug.trace('<<jsonRegion.loadRequiredFiles221', l_html);
