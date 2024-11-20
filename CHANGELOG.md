@@ -6,6 +6,7 @@
  
 ## Fixed Isses
 
+- #170 Change of SQL-query for schema references in region-attributes shows warning
 - #169 APEX<=22.1: datepicker partially broken
 
 

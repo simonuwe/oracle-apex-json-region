@@ -6,7 +6,7 @@ CREATE TABLE validate_json(
   CONSTRAINT validate_json_un UNIQUE(name)
 );
 
---ALTER TABLE validate_json DROP CONSTRAINT validate_json_validate;
+ALTER TABLE validate_json DROP CONSTRAINT validate_json_validate;
 
 ALTER TABLE validate_json ADD CONSTRAINT validate_json_validate CHECK (data IS JSON VALIDATE q'[{
   "type"       : "object",
@@ -14,21 +14,25 @@ ALTER TABLE validate_json ADD CONSTRAINT validate_json_validate CHECK (data IS J
     "lastname":  {"type": "string"},
     "firstname": {"type": "string"},
     "birthdate": {"type": "string", "format": "date"},
-    "addresses":   {
-      "type": "array",
-      "items": {
-        "address_type": {"type": "string", "enum": ["Office", "Private", "Billing", "Delivery"]},
-        "country":      {"type": "string"},
-        "city":         {"type": "string"},
-        "street":       {"type": "string"}
-      },
-      "required": ["country", "city"]
-    },
     "interests": {
       "type": "array",
       "items": {
         "type": "string", "enum": ["Computer", "Travel", "Sports", "Music", "Reading"]
       }
+    },
+    "addresses":   {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties":{
+          "address_type": {"type": "string", "enum": ["Office", "Private", "Billing", "Delivery"]},
+          "country":      {"type": "string"},
+          "city":         {"type": "string"},
+          "street":       {"type": "string"}
+        },
+        "required": ["city"]
+      },
+      "required": ["country", "city"]
     }
   },
   "required"   : ["lastname"]
@@ -81,8 +85,8 @@ CREATE TABLE address(
 
 CREATE OR REPLACE JSON RELATIONAL DUALITY VIEW duality_json AS
   SELECT JSON { '_id'        : c.customer_id,
-                'lastname'  : c.lastname,
-                'firstname' : c.firstname,
+                'lastname'   : c.lastname,
+                'firstname'  : c.firstname,
                 'birthdate'  : c.birthdate,
                 'adresses' :
                   [ SELECT JSON {'_id'         : a.address_id,

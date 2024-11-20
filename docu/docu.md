@@ -11,6 +11,8 @@ This Oracle-APEX-plugin provides a new region-type **JSON-region**.
 
 First first steps, here is a [Tutorial](tutorial/tutorial.md)
 
+The description of the installation of the JSON-region-plugin is [here](install.md).
+
 ## Supported datatypes
 
 The supported datatypes for JSON-attributes are

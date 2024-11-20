@@ -344,12 +344,63 @@ This will contains **address** and **office** which references the address-schem
 
 ## Oracle23ai
 
+When you install this totorial in an **Oracle23ai** database (or higher), you will see the items 
+- Validate JSONs
+- Duality JSONs
+
+in the menu.
+
 ### Table with JSON-column and VALIDATE constraint
 
+In Application builder, go to the page "Validate JSON" (9) and add a region of Type **JSON-Region**.
+Set **JSON-Item** to **P9_DATA**,the **Source** to **Static** and switch on **Headers**.
+
+![tutorial-61](tutorial-61.png)
+
+When you now call the **Validate JSONs** report and select a row you should see
+
+![tutorial-62](tutorial-62.png)
+
+
+***********BUG *************
+
+
+**Advanced:**
 When you are familar with JSON-schema, you can change the VALIDATE constraint (add a new column)
-You can find An ATLTER-table-statement in the file **install-tutorial-23ai.sql**
+You can find an ALTER-table-statement in the file **install-tutorial-23ai.sql**
 below the line containing **VALIDATE JSON-schema**
-First drop the Constriant and then call the ALTER statment with th modified JSON-Schema.
+First drop the Constraint and then call the ALTER statment with th modified JSON-Schema.
 Now you can see that after this change the UI at the next call.
 
 ### Duality-View
+
+In Application builder, go to the page "Duality JSON" (11) and add a region of Type **JSON-Region**.
+Set **JSON-Item** to **P9_DATA**,the **Source** to **Static** and switch on **Headers**.
+
+**Important**:
+This page is **tricky**:
+
+A **Duality-view** has no **primary-key-column**, so you have to use the **ROWID** as a primary key in **report** and **form**.
+
+APEX processes a check for lost updates. Therefore it re-reads the data and compares a checksum over it. Unfortunatelly The duality-view changes the property **AsOf** with every read, which is included in the checksum calculation. This causes an error when saving th data.
+![tutorial-72](tutorial-72.png)
+
+To come around this, goto **Process form Duality JSON** and switch off
+**Prevent Lost Updates**
+
+
+![tutorial-73](tutorial-73.png)
+
+Here you can also see another pitfall. Even when you switch on **Return Primary Key(s) after Insert** it will not return any primary key when a **duality-view** is used. This causes, that the earsy way to reread the data you just entered after inserting nuew data will not work.
+
+When now calling the **Duality JSON** report and selecting a row, it should look like
+![tutorial-74](tutorial-74.png)
+
+
+# The end
+
+This tutorial has now showm some fetures of the JSON-Region-plugin.
+In the [docu](../docu.md), you can find more features like changing the widgets for some datatype like use a **switch** for boolean, ...
+
+Have fun.
+

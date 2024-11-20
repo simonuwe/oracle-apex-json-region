@@ -32,6 +32,8 @@ When you receive an "compatibility mode" error here, upgrade the compatibility m
 
 This is automatically installed when importing the application **json-region-demo**.
 
+![config](region-config-0.png)
+
 The script 
 ```
   create_json_region_schema.sql
