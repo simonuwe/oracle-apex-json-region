@@ -14,7 +14,7 @@ Insert into json_ref_schema (path,schema,sqlquery) values ('/defs/address',q'[{
     "street":   {"type":"string"}
   }
 }]',null);
-xxxx  Insert into json_ref_schema (path,schema,sqlquery) values ('/enums/variable_name', null, q'[select json_generate_enum('select id, name from fixed_json order by name', null) from dual]');
+Insert into json_ref_schema (path,schema,sqlquery) values ('/enums/fixed_json', null, q'[select json_generate_enum('select id, name from fixed_json order by name', null) from dual]');
 Insert into json_ref_schema (path,schema,sqlquery) values ('/defs/car', null, q'[SELECT json_schema from json_type where name='Car']');
 COMMIT;
 

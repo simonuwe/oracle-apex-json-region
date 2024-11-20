@@ -28,7 +28,7 @@ prompt APPLICATION 101 - JSON-Region-Tutorial
 -- Application Export:
 --   Application:     101
 --   Name:            JSON-Region-Tutorial
---   Date and Time:   19:56 Tuesday November 19, 2024
+--   Date and Time:   18:20 Wednesday November 20, 2024
 --   Exported By:     UWE
 --   Flashback:       0
 --   Export Type:     Application Export
@@ -116,7 +116,7 @@ wwv_flow_imp.create_flow(
 ,p_substitution_string_01=>'APP_NAME'
 ,p_substitution_value_01=>'JSON-Region-Tutorial'
 ,p_last_updated_by=>'UWE'
-,p_last_upd_yyyymmddhh24miss=>'20241119195605'
+,p_last_upd_yyyymmddhh24miss=>'20241120182027'
 ,p_file_prefix => nvl(wwv_flow_application_install.get_static_app_file_prefix,'')
 ,p_files_version=>4
 ,p_ui_type_name => null
@@ -15914,11 +15914,11 @@ wwv_flow_imp_page.create_page(
 ,p_protection_level=>'C'
 ,p_page_component_map=>'02'
 ,p_last_updated_by=>'UWE'
-,p_last_upd_yyyymmddhh24miss=>'20241119103508'
+,p_last_upd_yyyymmddhh24miss=>'20241120180034'
 );
 wwv_flow_imp_page.create_page_plug(
  p_id=>wwv_flow_imp.id(7037413402537557)
-,p_plug_name=>'Validat JSON'
+,p_plug_name=>'Validate JSON'
 ,p_region_template_options=>'#DEFAULT#'
 ,p_plug_template=>wwv_flow_imp.id(6649341721368504)
 ,p_plug_display_sequence=>10
@@ -15929,6 +15929,7 @@ wwv_flow_imp_page.create_page_plug(
 ,p_edit_operations=>'i:u:d'
 ,p_lost_update_check_type=>'VALUES'
 ,p_plug_source_type=>'NATIVE_FORM'
+,p_plug_query_options=>'DERIVED_REPORT_COLUMNS'
 );
 wwv_flow_imp_page.create_page_plug(
  p_id=>wwv_flow_imp.id(7039908927537569)
@@ -16028,22 +16029,19 @@ wwv_flow_imp_page.create_page_item(
 ,p_item_sequence=>20
 ,p_item_plug_id=>wwv_flow_imp.id(7037413402537557)
 ,p_item_source_plug_id=>wwv_flow_imp.id(7037413402537557)
-,p_use_cache_before_default=>'NO'
 ,p_prompt=>'Name'
 ,p_source=>'NAME'
 ,p_source_type=>'REGION_SOURCE_COLUMN'
-,p_display_as=>'NATIVE_TEXTAREA'
+,p_display_as=>'NATIVE_TEXT_FIELD'
 ,p_cSize=>60
 ,p_cMaxlength=>100
-,p_cHeight=>4
-,p_label_alignment=>'RIGHT'
 ,p_field_template=>wwv_flow_imp.id(6781480036368573)
 ,p_item_template_options=>'#DEFAULT#'
 ,p_is_persistent=>'N'
-,p_attribute_01=>'Y'
+,p_attribute_01=>'N'
 ,p_attribute_02=>'N'
-,p_attribute_03=>'N'
-,p_attribute_04=>'BOTH'
+,p_attribute_04=>'TEXT'
+,p_attribute_05=>'BOTH'
 );
 wwv_flow_imp_page.create_page_item(
  p_id=>wwv_flow_imp.id(7038689424537568)
@@ -16052,15 +16050,12 @@ wwv_flow_imp_page.create_page_item(
 ,p_item_sequence=>30
 ,p_item_plug_id=>wwv_flow_imp.id(7037413402537557)
 ,p_item_source_plug_id=>wwv_flow_imp.id(7037413402537557)
-,p_use_cache_before_default=>'NO'
 ,p_prompt=>'Data'
 ,p_source=>'DATA'
 ,p_source_type=>'REGION_SOURCE_COLUMN'
 ,p_display_as=>'NATIVE_TEXTAREA'
 ,p_cSize=>60
-,p_cMaxlength=>255
 ,p_cHeight=>4
-,p_label_alignment=>'RIGHT'
 ,p_field_template=>wwv_flow_imp.id(6780123643368572)
 ,p_item_template_options=>'#DEFAULT#'
 ,p_is_persistent=>'N'
@@ -20581,7 +20576,7 @@ wwv_flow_imp_shared.create_install_script(
 'INSERT INTO generate_json(name, data) VALUES (''Elisabeth'', q''[{',
 '  "lastname": "Windsor",',
 '  "firstname": "Elisabeth II",',
-'  "profession": "Queen",',
+'  "title": "Queen",',
 '  "birthdate": "1926-04-21",',
 '  "died_on": "2022-09-08",',
 '  "Office": "Buckhingham Palace"',
@@ -20603,62 +20598,58 @@ wwv_flow_imp_shared.create_install_script(
 '',
 '-- ------------ fixed_json ------------------',
 'INSERT INTO fixed_json(name, data) VALUES(''Donald'', q''[{',
-'  "title":     "",',
 '  "lastname":  "Duck",',
 '  "firstname": "Donald",',
 '  "birthdate": "",',
 '  "address": {',
-'    "country": "",',
-'    "zipcode": "",',
-'    "city":    "Duckburg",',
-'    "street":    ""',
+'    "city":    "Duckburg"',
 '  }',
 '}]'');',
 '',
 'INSERT INTO fixed_json(name, data) VALUES(''Goofy'', q''[{',
+'  "lastname":  "Goof".',
 '  "firstname": "Goofy",',
 '  "birthdate": "1939-01-01",',
 '  "address": {',
-'    "country": "",',
-'    "zipcode": "",',
-'    "city":    "Mouseton",',
-'    "street":   ""',
+'    "city":    "Mouseton"',
 '  }',
 '}]'');',
 '',
 'INSERT INTO fixed_json(name, data) VALUES(''Micky'', q''[{',
-'  "title":     "",',
 '  "lastname":  "Mouse",',
-'  "firstname": "Micky",',
-'  "birthdate": "",',
+'  "firstname": "Mickey",',
 '  "address": {',
-'    "country": "",',
-'    "zipcode": "",',
-'    "city":    "Mouseton",',
-'    "street":    ""',
+'    "city":    "Mouseton"',
 '  }',
 '}]'');',
 '',
-'',
-'',
 'INSERT INTO fixed_json(name, data) VALUES(''Dagobert'', q''[{',
-'  "title":     "",',
 '  "lastname":  "Duck",',
 '  "firstname": "Dagobert",',
-'  "birthdate": "",',
 '  "address": {',
-'    "country": "",',
-'    "zipcode": "",',
 '    "city":    "Duckburg",',
-'    "street":    ""',
+'    "street":  "Killmotor Hill"',
 '  },',
 '  "creditcard": {',
-'    "type":      "VISA",',
+'    "cardtype": "VISA",',
 '    "number":   "1234 1234 1234 1234",',
 '    "validity": "01/26"',
 '  }',
 '}]'');',
 '',
+'INSERT INTO fixed_json(name, data) VALUES(''Queen'', q''[{',
+'  "title":     "Queen",',
+'  "lastname":  "Windsor",',
+'  "firstname": "Elisabeth II",',
+'  "birthdate": "1926-04-21",',
+'  "died_on":   "2022-09-08",',
+'  "address": {',
+'    "country": "United Kongdom",',
+'    "zipcode": "SW1A 1AA",',
+'    "city":    "London",',
+'    "street":    "Buckingham Palace"',
+'  }',
+'}]'');',
 '',
 '-- ------------ json_type ------------------',
 'INSERT INTO json_type(name, json_schema) VALUES(''Truck'', q''[{ ',
@@ -20744,9 +20735,17 @@ wwv_flow_imp_shared.create_install_script(
 '  CONSTRAINT json_ref_schema_pk PRIMARY KEY (path) ',
 ');',
 '',
-'Insert into json_ref_schema (path,schema,sqlquery) values (''/defs/address'',''{"type": "object", "properties": {"zip": {"type": "string"}, "city": {"type": "string"}, "street": {"type": "string"}}}'',null);',
-'Insert into json_ref_schema (path,schema,sqlquery) values (''/enums/object_type'', null, q''[select json_generate_enum(''select object_type_id, object_type_name from object_type order by object_type_name'', null) from dual]'');',
-'Insert into json_ref_schema (path,schema,sqlquery) values (''/defs/boolean'', null, q''[SELECT object_schema from object_type where object_type_name=''test-boolean-1'']'');',
+'Insert into json_ref_schema (path,schema,sqlquery) values (''/defs/address'',q''[{',
+'  "type":"object",',
+'  "properties":{',
+'    "country":  {"type":"string"},',
+'    "zipcode":  {"type":"string"},',
+'    "city":     {"type":"string"},',
+'    "street":   {"type":"string"}',
+'  }',
+'}]'',null);',
+'Insert into json_ref_schema (path,schema,sqlquery) values (''/enums/fixed_json'', null, q''[select json_generate_enum(''select id, name from fixed_json order by name'', null) from dual]'');',
+'Insert into json_ref_schema (path,schema,sqlquery) values (''/defs/car'', null, q''[SELECT json_schema from json_type where name=''Car'']'');',
 'COMMIT;',
 '',
 'CREATE TABLE json_ref_hierarchie(',
@@ -20855,6 +20854,7 @@ wwv_flow_imp_shared.create_install_script(
 ,p_condition=>'dbms_db_version.version>=23'
 ,p_condition2=>'PLSQL'
 ,p_script_clob=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'-- drop table validate_json;',
 'CREATE TABLE validate_json(',
 '  id   INTEGER GENERATED BY DEFAULT ON NULL AS IDENTITY,',
 '  name VARCHAR2(100) NOT NULL,',
@@ -20863,6 +20863,7 @@ wwv_flow_imp_shared.create_install_script(
 '  CONSTRAINT validate_json_un UNIQUE(name)',
 ');',
 '',
+'-------------VALIDATE-CONSTRAINT -------------------------------------------------------------------',
 '--ALTER TABLE validate_json DROP CONSTRAINT validate_json_validate;',
 '',
 'ALTER TABLE validate_json ADD CONSTRAINT validate_json_validate CHECK (data IS JSON VALIDATE q''[{',
@@ -20871,31 +20872,37 @@ wwv_flow_imp_shared.create_install_script(
 '    "lastname":  {"type": "string"},',
 '    "firstname": {"type": "string"},',
 '    "birthdate": {"type": "string", "format": "date"},',
-'    "addresses":   {',
-'      "type": "array",',
-'      "items": {',
-'        "address_type": {"type": "string", "enum": ["Office", "Private", "Billing", "Delivery"]},',
-'        "country":      {"type": "string"},',
-'        "city":         {"type": "string"},',
-'        "street":       {"type": "string"}',
-'      },',
-'      "required": ["country", "city"]',
-'    },',
 '    "interests": {',
 '      "type": "array",',
 '      "items": {',
 '        "type": "string", "enum": ["Computer", "Travel", "Sports", "Music", "Reading"]',
+'      }',
+'    },',
+'    "addresses":   {',
+'      "type": "array",',
+'      "items": {',
+'        "type": "object",',
+'        "properties":{',
+'          "address_type": {"type": "string", "enum": ["Office", "Private", "Billing", "Delivery"]},',
+'          "country":      {"type": "string"},',
+'          "city":         {"type": "string"},',
+'          "street":       {"type": "string"}',
+'        },',
+'        "required": ["country", "city"]',
 '      }',
 '    }',
 '  },',
 '  "required"   : ["lastname"]',
 '}]'');',
 '',
+'--------------------------------------------------------------------------------',
+'',
+'DELETE FROM validate_json;',
 'INSERT INTO validate_json(name, data) values(''uwe'', q''[',
 '{',
 '  "lastname": "Simon",',
 '  "firstname": "Uwe",',
-'  "adresses": [',
+'  "addresses": [',
 '    { "address_type": "Office", "country": "Germany", "city": "Cologne"},',
 '    { "address_type": "Delivery", "country": "Germany", "city": "Cologne"},',
 '  ],',
@@ -20906,7 +20913,7 @@ wwv_flow_imp_shared.create_install_script(
 '{',
 '  "lastname": "Bond",',
 '  "firstname": "James",',
-'  "adresses": [',
+'  "addresses": [',
 '    { "address_type": "Delivery", "country": "United Kingdom", "zip": "SE1 7TP", "city": "London", "street": "85 Albert Embankment"}',
 '  ],',
 '  "interests": ["Travel"]',
@@ -20914,6 +20921,7 @@ wwv_flow_imp_shared.create_install_script(
 '',
 'COMMIT;',
 '',
+'--------------------------------------------------------------------------------',
 '-- duality view',
 'CREATE TABLE customer(',
 '  customer_id   INTEGER GENERATED BY DEFAULT ON NULL AS IDENTITY,',
@@ -20938,9 +20946,8 @@ wwv_flow_imp_shared.create_install_script(
 '',
 'CREATE OR REPLACE JSON RELATIONAL DUALITY VIEW duality_json AS',
 '  SELECT JSON { ''_id''        : c.customer_id,',
-'                ''lastname''  : c.lastname,',
-'                ''firstname'' : c.firstname,',
-'                ''birthdate''  : c.birthdate,',
+'                ''lastname''   : c.lastname,',
+'                ''firstname''  : c.firstname,',
 '                ''adresses'' :',
 '                  [ SELECT JSON {''_id''         : a.address_id,',
 '                                ''address_type'' : a.address_type WITH NOCHECK,',
@@ -20958,28 +20965,28 @@ wwv_flow_imp_shared.create_install_script(
 '',
 'insert into duality_json values(q''[',
 '{ ',
-'  "lastname":"Kennedy","firstname":"J.F.K.","birthdate":"1954-05-17",',
+'  "lastname":"Kennedy","firstname":"J.F.K.",',
 '  "adresses":[{"address_type": "Office", "country": "USA", "zip": "20500", "city": "Washington", "street": "1600 Pennsylvania Avenue NW"}]',
 '}',
 ']'');',
 '',
 'insert into duality_json values(q''[',
 '{ ',
-'  "lastname":"Merkel","firstname":"Angela","birthdate":"1917-05-29",',
+'  "lastname":"Merkel","firstname":"Angela",',
 unistr('  "adresses":[{"address_type": "Office", "country": "Germany", "zip": "10557", "city": "Berlin", "street": "Willy-Brandt-Stra\00DFe 1"}]'),
 '}',
 ']'');',
 '',
 'insert into duality_json values(q''[',
 '{ ',
-'  "lastname":"Blair","firstname":"Tony","birthdate":"1953-05-06",',
+'  "lastname":"Blair","firstname":"Tony",',
 '  "adresses":[{"address_type": "Office", "country": "Germany", "zip": "SW1A 2AA", "city": "London", "street": "10 Downing St"}]',
 '}',
 ']'');',
 '',
 'insert into duality_json values(q''[',
 '{ ',
-'  "lastname":"Macron","firstname":"Emmanuel","birthdate":"1977-12-21",',
+'  "lastname":"Macron","firstname":"Emmanuel",',
 unistr('  "adresses":[{"address_type": "Office", "country": "France", "zip": "S75008", "city": "Paris", "street": "55 Rue du Faubourg Saint-Honor\00E9"}]'),
 '}',
 ']'');',

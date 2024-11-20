@@ -66,7 +66,7 @@ INSERT INTO generate_json(name, data) VALUES ('James', q'[{
 INSERT INTO generate_json(name, data) VALUES ('Elisabeth', q'[{
   "lastname": "Windsor",
   "firstname": "Elisabeth II",
-  "profession": "Queen",
+  "title": "Queen",
   "birthdate": "1926-04-21",
   "died_on": "2022-09-08",
   "Office": "Buckhingham Palace"
@@ -88,62 +88,58 @@ INSERT INTO generate_json(name, data) VALUES ('Athur', q'[{
 
 -- ------------ fixed_json ------------------
 INSERT INTO fixed_json(name, data) VALUES('Donald', q'[{
-  "title":     "",
   "lastname":  "Duck",
   "firstname": "Donald",
   "birthdate": "",
   "address": {
-    "country": "",
-    "zipcode": "",
-    "city":    "Duckburg",
-    "street":    ""
+    "city":    "Duckburg"
   }
 }]');
 
 INSERT INTO fixed_json(name, data) VALUES('Goofy', q'[{
+  "lastname":  "Goof".
   "firstname": "Goofy",
   "birthdate": "1939-01-01",
   "address": {
-    "country": "",
-    "zipcode": "",
-    "city":    "Mouseton",
-    "street":   ""
+    "city":    "Mouseton"
   }
 }]');
 
 INSERT INTO fixed_json(name, data) VALUES('Micky', q'[{
-  "title":     "",
   "lastname":  "Mouse",
-  "firstname": "Micky",
-  "birthdate": "",
+  "firstname": "Mickey",
   "address": {
-    "country": "",
-    "zipcode": "",
-    "city":    "Mouseton",
-    "street":    ""
+    "city":    "Mouseton"
   }
 }]');
 
-
-
 INSERT INTO fixed_json(name, data) VALUES('Dagobert', q'[{
-  "title":     "",
   "lastname":  "Duck",
   "firstname": "Dagobert",
-  "birthdate": "",
   "address": {
-    "country": "",
-    "zipcode": "",
     "city":    "Duckburg",
-    "street":    ""
+    "street":  "Killmotor Hill"
   },
   "creditcard": {
-    "type":      "VISA",
+    "cardtype": "VISA",
     "number":   "1234 1234 1234 1234",
     "validity": "01/26"
   }
 }]');
 
+INSERT INTO fixed_json(name, data) VALUES('Queen', q'[{
+  "title":     "Queen",
+  "lastname":  "Windsor",
+  "firstname": "Elisabeth II",
+  "birthdate": "1926-04-21",
+  "died_on":   "2022-09-08",
+  "address": {
+    "country": "United Kongdom",
+    "zipcode": "SW1A 1AA",
+    "city":    "London",
+    "street":    "Buckingham Palace"
+  }
+}]');
 
 -- ------------ json_type ------------------
 INSERT INTO json_type(name, json_schema) VALUES('Truck', q'[{ 

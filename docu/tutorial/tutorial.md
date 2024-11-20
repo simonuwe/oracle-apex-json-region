@@ -361,16 +361,64 @@ When you now call the **Validate JSONs** report and select a row you should see
 
 ![tutorial-62](tutorial-62.png)
 
-
-***********BUG *************
-
+Here you can change data, add or remove addresses.
 
 **Advanced:**
 When you are familar with JSON-schema, you can change the VALIDATE constraint (add a new column)
 You can find an ALTER-table-statement in the file **install-tutorial-23ai.sql**
-below the line containing **VALIDATE JSON-schema**
-First drop the Constraint and then call the ALTER statment with th modified JSON-Schema.
+below the line containing **VALIDATE-CONSTRAINT**
+First drop the Constraint and then call the ALTER statment with a modified JSON-Schema.
+
+For example add a new Property **title** before the **lastname** in the constraint
+```JSON
+  "properties" : {
+    "lastname":  {"type": "string"},
+    ...
+```
+to 
+```JSON
+  "properties" : {
+    "title":      {"type": "string", "enum": ["Ms.", "Mrs", "Mr."]},
+    "lastname":  {"type": "string"},
+
+```
+Execute the new check-constraint
+```SQL
+ALTER TABLE validate_json ADD CONSTRAINT validate_json_validate CHECK (data IS JSON VALIDATE q'[{
+  "type"       : "object",
+  "properties" : {
+    "title":      {"type": "string", "enum": ["Ms.", "Mrs", "Mr."]},
+    "lastname":  {"type": "string"},
+    "firstname": {"type": "string"},
+    "birthdate": {"type": "string", "format": "date"},
+    "interests": {
+      "type": "array",
+      "items": {
+        "type": "string", "enum": ["Computer", "Travel", "Sports", "Music", "Reading"]
+      }
+    },
+    "addresses":   {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties":{
+          "address_type": {"type": "string", "enum": ["Office", "Private", "Billing", "Delivery"]},
+          "country":      {"type": "string"},
+          "city":         {"type": "string"},
+          "street":       {"type": "string"}
+        },
+        "required": ["country", "city"]
+      }
+    }
+  },
+  "required"   : ["lastname"]
+}]');
+```
 Now you can see that after this change the UI at the next call.
+
+This should now look like
+![tutorial-63](tutorial-63.png)
+
 
 ### Duality-View
 
@@ -400,7 +448,7 @@ When now calling the **Duality JSON** report and selecting a row, it should look
 # The end
 
 This tutorial has now showm some fetures of the JSON-Region-plugin.
-In the [docu](../docu.md), you can find more features like changing the widgets for some datatype like use a **switch** for boolean, ...
+In the [docu](../docu.md), you can find more features like changing the widgets for some datatype like use a **switch** for boolean, Linebrakes, customized labels for the items, ...
 
 Have fun.
 
