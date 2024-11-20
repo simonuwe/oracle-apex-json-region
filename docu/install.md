@@ -6,10 +6,14 @@ When you see the **Component Settings** of the plugin, you can leave it as it is
 
 ![install-01](install-01.png)
 
-This query is used to resolve **server local JSON-schema**-references. It is fine for the table created with the script **examples/create_json_region_schema.sql**. When not using the server local references you can ingore it.
-
-After import of the plugin it should look like this.
-
-![config-01](install-02.png)
-
+This query is used to resolve **server local JSON-schema**-references. You can leave this field empty.
+With the script **examples/create_json_region_schema.sql** you can create a table for resolving server JSON-schema-references. 
+When this script was installed you can enter here
+```SQL
+SELECT schema, sqlquery
+FROM json_region_schema
+WHERE path=:p1
+```
+When using an application specific table adopt the query to your JSON-schema-reference table.
+Otherwise leave it empty.
 

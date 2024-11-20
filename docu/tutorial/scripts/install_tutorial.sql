@@ -97,7 +97,7 @@ INSERT INTO fixed_json(name, data) VALUES('Donald', q'[{
 }]');
 
 INSERT INTO fixed_json(name, data) VALUES('Goofy', q'[{
-  "lastname":  "Goof".
+  "lastname":  "Goof",
   "firstname": "Goofy",
   "birthdate": "1939-01-01",
   "address": {

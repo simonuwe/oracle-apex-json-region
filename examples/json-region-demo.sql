@@ -28,7 +28,7 @@ prompt APPLICATION 101 - json-region-demo
 -- Application Export:
 --   Application:     101
 --   Name:            json-region-demo
---   Date and Time:   18:23 Wednesday November 20, 2024
+--   Date and Time:   20:01 Wednesday November 20, 2024
 --   Exported By:     UWE
 --   Flashback:       0
 --   Export Type:     Application Export
@@ -120,7 +120,7 @@ wwv_flow_api.create_flow(
 ,p_substitution_string_01=>'APP_NAME'
 ,p_substitution_value_01=>'json-region-demo'
 ,p_last_updated_by=>'UWE'
-,p_last_upd_yyyymmddhh24miss=>'20241120085326'
+,p_last_upd_yyyymmddhh24miss=>'20241120194355'
 ,p_file_prefix => nvl(wwv_flow_application_install.get_static_app_file_prefix,'')
 ,p_files_version=>3
 ,p_ui_type_name => null
@@ -11904,7 +11904,6 @@ wwv_flow_api.create_plugin(
 ' * READ a schema from ref-schema-query with column path, schema, sqlquery ',
 '*/',
 'FUNCTION generate_schema(p_refquery IN VARCHAR2 , p_path IN VARCHAR2) RETURN CLOB IS',
-'    l_data     json_region_schema%ROWTYPE;',
 '    l_json     CLOB;',
 '    l_sqlquery VARCHAR2(4000);',
 'BEGIN',
@@ -12183,11 +12182,7 @@ wwv_flow_api.create_plugin_attribute(
 ,p_display_sequence=>200
 ,p_prompt=>'SQL-Query for referenced JSON-schema'
 ,p_attribute_type=>'SQL'
-,p_is_required=>true
-,p_default_value=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'SELECT schema, sqlquery',
-'FROM json_region_schema',
-'WHERE path=:p1'))
+,p_is_required=>false
 ,p_sql_min_column_count=>2
 ,p_sql_max_column_count=>2
 ,p_is_translatable=>false
@@ -12323,7 +12318,7 @@ wwv_flow_api.create_plugin_attribute(
 ,p_prompt=>'Headers'
 ,p_attribute_type=>'CHECKBOX'
 ,p_is_required=>false
-,p_default_value=>'N'
+,p_default_value=>'Y'
 ,p_is_translatable=>false
 ,p_help_text=>'When the JSON-schema contains "sub-objects" headers for each sub-object are shown.'
 );
@@ -15159,7 +15154,7 @@ wwv_flow_api.create_page(
 ,p_page_is_public_y_n=>'Y'
 ,p_protection_level=>'C'
 ,p_last_updated_by=>'UWE'
-,p_last_upd_yyyymmddhh24miss=>'20241120080842'
+,p_last_upd_yyyymmddhh24miss=>'20241120194355'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(6188028441989065)
@@ -15817,7 +15812,7 @@ wwv_flow_api.create_page(
 ,p_page_is_public_y_n=>'Y'
 ,p_protection_level=>'C'
 ,p_last_updated_by=>'UWE'
-,p_last_upd_yyyymmddhh24miss=>'20241120080842'
+,p_last_upd_yyyymmddhh24miss=>'20241120194355'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(6364511646945936)
@@ -16497,7 +16492,7 @@ wwv_flow_api.create_page(
 ,p_page_is_public_y_n=>'Y'
 ,p_protection_level=>'C'
 ,p_last_updated_by=>'UWE'
-,p_last_upd_yyyymmddhh24miss=>'20241120080842'
+,p_last_upd_yyyymmddhh24miss=>'20241120194355'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(7924194521862760)
@@ -17292,7 +17287,7 @@ wwv_flow_api.create_page(
 ,p_page_is_public_y_n=>'Y'
 ,p_protection_level=>'C'
 ,p_last_updated_by=>'UWE'
-,p_last_upd_yyyymmddhh24miss=>'20241120080842'
+,p_last_upd_yyyymmddhh24miss=>'20241120194355'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(6619879425564469)

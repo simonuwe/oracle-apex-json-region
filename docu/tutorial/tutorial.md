@@ -1,8 +1,4 @@
 # Tutorial for the **JSON-Region-Plugin**
----
-** Work in progress**
-
----
 
 The concentrate on the important stuff, the tutorial will use a small application with tables containing JSON-data.
 Here the JSON-data is shown in a **textarea**.
@@ -49,9 +45,11 @@ It should look like
 ## Install the plugin
 The plugin is installed like every other plugin via **shared components->Plug-In->Import**. As file use the file **region_type_plugin_json_region_uwesimon_selfhost_e.sql** located in the directory **plugin**. In the import wizard, you can keep all steps on default.
 
-After import of the plugin it should look like this.
-![tutorial-11](tutorial-11.png)
+After import of the plugin the page of the Component configuration is shown.
+![tutorial-10](tutorial-10.png)
 
+Go to the plugin-overview, this should look like this.
+![tutorial-11](tutorial-11.png)
 
 ## Add the plugin to a page
 
@@ -63,7 +61,7 @@ This step will be always the same on all pages.
 
 ![tutorial-13](tutorial-13.png)
 
-The JSON-data-items are always name **DATA**, so on tab "Atrributes" the JSON-item can always be set to the **P.._DATA** Item 
+The JSON-data-items are always name **DATA**, so on tab "Attributes" the JSON-item can always be set to the **P.._DATA** Item 
 
 ![tutorial-14](tutorial-14.png)
 
@@ -448,7 +446,7 @@ When now calling the **Duality JSON** report and selecting a row, it should look
 # The end
 
 This tutorial has now showm some fetures of the JSON-Region-plugin.
-In the [docu](../docu.md), you can find more features like changing the widgets for some datatype like use a **switch** for boolean, Linebrakes, customized labels for the items, ...
+In the [docu](../docu.md), you can find more features like changing the widgets for some datatype like use a **switch** for boolean, line brakes, customized labels for the items, conditional schema, ...
 
 Have fun.
 

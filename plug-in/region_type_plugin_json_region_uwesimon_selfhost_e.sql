@@ -28,7 +28,7 @@ prompt APPLICATION 101 - json-region-demo
 -- Application Export:
 --   Application:     101
 --   Name:            json-region-demo
---   Date and Time:   18:22 Wednesday November 20, 2024
+--   Date and Time:   19:44 Wednesday November 20, 2024
 --   Exported By:     UWE
 --   Flashback:       0
 --   Export Type:     Component Export
@@ -68,7 +68,6 @@ wwv_flow_api.create_plugin(
 ' * READ a schema from ref-schema-query with column path, schema, sqlquery ',
 '*/',
 'FUNCTION generate_schema(p_refquery IN VARCHAR2 , p_path IN VARCHAR2) RETURN CLOB IS',
-'    l_data     json_region_schema%ROWTYPE;',
 '    l_json     CLOB;',
 '    l_sqlquery VARCHAR2(4000);',
 'BEGIN',
@@ -347,11 +346,7 @@ wwv_flow_api.create_plugin_attribute(
 ,p_display_sequence=>200
 ,p_prompt=>'SQL-Query for referenced JSON-schema'
 ,p_attribute_type=>'SQL'
-,p_is_required=>true
-,p_default_value=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'SELECT schema, sqlquery',
-'FROM json_region_schema',
-'WHERE path=:p1'))
+,p_is_required=>false
 ,p_sql_min_column_count=>2
 ,p_sql_max_column_count=>2
 ,p_is_translatable=>false
@@ -487,7 +482,7 @@ wwv_flow_api.create_plugin_attribute(
 ,p_prompt=>'Headers'
 ,p_attribute_type=>'CHECKBOX'
 ,p_is_required=>false
-,p_default_value=>'N'
+,p_default_value=>'Y'
 ,p_is_translatable=>false
 ,p_help_text=>'When the JSON-schema contains "sub-objects" headers for each sub-object are shown.'
 );

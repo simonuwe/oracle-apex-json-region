@@ -8,7 +8,6 @@
  * READ a schema from ref-schema-query with column path, schema, sqlquery 
 */
 FUNCTION generate_schema(p_refquery IN VARCHAR2 , p_path IN VARCHAR2) RETURN CLOB IS
-    l_data     json_region_schema%ROWTYPE;
     l_json     CLOB;
     l_sqlquery VARCHAR2(4000);
 BEGIN

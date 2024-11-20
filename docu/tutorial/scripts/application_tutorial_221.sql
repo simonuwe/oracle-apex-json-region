@@ -28,7 +28,7 @@ prompt APPLICATION 101 - JSON-Region-Tutorial
 -- Application Export:
 --   Application:     101
 --   Name:            JSON-Region-Tutorial
---   Date and Time:   18:20 Wednesday November 20, 2024
+--   Date and Time:   19:19 Wednesday November 20, 2024
 --   Exported By:     UWE
 --   Flashback:       0
 --   Export Type:     Application Export
@@ -116,7 +116,7 @@ wwv_flow_imp.create_flow(
 ,p_substitution_string_01=>'APP_NAME'
 ,p_substitution_value_01=>'JSON-Region-Tutorial'
 ,p_last_updated_by=>'UWE'
-,p_last_upd_yyyymmddhh24miss=>'20241120182027'
+,p_last_upd_yyyymmddhh24miss=>'20241120191809'
 ,p_file_prefix => nvl(wwv_flow_application_install.get_static_app_file_prefix,'')
 ,p_files_version=>4
 ,p_ui_type_name => null
@@ -14498,7 +14498,7 @@ wwv_flow_imp_page.create_page(
 ,p_protection_level=>'C'
 ,p_page_component_map=>'13'
 ,p_last_updated_by=>'UWE'
-,p_last_upd_yyyymmddhh24miss=>'20241119083049'
+,p_last_upd_yyyymmddhh24miss=>'20241120191809'
 );
 wwv_flow_imp_page.create_page_plug(
  p_id=>wwv_flow_imp.id(6819578632368660)
@@ -14534,8 +14534,11 @@ wwv_flow_imp_page.create_page_plug(
 ,p_plug_display_sequence=>20
 ,p_plug_display_point=>'SUB_REGIONS'
 ,p_plug_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'<h2>Validate JSONs</h2>',
-'<h2>Duality JSONs</h2>'))
+'<h3>Validate JSONs</h3>',
+'How to use the plugin with a JSON-data-column checked by a IS JASON VALIDATE constraint.',
+'',
+'<h3>Duality JSONs</h3>',
+'How to use the plugin on a JSON-duality-view.'))
 ,p_plug_query_options=>'DERIVED_REPORT_COLUMNS'
 ,p_attribute_01=>'N'
 ,p_attribute_02=>'HTML'
@@ -14549,9 +14552,14 @@ wwv_flow_imp_page.create_page_plug(
 ,p_plug_display_sequence=>10
 ,p_plug_display_point=>'SUB_REGIONS'
 ,p_plug_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'<h2>Generate JSONs</h2>',
-'<h2>Fixed JSONs</h2>',
-'<h2>Variable JSONs</h2>'))
+'<h3>Generate JSONs</h3>',
+'Use the automatic generation of a JSON-schema and UI based on existing JSON-data.',
+'',
+'<h3>Fixed JSONs</h3>',
+'Use the plugin on a table with a column containing JSON-data of fixed JSON-schema.',
+'',
+'<h3>Variable JSONs</h3>',
+'Use the plugin on a table where the JSON-schema of a row depends on a "type" column.'))
 ,p_plug_query_options=>'DERIVED_REPORT_COLUMNS'
 ,p_attribute_01=>'N'
 ,p_attribute_02=>'HTML'
@@ -20607,7 +20615,7 @@ wwv_flow_imp_shared.create_install_script(
 '}]'');',
 '',
 'INSERT INTO fixed_json(name, data) VALUES(''Goofy'', q''[{',
-'  "lastname":  "Goof".',
+'  "lastname":  "Goof",',
 '  "firstname": "Goofy",',
 '  "birthdate": "1939-01-01",',
 '  "address": {',
