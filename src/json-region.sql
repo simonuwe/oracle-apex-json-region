@@ -192,7 +192,7 @@ FUNCTION ajax_region(p_region IN apex_plugin.t_region,
                      p_plugin IN apex_plugin.t_plugin)
   RETURN apex_plugin.t_region_ajax_result IS
   l_sqlquery  p_region.attribute_04%TYPE := p_region.attribute_04;  -- the SQLquery entered in page designer is passed in attribute_04;
-  l_refquery  p_region.attribute_12%TYPE := p_region.attribute_12; -- The query to retreive the schema reference column
+  l_refquery  p_region.attribute_12%TYPE := NVL(p_region.attribute_12, p_plugin.attribute_01); -- The query to retreive the schema reference column, If set on region level use it, els from Component level
   l_result    apex_plugin.t_region_ajax_result;
   l_function  APEX_APPLICATION.g_x04%TYPE := APEX_APPLICATION.g_x04;
   l_param1    APEX_APPLICATION.g_x05%TYPE := APEX_APPLICATION.g_x05;

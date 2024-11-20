@@ -33,7 +33,7 @@ apex.date = apex.date||{
       l_ret = new Date(l_ret.getTime() - l_ret.getTimezoneOffset()*60000);
     }
 
-    console.warn('date.parse', pDate, pFormat, l_ret);
+    // console.warn('date.parse', pDate, pFormat, l_ret);
     return(l_ret);
     // (pDate.replace('T', ' '));
   },
@@ -42,7 +42,7 @@ apex.date = apex.date||{
   },
   toISOString: function(pDate) { 
     let l_date = new Date(pDate).toISOString().substring(0,19);
-    console.warn('ISO', pDate, l_date);
+    //console.warn('ISO', pDate, l_date);
     return (l_date);
   }
 };
@@ -1491,14 +1491,14 @@ console.error('propagateShow if: not implemented', schema.if)
               x05: jsonpath}
           )
           .then((data) =>{
-            apex.debug.trace('AJAX-Callback $ref OK', data);
+            apex.debug.trace('AJAX-Callback $ref OK', jsonpath, data);
             // schema = data;
             schema = {...data, ...schema};
             schema.apex = {...data.apex, ...schema.apex};
             // console.dir(schema);
           })
           .catch((err) =>{
-            apex.debug.error('CallbackError $ref ERROR', err);
+            apex.debug.error('CallbackError $ref ERROR', jsonpath, err);
           });
         }
       } else {

@@ -9,7 +9,7 @@ In this way the field-items of an application always match with the format of yo
 
 This Oracle-APEX-plugin provides a new region-type **JSON-region**. 
 
-First first steps, here is a [Tutorial](tutorial.md)
+First first steps, here is a [Tutorial](tutorial/tutorial.md)
 
 ## Supported datatypes
 
