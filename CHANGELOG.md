@@ -1,3 +1,15 @@
+# 0.9.7.1 2024-10-19
+
+## New Features
+
+- #161 Tutorial
+ 
+## Fixed Isses
+
+- #170 Change of SQL-query for schema references in region-attributes shows warning
+- #169 APEX<=22.1: datepicker partially broken
+
+
 # 0.9.7 2024-10-17
 
 ## New Features
