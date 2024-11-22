@@ -38,11 +38,11 @@ apex.date = apex.date||{
     // (pDate.replace('T', ' '));
   },
   format: function(pDate, pFormat){
-    console.warn('format', pDate, pFormat);
+    // console.warn('format', pDate, pFormat);
   },
   toISOString: function(pDate) { 
     let l_date = new Date(pDate).toISOString().substring(0,19);
-    //console.warn('ISO', pDate, l_date);
+    // console.warn('ISO', pDate, l_date);
     return (l_date);
   }
 };
@@ -187,6 +187,8 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
   } else {
     gTimeFormat = "HH:ii";
   }
+
+  // console.warn(pOptions.apex_version, gDateFormat, gTimeFormat);
 
   // hack for apex.libVersions <21.1
   if(pOptions.apex_version>=C_APEX_VERSION_2101 && pOptions.apex_version<C_APEX_VERSION_2102){

@@ -1576,6 +1576,17 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
 || TO_CLOB(q'[ble"}}
   }
 }]'));
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('2404','test-ref-3','{
+  "type": "object",
+  "allOf":[
+    {"$ref": "/enums/hierarchie"},
+    {
+      "properties": {
+        "comment": {"type": "string"}
+      }
+    }
+  ] 
+}');
 Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('281','test-select-1',TO_CLOB(q'[{
   "type": "object",
   "properties": {
@@ -1808,187 +1819,5 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
 || TO_CLOB(q'[    }
   }
 }]'));
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('2365','test-xx-1',TO_CLOB(q'[{
-  "type": "object",
-  "properties": {
-    "sel1": {
-      "type": "string",
-      "enum": [
-        "val1-1",
-        "val1-2",
-        "val1-3"
-      ]
-    },
-    "sel3": {
-      "type": "string",
-      "enum": [
-        "val3-1",
-        "val3-2",
-        "val3-3",
-        "val3-4"
-      ]
-    }
-  },
-  "allOf": [
-    {
-      "if": {
-        "sel1": {
-          "const": "val1-2"
-        }
-      },
-      "then": {
-        "properties": {
-          "sel21": {
-            "type": "string",
-     ]')
-|| TO_CLOB(q'[       "enum": [
-              "val221-1",
-              "val221-2"
-            ]
-          },
-          "sel22": {
-            "type": "string",
-            "enum": [
-              "val222-1",
-              "val222-2"
-            ]
-          }
-        }
-      }
-    },
-    {
-      "if": {
-        "sel1": {
-          "const": "val1-3"
-        }
-      },
-      "then": {
-        "properties": {
-          "sel2": {
-            "type": "string",
-            "enum": [
-              "val23-1",
-        ]')
-|| TO_CLOB(q'[      "val23-2"
-            ]
-          }
-        }
-      }
-    }
-  ]
-}]'));
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('2366','test-xx-2',TO_CLOB(q'[{
 
-  "properties": {
-    "sel1": {
-      "type": "string",
-      "enum": [ "val1-1", "val1-2", "val1-3" ]
-    },
-    "sel3": {
-      "type": "string",
-      "enum": [ "val3-1", "val3-2", "val3-3", "val3-4" ]
-    }
-  },
-  "allOf": [
-    {
-      "if": { "sel1": { "const": "val1-2" } },
-      "then": {
-        "properties": {
-          "sel21": {
-            "type": "string",
-            "enum": [ "val221-1", "val221-2" ]
-          },
-          "sel22": {
-            "type": "string",
-            "]')
-|| TO_CLOB(q'[enum": [ "val222-1", "val222-2", "val222-3" ]
-          }
-        },
-        "if": { "sel22": { "const": "val222-3" } },
-        "then": {
-          "properties": {
-            "sel4": {
-              "type": "string",
-              "enum": [ "val4-222-1", "val4-222-2", "val4-222-3" ]
-            }
-          }
-        }
-      }
-    },
-    {
-      "if": { "sel1": { "const": "val1-3" } },
-      "then": {
-        "properties": {
-          "sel2": {
-            "type": "string",
-            "enum": ]')
-|| TO_CLOB(q'[[ "val23-1", "val23-2" ]
-          }
-        }
-      }
-    }
-  ]
-}]'));
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('2312','xxx',TO_CLOB(q'[{
-  "type": "object",
-  "properties": {
-    "sel": {"type": "string", "enum": ["val1-1", "val1-2", "val1-3"]}
-  },
-  
-  "allOf": [
-    {
-          "if":   {"properties": {"sel": { "const": "val1-1" } }}, 
-          "then": {
-            "properties":{
-              "sel2": {"type": "string", "enum": ["val21-1", "val21-2",  "val21-3"]}
-            }
-          }
-    },{          
-          "if":   {"properties": {"sel": { "const": "val1-2" } }}, 
-          "then": {
-            "properties":{
-    ]')
-|| TO_CLOB(q'[          "sel2": {"type": "string", "enum": ["val22-1", "val22-2",  "val22-3"]}
-            }
-          }
-    },{
-          "if":   {"properties": {"sel": { "const": "val1-3" } }}, 
-          "then": {
-            "properties":{
-               "sel2": {"type": "string", "enum": ["val23-1", "val23-2", "val23-3", "more"]}
-             }
-          }
-    },{
-	  "if": { "properties": {"sel2": { "const": "more" } }},
-            "then": {
-              "properties": {
-                "more": {"type":]')
-|| TO_CLOB(q'[ "string", "enum": ["more-1", "more-2", "more-3"]}
-              }
-            }
-    }
-  ]
-}]'));
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('2221','xxx-1',TO_CLOB(q'[{
-  "type": "object",
-  "properties": {
-    "sel1": {"type": "string", "enum": ["val1-1", "val1-2", "val1-3"]},
-    "sel2": {"type": "string",
-      "allOf": [
-        {
-          "if":   {"properties": {"sel1": { "const": "val1-1" } }}, 
-          "then": {"enum": ["val2-1", "val2-2",  "val2-3"]}
-        },{                                                                                                                                                                
-          "if":   {"propertie]')
-|| TO_CLOB(q'[s": {"sel1": { "const": "val1-2" } }}, 
-          "then": {"enum": ["val2-1", "val2-2",  "val2-3"]}
-        },{
-           "if":   {"properties": {"sel1": { "const": "val1-3" } }}, 
-           "then": {"enum": ["val2-1", "val2-2", "val2-3"]}
-        }
-      ]
-    }
-  }
-}]'));
-
-commit;
+COMMIT;

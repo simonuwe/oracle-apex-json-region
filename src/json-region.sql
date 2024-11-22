@@ -242,28 +242,3 @@ $end
   END;
   RETURN l_result;
 END ajax_region;
-
-PROCEDURE install(
-  p_plugin_id      IN NUMBER,
-  p_plugin_version IN VARCHAR2
-)IS
-BEGIN
-  EXECUTE IMMEDIATE 'CREATE TABLE xx(id number, txt varchar2(100);';
-END install;
-
-
-PROCEDURE uninstall(
-  p_plugin_id      IN NUMBER,
-  p_plugin_version IN VARCHAR2
-)IS
-BEGIN
-  EXECUTE IMMEDIATE 'DROP TABLE xx;';
-END uninstall;
-
-PROCEDURE upgrade(
-  p_plugin_id      IN NUMBER,
-  p_plugin_version IN VARCHAR2
-)IS
-BEGIN
-  EXECUTE IMMEDIATE 'CREATE TABLE xx(id number, txt varchar2(100);';
-END upgrade;

@@ -28,7 +28,7 @@ prompt APPLICATION 101 - json-region-demo
 -- Application Export:
 --   Application:     101
 --   Name:            json-region-demo
---   Date and Time:   19:44 Wednesday November 20, 2024
+--   Date and Time:   14:52 Friday November 22, 2024
 --   Exported By:     UWE
 --   Flashback:       0
 --   Export Type:     Component Export
@@ -334,7 +334,7 @@ wwv_flow_api.create_plugin(
 ,p_substitute_attributes=>true
 ,p_subscribe_plugin_settings=>true
 ,p_help_text=>'This plug-in was downloaded from https://github.com/simonuwe/oracle-apex-json-region and backported to APEX 20.2.'
-,p_version_identifier=>'0.9.7.1'
+,p_version_identifier=>'0.9.7.1b'
 ,p_about_url=>'https://github.com/simonuwe/oracle-apex-json-region'
 ,p_files_version=>229
 );
