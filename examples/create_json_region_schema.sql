@@ -8,10 +8,27 @@ CREATE TABLE json_region_schema(
 Insert into json_region_schema (path,schema,sqlquery) values ('/defs/address',     '{"type": "object", "properties": {"zip": {"type": "string"}, "city": {"type": "string"}, "street": {"type": "string"}}}',null);
 Insert into json_region_schema (path,schema,sqlquery) values ('/enums/object_type', null, q'[select json_region_generate_enum('select object_type_id, object_type_name from object_type order by object_type_name', null) from dual]');
 Insert into json_region_schema (path,schema,sqlquery) values ('/defs/boolean',      null, q'[SELECT object_schema from object_type where object_type_name='test-boolean-1']');
-Insert into json_region_schema (path,schema,sqlquery) values ('/enums/hierarchie',  null, q'[SELECT json_region_generate_cascade_enums('select id, text FROM json_region_hierarchie WHERE parent_id=:1 OR (:1<0 and parent_id IS NULL) ORDER BY text', -1, 'sel1,sel2,sel3,sel4') from dual]');
+Insert into json_region_schema (path,schema,sqlquery) values ('/enums/hierarchie',  null, q'[SELECT json_region_generate_cascade_enums('select id, text FROM json_region_hierarchie WHERE parent_id=:1 OR (:1<0 and parent_id IS NULL) ORDER BY text', -1, 1, 'sel1,sel2,sel3,sel4') from dual]');
 COMMIT;
 
-
+/*
+ * JSON_REGION_GENERATE_ENUM
+ * Returns the JSON-schema of an "enum".
+ * { "type": "string/integer",
+ *   "enum": ["val1", "val2", ...],
+ *   "apex": {"enum": {"val1": "disp1", "val2": "disp2", ...}}
+ * }
+ * The parameter p_query is the query for the values.
+ * When the query returns 2 columns, the 1st column is the enum-value 
+ * and the 2nd column is the display-value. 
+ * When the query return a single column, enum is equal display-value
+ * When the type of the first column of th query is numeric, the enum is of type "integer", else "string"
+ * Optionally, the SQL-query can have a bind-variable, the name of the variable MUST be :1, 
+ * then the parameter p_search is used for the bind-variable.
+ * Usage: 
+ *   select json_region_generate_enum('select object_type_id, object_type_name from object_type order by object_type_name', null) from dual;
+ * generates an enum with all rows of table object_type, the enum is the id-column and the display-value is the name-column
+*/
 CREATE OR REPLACE FUNCTION json_region_generate_enum (
       p_query   IN VARCHAR2,
       p_search  IN VARCHAR2 DEFAULT NULL
@@ -28,6 +45,7 @@ CREATE OR REPLACE FUNCTION json_region_generate_enum (
     l_cols      INTEGER;
     l_num_id    BOOLEAN;
     l_datatype  VARCHAR2(30) :='string';
+    l_entries   INTEGER:=0;
 BEGIN
   l_cursor := dbms_sql.open_cursor; 
   dbms_output.put_line('Query: '||p_query);
@@ -74,6 +92,7 @@ BEGIN
         l_names := l_names || l_delimiter||l_id||': "'||l_name||'"';
       END IF;
       l_delimiter:=', ';
+      l_entries := l_entries + 1;
     ELSE  
       EXIT; 
     END IF; 
@@ -81,12 +100,14 @@ BEGIN
 
   DBMS_SQL.CLOSE_CURSOR(l_cursor); 
 
+  IF(l_entries>0) THEN
       -- build enum { "type": "string", "enum": [...], "apex": {"enum": {id: name, ...}}}
-  l_json := '{"type": "'||l_datatype||'", "enum": ['||l_ids||']';
-  IF(length(l_names)>0) THEN
-    l_json := l_json || ', "apex": {"enum": {'||l_names|| '}}';
+    l_json := '{"type": "'||l_datatype||'", "enum": ['||l_ids||']';
+    IF(length(l_names)>0) THEN
+      l_json := l_json || ', "apex": {"enum": {'||l_names|| '}}';
+    END IF;
+    l_json := l_json || '}';
   END IF;
-  l_json := l_json || '}';
   dbms_output.put_line(l_json);
   RETURN l_json;
   

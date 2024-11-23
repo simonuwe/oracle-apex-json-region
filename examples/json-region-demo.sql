@@ -28,7 +28,7 @@ prompt APPLICATION 101 - json-region-demo
 -- Application Export:
 --   Application:     101
 --   Name:            json-region-demo
---   Date and Time:   15:02 Friday November 22, 2024
+--   Date and Time:   20:19 Saturday November 23, 2024
 --   Exported By:     UWE
 --   Flashback:       0
 --   Export Type:     Application Export
@@ -120,7 +120,7 @@ wwv_flow_api.create_flow(
 ,p_substitution_string_01=>'APP_NAME'
 ,p_substitution_value_01=>'json-region-demo'
 ,p_last_updated_by=>'UWE'
-,p_last_upd_yyyymmddhh24miss=>'20241122150248'
+,p_last_upd_yyyymmddhh24miss=>'20241123201916'
 ,p_file_prefix => nvl(wwv_flow_application_install.get_static_app_file_prefix,'')
 ,p_files_version=>3
 ,p_ui_type_name => null
@@ -15459,7 +15459,7 @@ wwv_flow_api.create_page(
 ,p_page_is_public_y_n=>'Y'
 ,p_protection_level=>'C'
 ,p_last_updated_by=>'UWE'
-,p_last_upd_yyyymmddhh24miss=>'20241117085422'
+,p_last_upd_yyyymmddhh24miss=>'20241122165957'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(7931303218862815)
@@ -15586,6 +15586,7 @@ wwv_flow_api.create_page_button(
 ,p_button_position=>'REGION_TEMPLATE_CREATE'
 ,p_button_redirect_url=>'f?p=&APP_ID.:8:&SESSION.::&DEBUG.:8'
 ,p_icon_css_classes=>'fa-plus-square'
+,p_required_patch=>-wwv_flow_api.id(3787636662688191)
 );
 end;
 /
@@ -16089,7 +16090,7 @@ wwv_flow_api.create_page(
 ,p_page_is_public_y_n=>'Y'
 ,p_protection_level=>'C'
 ,p_last_updated_by=>'nobody'
-,p_last_upd_yyyymmddhh24miss=>'20241120073652'
+,p_last_upd_yyyymmddhh24miss=>'20241123200910'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(6534017274653016)
@@ -16492,7 +16493,7 @@ wwv_flow_api.create_page(
 ,p_page_is_public_y_n=>'Y'
 ,p_protection_level=>'C'
 ,p_last_updated_by=>'UWE'
-,p_last_upd_yyyymmddhh24miss=>'20241120194355'
+,p_last_upd_yyyymmddhh24miss=>'20241122165839'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(7924194521862760)
@@ -16588,6 +16589,7 @@ wwv_flow_api.create_page_button(
 ,p_button_condition=>'P8_OBJECT_ID'
 ,p_button_condition_type=>'ITEM_IS_NULL'
 ,p_database_action=>'INSERT'
+,p_required_patch=>-wwv_flow_api.id(3787636662688191)
 );
 wwv_flow_api.create_page_button(
  p_id=>wwv_flow_api.id(7928730673862792)
@@ -20478,10 +20480,27 @@ wwv_flow_api.create_install_script(
 'Insert into json_region_schema (path,schema,sqlquery) values (''/enums/object_type'', null, q''[select json_region_generate_enum(''select object_type_id, object_type_name from object_type order by object_type_name'', null) from dual]'');',
 'Insert into json_region_schema (path,schema,sqlquery) values (''/defs/boolean'',      null, q''[SELECT object_schema from object_type where object_type_name=''test-boolean-1'']'');',
 'Insert into json_region_schema (path,schema,sqlquery) values (''/enums/hierarchie'',  null, q''[SELECT json_region_generate_cascade_enums(''select id, text FROM json_region_hierarchie WHERE parent_id=:1 OR (:1<0 and parent_id IS NULL) ORDER BY text'', -1,'
-||' ''sel1,sel2,sel3,sel4'') from dual]'');',
+||' 1, ''sel1,sel2,sel3,sel4'') from dual]'');',
 'COMMIT;',
 '',
-'',
+'/*',
+' * JSON_REGION_GENERATE_ENUM',
+' * Returns the JSON-schema of an "enum".',
+' * { "type": "string/integer",',
+' *   "enum": ["val1", "val2", ...],',
+' *   "apex": {"enum": {"val1": "disp1", "val2": "disp2", ...}}',
+' * }',
+' * The parameter p_query is the query for the values.',
+' * When the query returns 2 columns, the 1st column is the enum-value ',
+' * and the 2nd column is the display-value. ',
+' * When the query return a single column, enum is equal display-value',
+' * When the type of the first column of th query is numeric, the enum is of type "integer", else "string"',
+' * Optionally, the SQL-query can have a bind-variable, the name of the variable MUST be :1, ',
+' * then the parameter p_search is used for the bind-variable.',
+' * Usage: ',
+' *   select json_region_generate_enum(''select object_type_id, object_type_name from object_type order by object_type_name'', null) from dual;',
+' * generates an enum with all rows of table object_type, the enum is the id-column and the display-value is the name-column',
+'*/',
 'CREATE OR REPLACE FUNCTION json_region_generate_enum (',
 '      p_query   IN VARCHAR2,',
 '      p_search  IN VARCHAR2 DEFAULT NULL',
@@ -20498,6 +20517,7 @@ wwv_flow_api.create_install_script(
 '    l_cols      INTEGER;',
 '    l_num_id    BOOLEAN;',
 '    l_datatype  VARCHAR2(30) :=''string'';',
+'    l_entries   INTEGER:=0;',
 'BEGIN',
 '  l_cursor := dbms_sql.open_cursor; ',
 '  dbms_output.put_line(''Query: ''||p_query);',
@@ -20544,6 +20564,7 @@ wwv_flow_api.create_install_script(
 '        l_names := l_names || l_delimiter||l_id||'': "''||l_name||''"'';',
 '      END IF;',
 '      l_delimiter:='', '';',
+'      l_entries := l_entries + 1;',
 '    ELSE  ',
 '      EXIT; ',
 '    END IF; ',
@@ -20551,12 +20572,14 @@ wwv_flow_api.create_install_script(
 '',
 '  DBMS_SQL.CLOSE_CURSOR(l_cursor); ',
 '',
+'  IF(l_entries>0) THEN',
 '      -- build enum { "type": "string", "enum": [...], "apex": {"enum": {id: name, ...}}}',
-'  l_json := ''{"type": "''||l_datatype||''", "enum": [''||l_ids||'']'';',
-'  IF(length(l_names)>0) THEN',
-'    l_json := l_json || '', "apex": {"enum": {''||l_names|| ''}}'';',
+'    l_json := ''{"type": "''||l_datatype||''", "enum": [''||l_ids||'']'';',
+'    IF(length(l_names)>0) THEN',
+'      l_json := l_json || '', "apex": {"enum": {''||l_names|| ''}}'';',
+'    END IF;',
+'    l_json := l_json || ''}'';',
 '  END IF;',
-'  l_json := l_json || ''}'';',
 '  dbms_output.put_line(l_json);',
 '  RETURN l_json;',
 '  ',
@@ -20619,7 +20642,23 @@ wwv_flow_api.create_install_script(
 'order siblings by text;',
 '*/',
 '',
-'CREATE OR REPLACE FUNCTION json_region_generate_cascade_enums(p_sqlquery IN VARCHAR2, p_parent IN VARCHAR2 DEFAULT NULL, p_items IN VARCHAR2 DEFAULT NULL, p_level IN INTEGER DEFAULT 0) ',
+'/*',
+' * Function to generate the JSON-schema for a cascading selectlist based on a hierarchical sqlquery',
+' * The query has to return 1 or 2 columns (1 column when the enum-value isequal to the display value)',
+' * The qury is passed to json_region_generate_enum to generate the enum. ',
+' * The hierarchy is build using JSON-schemas if/then/allOf',
+' *',
+' * Parameter:',
+' *   p_sqlquery   sql-query to retrieve all entries for a parent-id',
+' *   p_parent     the id of the parent',
+' *   p_required   !=0 means the enums are required',
+' *   p_items      a comma separated list of item-names used for the enums',
+' *   p_level      (only used internaly)',
+' *',
+' * Usage: ',
+' *   SELECT json_region_generate_cascade_enums(''select id, text FROM json_region_hierarchie WHERE parent_id=:1 OR (:1<0 and parent_id IS NULL) ORDER BY text'', -1, 0, ''sel1,sel2,sel3,sel4'') from dual',
+' */',
+'CREATE OR REPLACE FUNCTION json_region_generate_cascade_enums(p_sqlquery IN VARCHAR2, p_parent IN VARCHAR2 DEFAULT NULL, p_required BOOLEAN DEFAULT FALSE, p_items IN VARCHAR2 DEFAULT NULL, p_level IN INTEGER DEFAULT 0) ',
 '  RETURN CLOB IS',
 '  l_json      CLOB;',
 '  l_delimiter VARCHAR2(10);',
@@ -20632,6 +20671,7 @@ wwv_flow_api.create_install_script(
 '  l_enum      CLOB;',
 '  l_pos       INTEGER;',
 '  l_dependent CLOB :='''';',
+'  l_padding   VARCHAR2(100):= CHR(10)||LPAD(''  '', 2+2*p_level, '' '');',
 'BEGIN',
 '  l_pos := INSTR(p_items, '','');',
 '  if(l_pos>=0) THEN',
@@ -20644,42 +20684,49 @@ wwv_flow_api.create_install_script(
 '  IF(l_item IS NULL OR NOT LENGTH(l_item)>0) THEN',
 '    l_item:=''sel_''||p_level;',
 '  END IF;',
-'  l_json := ''{ "properties": {"''||l_item||''": '' ||json_region_generate_enum(p_sqlquery, p_parent)||''}'';',
-'  l_cursor := DBMS_SQL.OPEN_CURSOR; ',
-'  DBMS_SQL.PARSE(l_cursor, p_sqlquery, DBMS_SQL.NATIVE); ',
-'  IF(p_parent IS NOT NULL) THEN',
-'    DBMS_SQL.BIND_VARIABLE(l_cursor, '':1'', p_parent);',
-'    dbms_output.put_line(''bind: ''|| p_parent);',
-'  END IF;',
-'  l_ignore := DBMS_SQL.EXECUTE(l_cursor); ',
-'  DBMS_SQL.DEFINE_COLUMN(l_cursor, 1, l_id);',
-'',
-'  l_json := l_json || '', ''||chr(10)||''  "allOf": [''||chr(10);',
-'  LOOP',
-'    IF DBMS_SQL.FETCH_ROWS(l_cursor)>0 THEN  -- found a row, process it ',
-'      DBMS_SQL.COLUMN_VALUE(l_cursor, 1, l_id);',
-'      l_entries := l_entries+1;',
-'      l_enum := json_region_generate_cascade_enums(p_sqlquery, l_id, l_items, p_level+1);',
-'      IF(l_enum IS NOT NULL) THEN',
-'        l_json := l_json || l_delimiter||''{'';',
-'        l_json := l_json ||''"if": {"properties": {"''|| l_item ||''": {"const": ''||l_id||''}}},'';',
-'        l_json := l_json ||''"then": ''||l_enum;',
-'        l_json := l_json||''}'';',
-'        l_delimiter :='', ''||chr(13);',
-'        END IF;',
-'    ELSE',
-'      EXIT;',
+'  ',
+'  l_enum :=json_region_generate_enum(p_sqlquery, p_parent);',
+'  IF(l_enum IS NOT NULL) THEN  -- an enum is generated, ',
+'    l_json := l_padding || ''{ "properties": {"''||l_item||''": '' ||json_region_generate_enum(p_sqlquery, p_parent)||''}'';',
+'    IF(p_required = TRUE) THEN',
+'      l_json := l_json || '',''||l_padding||''"required": ["''||l_item||''"]'';',
 '    END IF;',
-'  END LOOP;',
-'  DBMS_SQL.CLOSE_CURSOR(l_cursor); ',
-'  l_json:= l_json ||''  ]''||CHR(10);',
+'    l_cursor := DBMS_SQL.OPEN_CURSOR; ',
+'    DBMS_SQL.PARSE(l_cursor, p_sqlquery, DBMS_SQL.NATIVE); ',
+'    IF(p_parent IS NOT NULL) THEN',
+'      DBMS_SQL.BIND_VARIABLE(l_cursor, '':1'', p_parent);',
+'      dbms_output.put_line(''bind: ''|| p_parent);',
+'    END IF;',
+'    l_ignore := DBMS_SQL.EXECUTE(l_cursor); ',
+'    DBMS_SQL.DEFINE_COLUMN(l_cursor, 1, l_id);',
 '',
+'    LOOP',
+'      IF DBMS_SQL.FETCH_ROWS(l_cursor)>0 THEN  -- found a row, process it ',
+'        DBMS_SQL.COLUMN_VALUE(l_cursor, 1, l_id);',
+'        l_enum := json_region_generate_cascade_enums(p_sqlquery, l_id, p_required, l_items, p_level+1);',
+'        IF(l_enum IS NOT NULL) THEN',
+'          l_entries := l_entries+1;',
+'          l_dependent := l_dependent || l_delimiter || l_padding ||''  {'';',
+'          l_dependent := l_dependent || l_padding ||''    "if": {"properties": {"''|| l_item ||''": {"const": ''||l_id||''}}},'';',
+'          l_dependent := l_dependent || l_padding ||''    "then": ''||l_enum;',
+'          l_dependent := l_dependent || l_padding ||''  }'';',
+'          l_delimiter :='', '';',
+'          END IF;',
+'      ELSE',
+'        EXIT;',
+'      END IF;',
+'    END LOOP;',
+'    DBMS_SQL.CLOSE_CURSOR(l_cursor); ',
 '  --  l_json := ''{"allOf": [''||chr(13);',
 '',
-'  IF(l_entries>0) THEN',
-'    l_json := l_json || chr(13)||''}'';',
-'  ELSE',
-'    l_json:=NULL;',
+'    IF(l_entries>0) THEN',
+'      l_json := l_json || '', ''||l_padding||''  "allOf": [''||l_dependent||l_padding||''  ]'';',
+'--   ELSE',
+'--      l_json:=NULL;',
+'    END IF;',
+'    IF(l_json IS NOT NULL) THEN -- it''s generate some stuff, need a }',
+'      l_json:= l_json||''}'';',
+'    END IF;',
 '  END IF;',
 '  RETURN(l_json);',
 '  EXCEPTION WHEN OTHERS THEN',
@@ -20690,7 +20737,8 @@ wwv_flow_api.create_install_script(
 'END json_region_generate_cascade_enums;',
 '/',
 '',
-'select json_region_generate_cascade_enums(''select id, text from json_region_hierarchie where parent_id=:1 OR (:1<0 and parent_id IS NULL) ORDER BY text'', -1, ''sel,sel1,sel2,sel3'') from dual;'))
+'select json_region_generate_enum(''select id, text from json_region_hierarchie where parent_id=:1 OR (:1<0 and parent_id IS NULL) ORDER BY text'', 5) from dual;',
+'select json_region_generate_cascade_enums(''select id, text from json_region_hierarchie where parent_id=:1 OR (:1<0 and parent_id IS NULL) ORDER BY text'', -1, 1, ''sel,sel1,sel2,sel3'') from dual;'))
 );
 end;
 /
