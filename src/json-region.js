@@ -1595,7 +1595,7 @@ console.error('propagateShow if: not implemented', schema.if)
 
       // check for valid values
     if(schema.extendedType && !validValues.extendedType.includes(schema.extendedType))    { logSchemaError(name, 'invalid extendedtype', schema.extendedType)}
-    if(!schema.extendedType && name && !name.startsWith('_') && !validValues.type.includes(schema.type)) 
+    if(!conditional && !schema.extendedType && name && !name.startsWith('_') && !validValues.type.includes(schema.type)) 
       { logSchemaError(name, 'invalid type', schema.type)}
     if(schema.apex.itemtype && !validValues.apex.itemtype.includes(schema.apex.itemtype)) { logSchemaError(name, 'invalid itemtype', schema.apex.itemtype)}
     if(schema.apex.template && !validValues.apex.template.includes(schema.apex.template)) { logSchemaError(name, 'invalid template', schema.apex.template)}
@@ -1844,7 +1844,7 @@ console.error('propagateShow if: not implemented', schema.if)
       let l_name = name;
       let nr     = 0;
       for(let l_schema of schema.allOf){
-        const l_props = propagateProperties(l_schema, level, schema.readOnly, schema.writeOnly, schema.additionalProperties, false, l_name, genItemname(prefix, nr++));
+        const l_props = propagateProperties(l_schema, level, schema.readOnly, schema.writeOnly, schema.additionalProperties, true, l_name, genItemname(prefix, nr++));
         l_allProperties = {...l_allProperties, ...l_props}
       }
     }
@@ -2709,10 +2709,10 @@ console.error('propagateShow if: not implemented', schema.if)
    * The id is required to show/hide the content of the row for conditional schema
    * returns the html 
   */
-  function generateSeparator(schema, label, id, inArray){
-    apex.debug.trace(">>jsonRegion.generateSeparator", schema, label, id, inArray); 
+  function generateSeparator(schema, label, id){
+    apex.debug.trace(">>jsonRegion.generateSeparator", schema, label, id); 
     let l_html ='';
-    if(!inArray && label) {    // There is a label, put a line with the text
+    if(label) {    // Not in array and hasa label, put a line with the text
       l_html += `
 </div>
 <div class="row jsonregion">
@@ -2993,7 +2993,7 @@ console.error('propagateShow if: not implemented', schema.if)
     for(let [l_name, l_item] of Object.entries(items)){
       if(!(''+l_name).startsWith('_')){
         if(l_item.apex.textBefore|| l_item.apex.newRow) {
-          l_generated.html += generateSeparator(l_item, l_item.apex.textBefore, null, false);
+          l_generated.html += generateSeparator(l_item, l_item.apex.textBefore, null);
         }
         const l_gen = generateForItem(l_item, data[l_name], genItemname(id, l_name), startend, newItem);
         l_generated.html += l_gen.html;
@@ -3046,7 +3046,7 @@ console.error('propagateShow if: not implemented', schema.if)
         case C_JSON_OBJECT: // an object, so generate all of its properties
           data = data ||'{}';
           if(pOptions.headers){
-            l_generated.html = generateSeparator(schema, generateLabel(schema.name, schema), name, false);
+            l_generated.html = generateSeparator(schema, generateLabel(schema.name, schema), name);
           }
           let l_gen = generateForItems(schema, data, name, startend, newItem);
           l_generated.html += l_gen.html;
