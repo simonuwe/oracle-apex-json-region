@@ -2543,9 +2543,7 @@ console.error('propagateShow if: not implemented', schema.if)
           logSchemaError('"type":: "array" simple type string with enum only', schema, data);
         }
       } else {  // loop through the array and generate an object for each row
-        if(pOptions.headers){
-          l_generated.html = generateArraySeparator(schema, generateLabel(schema.name, schema), id);
-        }
+        l_generated.html = generateArraySeparator(schema, generateLabel(schema.name, schema), id);
         for(const  i in data) {
           let l_item = {...item};
           l_item.name = i;
@@ -2709,8 +2707,8 @@ console.error('propagateShow if: not implemented', schema.if)
    * The id is required to show/hide the content of the row for conditional schema
    * returns the html 
   */
-  function generateSeparator(schema, label, id){
-    apex.debug.trace(">>jsonRegion.generateSeparator", schema, label, id); 
+  function generateSeparator(schema, label, id, isObjectHeader){
+    apex.debug.trace(">>jsonRegion.generateSeparator", schema, label, id, isObjectHeader); 
     let l_html ='';
     if(label) {    // Not in array and hasa label, put a line with the text
       l_html += `
@@ -2725,10 +2723,17 @@ console.error('propagateShow if: not implemented', schema.if)
 <div #DIVID# class="row jsonregion #CSS#" json-property="#JSONPROPERTY#">
  `;
     } else {
-      l_html +=`
+      if(isObjectHeader){  // 
+        l_html +=`
+<div #DIVID# json-property="#JSONPROPERTY#"></div>
+`;
+
+      } else {
+        l_html +=`
 </div>
 <div class="row jsonregion" #DIVID#>
-`  
+`;
+      }
     }
 
     l_html = apex.util.applyTemplate(l_html, 
@@ -2753,7 +2758,9 @@ console.error('propagateShow if: not implemented', schema.if)
   */
   function generateArraySeparator(schema, label, id){
     apex.debug.trace(">>jsonRegion.generateArraySeparator", schema, label, id); 
-    let l_html =`
+    let l_html = '';
+    if(pOptions.headers){
+      l_html =`
     </div>
 <div id="#ID#_CONTAINER" class="row jsonregion" json-property="#JSONPROPERTY#">
   <div class="t-Region-header">
@@ -2761,8 +2768,8 @@ console.error('propagateShow if: not implemented', schema.if)
       <h2 class="t-Region-title" id="#ID#_heading" data-apex-heading="">#LABEL#</h2>
     </div>
  `;
-    if(schema.apex.hasInsert != 'none'){  // 
-      l_html += `
+      if(schema.apex.hasInsert != 'none'){  // 
+        l_html += `
     <div class="t-Region-headerItems t-Region-headerItems--buttons">
       <button id="#ID#_CREATE" type="button" class="t-Button t-Button--noLabel t-Button--icon js-ignoreChange lto33153869848604592_0" title="Create" aria-label="Create">
         <span class="a-Icon icon-ig-add-row" aria-hidden="true"></span>
@@ -2770,10 +2777,16 @@ console.error('propagateShow if: not implemented', schema.if)
     </div>
   </div>
 `;
-    } else {
-      l_html += `
+      } else {
+        l_html += `
   </div>
 `;
+      }
+    } else {  // no header, add a dummy diff, for storing the json-property with the propertyname 
+      l_html += `
+  <div id="#ID#_CONTAINER" json-property="#JSONPROPERTY#"></div>
+`;
+
     }
 
     l_html = apex.util.applyTemplate(l_html, 
@@ -2784,7 +2797,6 @@ console.error('propagateShow if: not implemented', schema.if)
                                           "JSONPROPERTY": schema.name
                                         }
                                       });
-
     apex.debug.trace("<<jsonRegion.generateArraySeparator"); 
     return(l_html);
   }
@@ -2993,7 +3005,7 @@ console.error('propagateShow if: not implemented', schema.if)
     for(let [l_name, l_item] of Object.entries(items)){
       if(!(''+l_name).startsWith('_')){
         if(l_item.apex.textBefore|| l_item.apex.newRow) {
-          l_generated.html += generateSeparator(l_item, l_item.apex.textBefore, null);
+          l_generated.html += generateSeparator(l_item, l_item.apex.textBefore, null, false);
         }
         const l_gen = generateForItem(l_item, data[l_name], genItemname(id, l_name), startend, newItem);
         l_generated.html += l_gen.html;
@@ -3045,9 +3057,7 @@ console.error('propagateShow if: not implemented', schema.if)
         break;
         case C_JSON_OBJECT: // an object, so generate all of its properties
           data = data ||'{}';
-          if(pOptions.headers){
-            l_generated.html = generateSeparator(schema, generateLabel(schema.name, schema), name);
-          }
+          l_generated.html = generateSeparator(schema, pOptions.headers?generateLabel(schema.name, schema):null, name, true);
           let l_gen = generateForItems(schema, data, name, startend, newItem);
           l_generated.html += l_gen.html;
           l_generated.items += l_gen.items;
