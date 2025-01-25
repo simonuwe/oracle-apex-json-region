@@ -12,9 +12,14 @@ In this way the field-items of an application always match with the format of yo
 
 ## Demo
 
-In directory examples you can find a demo-applicaton.
+In directory **examples** you can find a demo-applicaton.
 
 [The demo](examples/demo.md)
+
+## Tutorial
+
+In directory **docu/tutorial** you can find a brief [tutorial](docu/tutorial/tutorial.md).
+ 
 
 ## Idea
 

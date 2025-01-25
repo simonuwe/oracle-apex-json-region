@@ -1,3 +1,16 @@
+# 0.9.7.2 2024-01-25
+
+## New Features
+
+- #177 Support of APEX-24.2
+
+## Fixed Isses
+ - #179 Demo broken with APEX-24.2
+ - #176 When "Headers" is off in JSON-region-configuration, arrays are saved with property name "undefined"
+ - #175 Example for "Cascading Select-lists"
+ - #174 Wrong error message in browser log: JSON-schema invalid: then invalid type undefined
+
+
 # 0.9.7.1 2024-10-19
 
 ## New Features

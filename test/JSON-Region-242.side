@@ -2,7 +2,7 @@
   "id": "6b739ce4-9172-4b35-a468-a8946a3f10dd",
   "version": "2.0",
   "name": "JSON-Region",
-  "url": "https://localhost:10443/ords/r/uwe/json-region-demo/objects",
+  "url": "https://localhost:11443/ords/r/uwe/json-region-demo/objects",
   "tests": [{
     "id": "916295a0-d7db-4311-8fa3-3a203d4e0833",
     "name": "array-2",
@@ -2039,30 +2039,6 @@
       ],
       "value": ""
     }, {
-      "id": "42bef753-d227-430d-b4d4-a1be3b1e9e22",
-      "comment": "",
-      "command": "mouseOver",
-      "target": "css=#B14596118626240091 > .t-Button-label",
-      "targets": [
-        ["css=#B14596118626240091 > .t-Button-label", "css:finder"],
-        ["xpath=//button[@id='B14596118626240091']/span[2]", "xpath:idRelative"],
-        ["xpath=//div[3]/button/span[2]", "xpath:position"],
-        ["xpath=//span[contains(.,'Create')]", "xpath:innerText"]
-      ],
-      "value": ""
-    }, {
-      "id": "f6ddbadd-6d9a-4a99-9424-a2def18723a2",
-      "comment": "",
-      "command": "mouseOut",
-      "target": "css=#B14596118626240091 > .t-Button-label",
-      "targets": [
-        ["css=#B14596118626240091 > .t-Button-label", "css:finder"],
-        ["xpath=//button[@id='B14596118626240091']/span[2]", "xpath:idRelative"],
-        ["xpath=//div[3]/button/span[2]", "xpath:position"],
-        ["xpath=//span[contains(.,'Create')]", "xpath:innerText"]
-      ],
-      "value": ""
-    }, {
       "id": "252e291c-cf67-41b9-bf18-679f83a6c4da",
       "comment": "",
       "command": "selectFrame",
@@ -2320,39 +2296,6 @@
         ["xpath=//div[6]/div[4]/div/div[2]/div[2]/input", "xpath:position"]
       ],
       "value": "c2"
-    }, {
-      "id": "af10a942-c5d2-4063-b6e4-bf49e1dc21f8",
-      "comment": "",
-      "command": "mouseDownAt",
-      "target": "css=.t-Drawer-bodyWrapperIn",
-      "targets": [
-        ["css=.t-Drawer-bodyWrapperIn", "css:finder"],
-        ["xpath=//form[@id='wwvFlowForm']/div/div[2]/div", "xpath:idRelative"],
-        ["xpath=//form/div/div[2]/div", "xpath:position"]
-      ],
-      "value": "714,330"
-    }, {
-      "id": "637d3955-f2df-4ad0-9970-fc929aef152a",
-      "comment": "",
-      "command": "mouseMoveAt",
-      "target": "css=.t-Drawer-bodyWrapperIn",
-      "targets": [
-        ["css=.t-Drawer-bodyWrapperIn", "css:finder"],
-        ["xpath=//form[@id='wwvFlowForm']/div/div[2]/div", "xpath:idRelative"],
-        ["xpath=//form/div/div[2]/div", "xpath:position"]
-      ],
-      "value": "714,330"
-    }, {
-      "id": "b2c25371-42c0-40fe-9e17-d2b8d144b07d",
-      "comment": "",
-      "command": "mouseUpAt",
-      "target": "css=.t-Drawer-bodyWrapperIn",
-      "targets": [
-        ["css=.t-Drawer-bodyWrapperIn", "css:finder"],
-        ["xpath=//form[@id='wwvFlowForm']/div/div[2]/div", "xpath:idRelative"],
-        ["xpath=//form/div/div[2]/div", "xpath:position"]
-      ],
-      "value": "714,330"
     }, {
       "id": "58732226-e764-45d6-b50e-eaa3835d5f26",
       "comment": "",
@@ -3424,8 +3367,29 @@
     }, {
       "id": "a1cfdf30-7839-49be-aa8f-bacb7faf56b2",
       "comment": "",
+      "command": "//selectFrame",
+      "target": "index=0",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "5c167be2-2aba-4ae3-a309-213c12e0c900",
+      "comment": "",
+      "command": "click",
+      "target": "id=P11_DATA_editor_string_CONTAINER",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "5bd94bf0-5916-4666-a77f-d94e9552f89c",
+      "comment": "",
       "command": "selectFrame",
       "target": "index=0",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "e0fb11c3-2018-4639-b4ba-f230380f845c",
+      "comment": "",
+      "command": "click",
+      "target": "css=html",
       "targets": [],
       "value": ""
     }, {
@@ -5117,19 +5081,6 @@
       ],
       "value": ""
     }, {
-      "id": "4b03c5c3-75e0-4b2e-aca5-03c03178d7e6",
-      "comment": "",
-      "command": "click",
-      "target": "id=P11_FORMATTED_VALUE_DISPLAY",
-      "targets": [
-        ["id=P11_FORMATTED_VALUE_DISPLAY", "id"],
-        ["css=#P11_FORMATTED_VALUE_DISPLAY", "css:finder"],
-        ["xpath=//span[@id='P11_FORMATTED_VALUE_DISPLAY']", "xpath:attributes"],
-        ["xpath=//div[@id='P11_FORMATTED_VALUE_CONTAINER']/div[2]/div/div/span", "xpath:idRelative"],
-        ["xpath=//div/div/div[2]/div/div/span", "xpath:position"]
-      ],
-      "value": ""
-    }, {
       "id": "99d73ff5-a224-4ea0-9d2c-f63a9cf8013a",
       "comment": "",
       "command": "click",
@@ -6408,7 +6359,7 @@
       "id": "1e23024c-1aa5-49db-9ab7-94bebb9bf1a2",
       "comment": "",
       "command": "open",
-      "target": "https://localhost:10443/ords/r/uwe/json-region-demo/objects",
+      "target": "/ords/r/uwe/json-region-demo/objects",
       "targets": [],
       "value": ""
     }, {
@@ -10645,6 +10596,6 @@
     "timeout": 300,
     "tests": []
   }],
-  "urls": ["https://localhost:10443/", "https://localhost:10443/ords/r/uwe/json-region-demo/objects"],
+  "urls": ["https://localhost:10443/", "https://localhost:10443/ords/r/uwe/json-region-demo/objects", "https://localhost:11443/ords/r/uwe/json-region-demo/objects"],
   "plugins": []
 }

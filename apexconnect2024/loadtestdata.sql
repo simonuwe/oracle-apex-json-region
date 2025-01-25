@@ -794,6 +794,7 @@ Insert into UWE.OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) valu
       "pattern": "[0-9]{4}( [0-9]{4}){3}",
       "apex": {"label": "CC pattern"}
     },
+    "all_lower": { "type": "string", "apex": {"textcase": "lower"}},
     "long_string": { "type": "string", "maxLength":400},
     "length": { "type": "string", "minLength": 3, "maxLength":10},
     "password":  {"type": "string", "minLength": 8, "maxLength": 16, "writeOnly": ]')
@@ -940,6 +941,35 @@ Insert into UWE.OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) valu
   },
   "apex": {"template": "above"}
 }]'));
+
+Insert into UWE.OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('261','test-array-4',TO_CLOB(q'[{
+  "type": "object",
+  "properties": {
+    "lastname":  {"type": "string", "maxLength": 30},
+    "firstname": {"type": "string", "maxLength": 30},
+    "email":     {"type": "string", "format": "email"},
+    "comments": {
+      "type":     "array",
+      "items":    {"$ref": "#/$defs/comment"},
+      "readOnly": true,
+      "apex": {
+        "hasInsert": "begin",
+        "xhasDelete": false
+      }
+    } 
+  },
+  "$defs":{
+    "comment": {
+      "type": "object")
+|| TO_CLOB(q'[ty"],
+      "properties": {
+        "comment": {"type": "string"},
+        "datetime": {"type": "string", "format": "date-time", "default": "NOW"}
+      }
+    }
+  }
+}]'));
+
 Insert into UWE.OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('241','test-array-3','{ 
   "type":"object",
   "properties": {

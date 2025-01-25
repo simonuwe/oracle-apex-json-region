@@ -1,13 +1,15 @@
 "use strict"
 
 /*
- * JSON-region
+ * JSON-region 0.9.7.2
  * Supports Oracle-APEX >=20.2
  * 
  * APEX JSON-region plugin
- * (c) Uwe Simon 2023,2024
+ * (c) Uwe Simon 2023, 2024, 2025
  * Apache License Version 2.0
 */
+
+const ORTL_VERSION = '2.0.1';
 
 // for Oracle < 21.1
 apex.libVersions = apex.libVersions || {oraclejet: "11.0.0"};
@@ -64,6 +66,8 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
   const C_APEX_VERSION_2301 = "23.1"
   const C_APEX_VERSION_2302 = "23.2"
   const C_APEX_VERSION_2401 = "24.1"
+  const C_APEX_VERSION_2402 = "24.2"
+
                                               // JSON "type": "..."
   const C_JSON_OBJECT           = 'object';
   const C_JSON_ARRAY            = 'array';
@@ -159,6 +163,7 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
     }
   }
 
+  pOptions.apex_full_version = pOptions.apex_version;
   pOptions.apex_version = pOptions.apex_version.match(/\d+\.\d+/)[0];  // only first 2 numbers of version
 
 
@@ -245,39 +250,61 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
   }
 
   /*
-   * Some hacks
-   * Wait for Richttext-Editor to be initialized
-   * otherwise apex.item('richtext-ITEM').setValue(...) will cause undefined error 
-  */
-  function waitForEditor() {
-    return new Promise(function (resolve, reject) {
-        checkEditor(resolve);
-    });
-  }
+   * Wait until the richtext-editor is initialized
+   */
+  async function richtextHack(){
+    /*
+     * Check whether the richtext-editor is initialized
+    */
+    let editorElement = $('#' + pRegionId + ' a-rich-text-editor');;
 
-  /*
-   * Check whether the richtext-editor is initialized
-  */
-  function checkEditor(resolve) {
-    let editorElement = $('a-rich-text-editor');
-    if (!(editorElement && editorElement[0] && editorElement[0].getEditor())) {
-      setTimeout(checkEditor.bind(this, resolve), 30);
-    }  else {
-      resolve();
+    function checkEditor(resolve) {
+      if(editorElement[0] && pOptions.apex_version <C_APEX_VERSION_2402 && !editorElement[0].getEditor()
+        ){
+        setTimeout(checkEditor.bind(this, resolve), 30);
+      }  else {
+        resolve();
+      }
+    }
+   /*
+     * Some hacks
+     * Wait for Richttext-Editor to be initialized
+     * otherwise apex.item('richtext-ITEM').setValue(...) will cause undefined error 
+    */
+    function waitForEditor() {
+      return new Promise(function (resolve, reject) {
+        checkEditor(resolve);
+      });
+    }
+
+    if(editorElement && editorElement.length){
+      apex.debug.trace ('wait for richtext-editor initializing ...');
+      await waitForEditor();
+      apex.debug.trace ('wait for richtext-editor initialized');
     }
   }
+
 
   /*
    * Wait until the richtext-editor is initialized
-  */
-  async function richtextHack(){
-    let editorElement = $('a-rich-text-editor');
-    if(editorElement && editorElement[0]){
-      apex.debug.trace ('wait for richtext-editor beeon initialized');
-      await waitForEditor();
+   */
+  async function richtextOrtlHack(itemtypes){
+            
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));  
+    }
+
+    if(pOptions.apex_version>= C_APEX_VERSION_2402 && itemtypes.itemtype.richtext){
+      let editorElement = $('#' + pRegionId + ' .ck-content');
+      apex.debug.trace ('wait for richtext-editor initializing ...');
+      while(!editorElement.length){  // wait until editor is created
+        await sleep(10);
+        editorElement = $('#' + pRegionId + ' .ck-content');
+      }
+      apex.debug.trace ('wait for richtext-editor initialized');
+      // console.dir(editorElement[0].ckeditorInstance);
     }
   }
-
 
   /*
    * Check whether an object is empty, contains no properties or all properties are null
@@ -1008,13 +1035,14 @@ console.error('propagateShow if: not implemented', schema.if)
           $('#' + dataitem + '_DISPLAY').html(l_value);
         }
       }
+
       if(!schema.readOnly || [C_APEX_QRCODE].includes(schema.apex.itemtype)){
         if(pOptions.apex_version>=C_APEX_VERSION_2202 || ( 
              ![C_JSON_FORMAT_DATETIME, C_JSON_FORMAT_DATE].includes(schema.format) &&
              ![C_APEX_STARRATING].includes(schema.apex.itemtype)
            )
         ){  // hack for old jet-data-picker, starrating
-          apex.item(dataitem).setValue(l_value);
+          apex.item(dataitem).setValue(l_value||'');
         }
       }
     break;
@@ -1163,6 +1191,29 @@ console.error('propagateShow if: not implemented', schema.if)
         break;
         case C_APEX_IMAGE:  // display only
         case C_APEX_QRCODE: // display only
+        break;
+        case C_APEX_RICHTEXT:
+          if(pOptions.apex_version >= C_APEX_VERSION_2402) {
+            /*
+            apex.widget.markdown('#' + dataitem, {
+                                                   previewEmptyMessage: "'Nothing To Preview'",
+                                                   syntaxHighlighting: true,
+                                                   toolbar: "SIMPLE"});
+            */
+            apex.widget.rte('#' + dataitem, {
+                mode:             'markdown',
+                allowCustomHtml:  false,
+                minHeight:        180,
+                maxHeight:        360,
+                displayValueMode: "plain-text",
+                editorOptions:    {language: apex.locale.getLanguage()},
+                label:            generateLabel(schema.name, schema),
+                toolbar:          "intermediate",
+                toolbarStyle:     "overflow"
+            });
+          } else {
+            apex.item.create(dataitem, {});
+          }
         break;
         default:
           apex.item.create(dataitem, {});
@@ -2354,13 +2405,22 @@ console.error('propagateShow if: not implemented', schema.if)
 `};
           break;    
           case C_APEX_RICHTEXT:
-            l_generated = {
-              items: 1,
-              wrappertype: 'apex-item-wrapper--rich-text-editor',
-              html: `
+            if(pOptions.apex_version >=C_APEX_VERSION_2402) {
+              l_generated = {
+                items: 1,
+                wrappertype: 'apex-item-wrapper--rich-text-editor',
+                html: `
+<textarea id="#ID#" name="#ID#" #REQUIRED#  style="resize: none; display: none;">#QUOTEVALUE#</textarea>
+`};
+            } else {
+              l_generated = {
+                items: 1,
+                wrappertype: 'apex-item-wrapper--rich-text-editor',
+                html: `
 <a-rich-text-editor id="#ID#" name="#ID#" mode="markdown" #REQUIRED# read-only="#READONLY#" display-value-mode="plain-text" visual-mode="inline" value="#QUOTEVALUE#">
 </a-rich-text-editor>
 `};
+            } 
          break;
           case C_APEX_TEXTAREA:
             l_generated = {
@@ -2952,6 +3012,7 @@ console.error('propagateShow if: not implemented', schema.if)
                                     { placeholders: {"WRAPPERTYPE":   l_generated.wrappertype,
                                                      "COLWIDTH":      (item.apex.colSpan?item.apex.colSpan:pOptions.colwidth),
                                                      "ROWS":          (item.apex.lines?item.apex.lines:5),
+                                                     "COLS":          30,
                                                      "COLSTARTEND":   startend<0?'col-start':(startend>0?'col-end':''),
                                                      "ID":            id, 
                                                      "NAME":          id,
@@ -3102,6 +3163,7 @@ console.error('propagateShow if: not implemented', schema.if)
     apex.debug.trace("<<jsonRegion.generateForRegion", l_generated);
     return(l_generated);
   }
+
   /*
    * get a file with an AJAX-request return a promise
   */
@@ -3111,7 +3173,7 @@ console.error('propagateShow if: not implemented', schema.if)
       const s = document.createElement(cMapType[type].tag);
       let r = false;
       s.type = cMapType[type].type;
-      s[cMapType[type].attr] = src;
+      s[cMapType[type].attr] = src + '?v=' + pOptions.apex_full_version;
       s.rel = cMapType[type].rel;
       s.async = false;
       s.onerror = function(err) {
@@ -3191,13 +3253,23 @@ console.error('propagateShow if: not implemented', schema.if)
 
       if(itemtypes.itemtype.richtext){  // richtext is used, so load files for rich-text-editor
         if(!customElements.get('a-rich-text-editor')){  // Custom Element is not in use, load it
-          l_scripts.push('libraries/tinymce/' + apex.libVersions.tinymce + '/skins/ui/oxide/skin.css');
-          l_scripts.push('libraries/tinymce/' + apex.libVersions.tinymce + '/tinymce.min.js');
+
           l_scripts.push('libraries/purify/'  + apex.libVersions.domPurify + '/purify.min.js');
           l_scripts.push('libraries/prismjs/' + apex.libVersions.prismJs + '/prism.js');
           l_scripts.push('libraries/markedjs/' + apex.libVersions.markedJs + '/marked.min.js');
           l_scripts.push('libraries/turndown/' + apex.libVersions.turndown + '/turndown.js');
-          l_scripts.push('libraries/apex/minified/item.RichTextEditor.min.js');
+          if(pOptions.apex_version >=C_APEX_VERSION_2402){  // richtext deitor with widget.rte for 24.2
+    //        l_scripts.push('libraries/apex/minified/widget.toolbar.min.js');
+    //        l_scripts.push('libraries/apex/minified/widget.markdownEditor.min.js');
+            l_scripts.push('libraries/ortl/' + ORTL_VERSION + '/ckeditor5.umd.js');
+            l_scripts.push('libraries/ortl/' + ORTL_VERSION + '/ckeditor5-editor.css');
+            l_scripts.push('libraries/ortl/' + ORTL_VERSION + '/ckeditor5-content.css');
+            l_scripts.push('libraries/apex/minified/widget.rte.min.js');
+          }else {
+            l_scripts.push('libraries/tinymce/' + apex.libVersions.tinymce + '/skins/ui/oxide/skin.css');
+            l_scripts.push('libraries/tinymce/' + apex.libVersions.tinymce + '/tinymce.min.js');
+            l_scripts.push('libraries/apex/minified/item.RichTextEditor.min.js');
+          }
         }
       }
     }
@@ -3231,13 +3303,8 @@ console.error('propagateShow if: not implemented', schema.if)
     apex.debug.trace('jsonRegion.refresh', 'data', newItem, gData);
 
     await richtextHack();
-//        // attach the fields to the generated UI
-/*
-    if(newItem){  // new Data, so create JSON-data with default values
-      gData = defaultValues(pOptions.schema);
-      removeNulls(gData);
-    }
-*/
+
+        // attach the fields to the generated UI
     attachObject(pOptions.dataitem, null, pOptions.schema, pOptions.readonly, gData, newItem, pOptions.schema, pOptions.dataitem);
     addArrayDeleteEvent();
     apexHacks();
@@ -3390,7 +3457,7 @@ console.error('propagateShow if: not implemented', schema.if)
   */
     function createRegion(){
       apex.debug.trace(">>createRegion");
-      // if reagion already exists destroy it first
+      // if region already exists destroy it first
       if(apex.region.isRegion(pRegionId)) {
         apex.debug.trace('DESTROY REGION', pRegionId);
         apex.region.destroy(pRegionId);
@@ -3435,6 +3502,7 @@ console.error('propagateShow if: not implemented', schema.if)
 //                gData = defaultValues(pOptions.schema);
 //                removeNulls(gData);
                 attachObject(pOptions.dataitem, null, pOptions.schema, pOptions.readonly, gData, l_newitem, pOptions.schema, pOptions.dataitem);
+                await richtextOrtlHack(l_itemtypes);
                 addArrayDeleteEvent();
                 setObjectValues(pOptions.dataitem, '', pOptions.schema, pOptions.readonly, gData);
                 apexHacks();
