@@ -1,7 +1,7 @@
 {
   "id": "6b739ce4-9172-4b35-a468-a8946a3f10dd",
   "version": "2.0",
-  "name": "JSON-Region",
+  "name": "JSON-Region &gt;= 24.2",
   "url": "https://localhost:11443/ords/r/uwe/json-region-demo/objects",
   "tests": [{
     "id": "916295a0-d7db-4311-8fa3-3a203d4e0833",
@@ -3358,62 +3358,11 @@
       ],
       "value": ""
     }, {
-      "id": "29ff4d26-3bb7-4224-b402-fd7707c53ded",
+      "id": "a54886a8-4372-42c3-9110-c065ab20f155",
       "comment": "",
-      "command": "//click",
-      "target": "css=.t-Region > #P11_DATA_CONTAINER",
+      "command": "executeScript",
+      "target": "apex.item('P11_DATA_editor_string').setValue('aaaaa')",
       "targets": [],
-      "value": ""
-    }, {
-      "id": "a1cfdf30-7839-49be-aa8f-bacb7faf56b2",
-      "comment": "",
-      "command": "//selectFrame",
-      "target": "index=0",
-      "targets": [],
-      "value": ""
-    }, {
-      "id": "5c167be2-2aba-4ae3-a309-213c12e0c900",
-      "comment": "",
-      "command": "click",
-      "target": "id=P11_DATA_editor_string_CONTAINER",
-      "targets": [],
-      "value": ""
-    }, {
-      "id": "5bd94bf0-5916-4666-a77f-d94e9552f89c",
-      "comment": "",
-      "command": "selectFrame",
-      "target": "index=0",
-      "targets": [],
-      "value": ""
-    }, {
-      "id": "e0fb11c3-2018-4639-b4ba-f230380f845c",
-      "comment": "",
-      "command": "click",
-      "target": "css=html",
-      "targets": [],
-      "value": ""
-    }, {
-      "id": "b6062616-8318-483c-866e-e9d88fb242a8",
-      "comment": "",
-      "command": "editContent",
-      "target": "id=tinymce",
-      "targets": [],
-      "value": "<p>Editor </p><p><strong>String</strong></p>"
-    }, {
-      "id": "31c6d51b-a170-4975-8193-2107f147725a",
-      "comment": "",
-      "command": "type",
-      "target": "id=tinymce",
-      "targets": [],
-      "value": "\\n"
-    }, {
-      "id": "5ef459d3-8e1a-476f-8b22-6a91af680228",
-      "comment": "",
-      "command": "selectFrame",
-      "target": "relative=parent",
-      "targets": [
-        ["relative=parent"]
-      ],
       "value": ""
     }, {
       "id": "5f900eb9-c1d0-48de-9e07-90b3dcd3d85f",
@@ -6716,40 +6665,10 @@
       ],
       "value": "long\\nstring"
     }, {
-      "id": "a383cc21-9081-4c5d-b515-c76776a33295",
+      "id": "372ac431-c25e-4fc9-abd9-643513b656b3",
       "comment": "",
-      "command": "selectFrame",
-      "target": "index=0",
-      "targets": [
-        ["index=0"]
-      ],
-      "value": ""
-    }, {
-      "id": "1be4f7b2-bad9-47c1-b038-00ed3aadc380",
-      "comment": "",
-      "command": "editContent",
-      "target": "id=tinymce",
-      "targets": [
-        ["id=tinymce", "id"],
-        ["css=#tinymce", "css:finder"],
-        ["xpath=//body[@id='tinymce']", "xpath:attributes"],
-        ["xpath=//body", "xpath:position"]
-      ],
-      "value": "xxxx"
-    }, {
-      "id": "cfa24ab8-b613-4491-9b6e-31aa02be1744",
-      "comment": "",
-      "command": "selectFrame",
-      "target": "relative=parent",
-      "targets": [
-        ["relative=parent"]
-      ],
-      "value": ""
-    }, {
-      "id": "0138bb07-3a02-4611-a471-f3efc85e0531",
-      "comment": "",
-      "command": "runScript",
-      "target": "document.getElementsByName('P11_DATA_string_editor_string')[0].value='xxxx'",
+      "command": "executeScript",
+      "target": "apex.item('P11_DATA_string_editor_string').setValue('aaaaa')",
       "targets": [],
       "value": ""
     }, {
