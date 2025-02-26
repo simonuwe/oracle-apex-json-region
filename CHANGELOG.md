@@ -1,3 +1,13 @@
+# 0.9.7.3 2024-02-??
+
+## New Features
+
+  - #184 Support of 23ai COLLECTION TABLE/VIEW
+  - #185 Support of universal-scheme style Redwood-light
+
+## Fixed Isses
+
+
 # 0.9.7.2 2024-01-25
 
 ## New Features

@@ -3,6 +3,9 @@
 --
 
 set pages 1000
+
+
+set pages 1000
 set linesize 100
 set trimspool on
 SELECT  
@@ -12,3 +15,10 @@ SELECT
 from object o join object_type ot on (o.object_type_id=ot.object_type_id)
 --where o.object_type_id=1
 ;
+
+
+--
+--  Gen JSON-schema from duality-view
+--
+
+select  JSON_SERIALIZE(DBMS_JSON_SCHEMA.DESCRIBE('JSON23AI') pretty) from dual;

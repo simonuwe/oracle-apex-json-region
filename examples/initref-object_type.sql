@@ -1783,10 +1783,10 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
       "type": "object",
       "required": ["date", "datetime", "time"],
       "properties": {
-        "date":     {"type": "string", "format": "date",      "apex": {"minimum": "2024-01-01T:00:00:00", "maximum": "now"}},
+        "date":     { "type": "string", "format": "date",      "apex": {"minimum": "2024-01-01T00:00:00", "maximum": "now"}},
         "dat]')
-|| TO_CLOB(q'[etime": {"type": "string", "format": "date-time", "apex": {"minimum": "NOW", "maximum": "2026-12-31T23:59:00"}},
-        "time":     { "type": "string", "format": "time",     "apex": {"minimum": "09:00", "maximum": "16:59" }}
+|| TO_CLOB(q'[etime": { "type": "string", "format": "date-time", "apex": {"minimum": "NOW", "maximum": "2026-12-31T23:59:00"}},
+        "time":     { "type": "string", "format": "time",      "apex": {"minimum": "09:00", "maximum": "16:59" }}
       }
     },
     "array": {

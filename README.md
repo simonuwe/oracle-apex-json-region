@@ -92,14 +92,21 @@ This retrievs the JSON-schema for column **TAB.JSON_DATA** from the data diction
 
 #### JSON-duality-views
 
-The plugin can also retrieve the JSON-schema from a JSON-duality-views
+The plugin supports INSERT/UPDATE/DELETE and can also retrieve the JSON-schema from a JSON-duality-views.
 
+### JSON collection-tables
+The plugin supports SELECT/INSERT/UPDATE on JSON-collection-tables.
+
+### JSON collection-views
+
+In Oracle 23ai JSON-collection-views are always readonly, so only SELECT is supported.
 
 ## Know issues
 
 - In SQL-Workshop in APEX-Oracle-Cloud you can not create JSON-Columns (trying this returns ORA-00002 invalid datatype). Here you have to use CLOB columns. 
 - When using a CLOB for the JSONs use check constraint **IS JSON(STRICT)** to enforce that the JSON is returned wth **"** enclosed keys..
 - In APEX 22.1 there is a general issue (with plugin and without) with "**Modal Dialog** with template **Drawer**", this causes a jquery-error (looks like a datepicker issue). Without "Drawer" all work fine. 
+- Theme-Style **redwood-light** does not work as expected (show **Required** even for optional items).
 
 ## Current status
 - only one schema in **dependentSchemas**
