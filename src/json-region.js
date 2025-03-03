@@ -15,9 +15,9 @@ const ORTL_VERSION = '2.0.1';
 apex.libVersions = apex.libVersions || {oraclejet: "11.0.0"};
 // apex.env does not not exists, apex.locale only partially
 apex.locale.toNumber = apex.locale.toNumber || function(pValue, pFormat) { 
-  pValue = ('' + pValue).replace(apex.locale.getCurrency(), '');  // remove currency $€...
-  pValue = ('' + pValue).replace(apex.locale.getISOCurrency(), ''); // remove EUR/USD/...
-  pValue = ('' + pValue).replace(apex.locale.getGroupSeparator(), '');  // remove Groupseperator
+  pValue = ('' + pValue).replace(apex.locale.getCurrency(), '');           // remove currency $€...
+  pValue = ('' + pValue).replace(apex.locale.getISOCurrency(), '');        // remove EUR/USD/...
+  pValue = ('' + pValue).replace(apex.locale.getGroupSeparator(), '');     // remove Groupseperator
   pValue = ('' + pValue).replace(apex.locale.getDecimalSeparator(), '.');  // convert DecimalSeperator to .
   return Number(pValue)
 }; 
@@ -25,7 +25,7 @@ apex.locale.toNumber = apex.locale.toNumber || function(pValue, pFormat) {
 apex.date = apex.date||{
   parse: function(pDate, pFormat) {
     let l_ret =null;
-    if(pDate.includes(' ')){  // contains time
+    if(pDate.includes(' ')){           // contains time
       pDate = pDate.replace('T', ' '); // except datetime with " " or "T" between date and time, APEX<22.1 " " delimiter
       l_ret = $.datepicker.parseDate(pFormat.match('[^ ]+')[0], pDate);
       l_ret = new Date(l_ret.getTime() - l_ret.getTimezoneOffset()*60000);
@@ -154,7 +154,7 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
     // the valid values for some keys
   const validValues = {
     "type":             [C_JSON_OBJECT, C_JSON_ARRAY, C_JSON_STRING, C_JSON_NUMBER, C_JSON_INTEGER, C_JSON_BOOLEAN],
-    "extendedType":     [C_JSON_STRING, C_JSON_NUMBER, C_ORACLE_DATE, C_ORACLE_TIMESTAMP],
+    "extendedType":     [C_JSON_STRING, C_JSON_NUMBER, C_ORACLE_DATE, C_ORACLE_TIMESTAMP, C_JSON_ARRAY, C_JSON_OBJECT],
     "contentMediaType": [C_JSON_IMAGE_GIF, C_JSON_IMAGE_JPG, C_JSON_IMAGE_PNG],
     "contentEncoding":  [C_JSON_ENCODING_BASE64],
     "apex": {
@@ -621,13 +621,13 @@ console.error('propagateShow if: not implemented', schema.if)
     apex.debug.trace(">>jsonRegion.propagateRequired", dataitem, schema, mode);
     let item = $('#' + dataitem);
     item.prop("required",mode);
-    if(pOptions.apex_version>=C_APEX_VERSION_2201) {   // always remove the required markers, will be added if nessessary
+    if(pOptions.apex_version>=C_APEX_VERSION_2102) {   // always remove the required markers, will be added if nessessary
       $('#' + dataitem + '_CONTAINER .t-Form-itemRequired-marker').remove();
       $('#' + dataitem + '_CONTAINER .t-Form-itemRequired').remove();
     }
     if(mode==true){
       item.closest(".t-Form-fieldContainer").addClass("is-required");
-      if(pOptions.apex_version>=C_APEX_VERSION_2201) { 
+      if(pOptions.apex_version>=C_APEX_VERSION_2102) { 
             // add div t-Form-itemRequired-marker
         $('#' + dataitem + '_CONTAINER .t-Form-inputContainer').prepend('<div class="t-Form-itemRequired-marker" aria-hidden="true"></div>');
             // add div t-Form-itemRequired
@@ -1059,7 +1059,7 @@ console.error('propagateShow if: not implemented', schema.if)
 
     if(Array.isArray(schema.oneOf)){
       let nr = 0;
-      for(const l_schema of schema.anyOf){
+      for(const l_schema of schema.oneOf){
         const l_obj = {...l_schema};
         l_obj.type = C_JSON_OBJECT;
         setObjectValues(genItemname(dataitem , nr++), dataitem, l_obj, schema.readOnly, data);
@@ -1622,6 +1622,16 @@ console.error('propagateShow if: not implemented', schema.if)
       return;
     }
 
+     // process Oracle's extendedTypes
+        // Oracle's extendedType for >= 23.7
+    if(Array.isArray(schema.oneOf) && schema.oneOf.length==2) {
+      schema.oneOf = schema.oneOf.filter(item => item.extendedType!='null') 
+      if(schema.oneOf.length==1){
+        schema.extendedType = schema.oneOf[0].extendedType;
+        delete(schema.oneOf);
+      }
+    }
+
     if(schema.extendedType) {   // Oracle specific datatype, could be a string or an array of string
       if(Array.isArray(schema.extendedType)){    // for nullable  properties it is ["type", null]
         const l_nullPos = schema.extendedType.indexOf('null'); 
@@ -1750,6 +1760,8 @@ console.error('propagateShow if: not implemented', schema.if)
         schema.type = C_JSON_STRING;
         schema.format=schema.format|| C_JSON_FORMAT_DATETIME;
       break;
+      case C_JSON_ARRAY:
+      case C_JSON_OBJECT:
       case C_JSON_STRING:
       case C_JSON_BOOLEAN:
         schema.type = schema.extendedType;
@@ -2963,7 +2975,7 @@ console.error('propagateShow if: not implemented', schema.if)
     if(l_generated.wrappertype){ // input items is generated
       let label = generateLabel(item.name, item);
       let l_error = '';
-      if(pOptions.apex_version>=C_APEX_VERSION_2201) { 
+      if(pOptions.apex_version>=C_APEX_VERSION_2102) { 
         l_error = `
 <div class="t-Form-itemAssistance">
   <span id="#ID#_error_placeholder" class="a-Form-error u-visible" data-template-id="#DATATEMPLATE#"></span>
@@ -3407,14 +3419,14 @@ console.error('propagateShow if: not implemented', schema.if)
     apex.debug.trace(">>mergeSchema", staticSchema, genSchema);
     if(typeof genSchema == 'object'){
       if(Array.isArray(genSchema)){
-        l_schema = [ ...staticSchema ];
         staticSchema = staticSchema || [];
-        for (const [ind, entry] of gen_schema.entries()) { 
+        l_schema = [ ...staticSchema ];
+        for (const [idx, entry] of genSchema.entries()) { 
           l_schema[idx] = mergeSchema(staticSchema[idx], entry);
         }
       } else {
-        l_schema = { ...staticSchema };
         staticSchema = staticSchema || {};
+        l_schema = { ...staticSchema };
         for(let [l_name, l_item] of Object.entries(genSchema)){ 
           l_schema[l_name] = mergeSchema(staticSchema[l_name], genSchema[l_name]);
         }
@@ -3442,6 +3454,15 @@ console.error('propagateShow if: not implemented', schema.if)
     pOptions.schema = {};
   }
 
+  if(pOptions.additionalschema) {
+    try{
+      pOptions.additionalschema = JSON.parse(pOptions.additionalschema);
+    } catch(e) {
+      apex.debug.error('json-region: additionalschema', e, pOptions.additionalschema);
+      pOptions.additionalschema = {};
+    }
+  }
+
     // generate the JSON from dataitem-field
   try {
     const l_data = apex.item(pOptions.dataitem).getValue();
@@ -3458,10 +3479,13 @@ console.error('propagateShow if: not implemented', schema.if)
     let l_schema ={};
     apex.debug.trace('static-schema', JSON.stringify(pOptions.schema));
     l_schema = generateSchema(l_schema, gData||{});
-    apex.debug.trace('gen-schema', JSON.stringify(l_schema));
-    pOptions.schema = mergeSchema(pOptions.schema, l_schema);
     console.info('+++JSON-schema+++', JSON.stringify(pOptions.schema));
   }
+
+  if(pOptions.additionalschema){  // have to merge the JSON-schema
+    pOptions.schema = mergeSchema(pOptions.additionalschema, pOptions.schema);
+  }
+
 
   pOptions = adjustOptions(pOptions);
 
