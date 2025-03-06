@@ -28,7 +28,7 @@ prompt APPLICATION 100 - json-region-demo
 -- Application Export:
 --   Application:     100
 --   Name:            json-region-demo
---   Date and Time:   09:00 Monday March 3, 2025
+--   Date and Time:   10:23 Thursday March 6, 2025
 --   Exported By:     UWE
 --   Flashback:       0
 --   Export Type:     Component Export
@@ -311,9 +311,9 @@ wwv_flow_api.create_plugin(
 ,p_substitute_attributes=>true
 ,p_subscribe_plugin_settings=>true
 ,p_help_text=>'This plug-in was downloaded from https://github.com/simonuwe/oracle-apex-json-region and backported to APEX 20.2.'
-,p_version_identifier=>'0.9.7.2b'
+,p_version_identifier=>'0.9.7.3'
 ,p_about_url=>'https://github.com/simonuwe/oracle-apex-json-region'
-,p_files_version=>251
+,p_files_version=>252
 );
 wwv_flow_api.create_plugin_attribute(
  p_id=>wwv_flow_api.id(23082134071690739)
@@ -575,6 +575,9 @@ wwv_flow_api.create_plugin_attribute(
 ,p_is_required=>false
 ,p_default_value=>'N'
 ,p_is_translatable=>false
+,p_depending_on_attribute_id=>wwv_flow_api.id(72718165632441075)
+,p_depending_on_has_to_exist=>true
+,p_depending_on_condition_type=>'NULL'
 ,p_help_text=>wwv_flow_string.join(wwv_flow_t_varchar2(
 '"Merge Schema" is used to overwrite (or add proerties to) the JSON-schema retrieved from the data dictionary or generated from the data.',
 'A usecase is adding "apex" properties to the JSON-schema or changing the sort order of properties.'))
@@ -2089,7 +2092,7 @@ end;
 /
 begin
 wwv_flow_api.create_plugin_file(
- p_id=>wwv_flow_api.id(6640976774391552)
+ p_id=>wwv_flow_api.id(6903568363836385)
 ,p_plugin_id=>wwv_flow_api.id(72716234722415515)
 ,p_file_name=>'json-region.js'
 ,p_mime_type=>'text/javascript'

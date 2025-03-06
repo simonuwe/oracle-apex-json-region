@@ -9629,53 +9629,33 @@
       ],
       "value": "first"
     }, {
-      "id": "9373b2e1-beca-4028-9e60-37f427983de8",
-      "comment": "",
-      "command": "type",
-      "target": "id=P11_DATA_birthdate_input",
-      "targets": [
-        ["id=P11_DATA_birthdate_input", "id"],
-        ["name=P11_DATA_birthdate", "name"],
-        ["css=#P11_DATA_birthdate_input", "css:finder"],
-        ["xpath=//input[@id='P11_DATA_birthdate_input']", "xpath:attributes"],
-        ["xpath=//a-date-picker[@id='P11_DATA_birthdate']/input", "xpath:idRelative"],
-        ["xpath=//div[2]/div[3]/div/div[2]/div[2]/a-date-picker/input", "xpath:position"]
-      ],
-      "value": "01.11.2024"
-    }, {
-      "id": "a610f28e-0686-4ebe-a358-6be160aeb136",
-      "comment": "",
-      "command": "sendKeys",
-      "target": "id=P11_DATA_birthdate_input",
-      "targets": [
-        ["id=P11_DATA_birthdate_input", "id"],
-        ["name=P11_DATA_birthdate", "name"],
-        ["css=#P11_DATA_birthdate_input", "css:finder"],
-        ["xpath=//input[@id='P11_DATA_birthdate_input']", "xpath:attributes"],
-        ["xpath=//a-date-picker[@id='P11_DATA_birthdate']/input", "xpath:idRelative"],
-        ["xpath=//div[2]/div[3]/div/div[2]/div[2]/a-date-picker/input", "xpath:position"]
-      ],
-      "value": "${KEY_ENTER}"
-    }, {
       "id": "a88d45fd-6c3e-4633-8388-834552451e7f",
+      "comment": "",
+      "command": "click",
+      "target": "css=#P11_DATA_birthdate .a-Icon",
+      "targets": [
+        ["css=#P11_DATA_birthdate .a-Icon", "css:finder"],
+        ["xpath=//a-date-picker[@id='P11_DATA_birthdate']/button/span", "xpath:idRelative"],
+        ["xpath=//div[4]/div/div[2]/div[2]/a-date-picker/button/span", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "44cfb6c1-9da3-44b7-8304-6c7fb7ede015",
       "comment": "",
       "command": "selectFrame",
       "target": "relative=parent",
-      "targets": [
-        ["relative=parent"]
-      ],
+      "targets": [],
       "value": ""
     }, {
       "id": "822ff5dc-01e6-4c43-9f45-cecca3092efd",
       "comment": "",
       "command": "click",
-      "target": "css=.a-DatePicker--today",
+      "target": "css=#P11_DATA_birthdate_dialog .a-DatePicker-footer .a-Button",
       "targets": [
-        ["css=.a-DatePicker--today", "css:finder"],
-        ["xpath=(//button[@type='button'])[44]", "xpath:attributes"],
+        ["css=#P11_DATA_birthdate_dialog .a-DatePicker-footer .a-Button", "css:finder"],
+        ["xpath=(//button[@type='button'])[39]", "xpath:attributes"],
         ["xpath=//div[@id='P11_DATA_birthdate_dialog']/div/div[3]/div/button", "xpath:idRelative"],
-        ["xpath=//div[27]/div[2]/div/div[3]/div/button", "xpath:position"],
-        ["xpath=//button[contains(.,'Today')]", "xpath:innerText"]
+        ["xpath=//div[21]/div[2]/div/div[3]/div/button", "xpath:position"]
       ],
       "value": ""
     }, {
@@ -10853,6 +10833,6 @@
     "timeout": 300,
     "tests": []
   }],
-  "urls": ["https://localhost:10443/", "https://localhost:10443/ords/r/uwe/json-region-demo/objects", "https://localhost:11443/ords/r/uwe/json-region-demo/objects", "https://localhost:11443/ords/r/uwe/json-region-demo/"],
+  "urls": ["https://localhost:10443/", "https://localhost:10443/ords/r/uwe/json-region-demo/objects", "https://localhost:11443/ords/r/uwe/json-region-demo/objects", "https://localhost:11443/ords/r/uwe/json-region-demo/", "https://localhost:10443/ords/r/uwe/json-region-demo/"],
   "plugins": []
 }

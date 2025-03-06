@@ -28,7 +28,7 @@ prompt APPLICATION 100 - json-region-demo
 -- Application Export:
 --   Application:     100
 --   Name:            json-region-demo
---   Date and Time:   09:01 Monday March 3, 2025
+--   Date and Time:   10:24 Thursday March 6, 2025
 --   Exported By:     UWE
 --   Flashback:       0
 --   Export Type:     Application Export
@@ -121,7 +121,7 @@ wwv_flow_api.create_flow(
 ,p_substitution_string_01=>'APP_NAME'
 ,p_substitution_value_01=>'json-region-demo'
 ,p_last_updated_by=>'UWE'
-,p_last_upd_yyyymmddhh24miss=>'20250303085905'
+,p_last_upd_yyyymmddhh24miss=>'20250306102205'
 ,p_file_prefix => nvl(wwv_flow_application_install.get_static_app_file_prefix,'')
 ,p_files_version=>3
 ,p_ui_type_name => null
@@ -14773,9 +14773,9 @@ wwv_flow_api.create_plugin(
 ,p_substitute_attributes=>true
 ,p_subscribe_plugin_settings=>true
 ,p_help_text=>'This plug-in was downloaded from https://github.com/simonuwe/oracle-apex-json-region and backported to APEX 20.2.'
-,p_version_identifier=>'0.9.7.2b'
+,p_version_identifier=>'0.9.7.3'
 ,p_about_url=>'https://github.com/simonuwe/oracle-apex-json-region'
-,p_files_version=>251
+,p_files_version=>252
 );
 wwv_flow_api.create_plugin_attribute(
  p_id=>wwv_flow_api.id(23082134071690739)
@@ -15037,6 +15037,9 @@ wwv_flow_api.create_plugin_attribute(
 ,p_is_required=>false
 ,p_default_value=>'N'
 ,p_is_translatable=>false
+,p_depending_on_attribute_id=>wwv_flow_api.id(72718165632441075)
+,p_depending_on_has_to_exist=>true
+,p_depending_on_condition_type=>'NULL'
 ,p_help_text=>wwv_flow_string.join(wwv_flow_t_varchar2(
 '"Merge Schema" is used to overwrite (or add proerties to) the JSON-schema retrieved from the data dictionary or generated from the data.',
 'A usecase is adding "apex" properties to the JSON-schema or changing the sort order of properties.'))
@@ -16551,7 +16554,7 @@ end;
 /
 begin
 wwv_flow_api.create_plugin_file(
- p_id=>wwv_flow_api.id(6640976774391552)
+ p_id=>wwv_flow_api.id(6903568363836385)
 ,p_plugin_id=>wwv_flow_api.id(72716234722415515)
 ,p_file_name=>'json-region.js'
 ,p_mime_type=>'text/javascript'
@@ -17845,7 +17848,7 @@ wwv_flow_api.create_page(
 ,p_page_is_public_y_n=>'Y'
 ,p_protection_level=>'C'
 ,p_last_updated_by=>'UWE'
-,p_last_upd_yyyymmddhh24miss=>'20250302164746'
+,p_last_upd_yyyymmddhh24miss=>'20250303171101'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(9988479791849210)
@@ -18511,7 +18514,7 @@ wwv_flow_api.create_page(
 ,p_page_is_public_y_n=>'Y'
 ,p_protection_level=>'C'
 ,p_last_updated_by=>'UWE'
-,p_last_upd_yyyymmddhh24miss=>'20250303085905'
+,p_last_upd_yyyymmddhh24miss=>'20250303171101'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(10164962996806081)
@@ -18799,7 +18802,7 @@ wwv_flow_api.create_page(
 ,p_page_is_public_y_n=>'Y'
 ,p_protection_level=>'C'
 ,p_last_updated_by=>'nobody'
-,p_last_upd_yyyymmddhh24miss=>'20250226175825'
+,p_last_upd_yyyymmddhh24miss=>'20250306100521'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(10334468624513161)
@@ -19205,7 +19208,7 @@ wwv_flow_api.create_page(
 ,p_page_is_public_y_n=>'Y'
 ,p_protection_level=>'C'
 ,p_last_updated_by=>'UWE'
-,p_last_upd_yyyymmddhh24miss=>'20250302164746'
+,p_last_upd_yyyymmddhh24miss=>'20250303171101'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(11724645871722905)
@@ -20017,7 +20020,7 @@ wwv_flow_api.create_page(
 ,p_page_is_public_y_n=>'Y'
 ,p_protection_level=>'C'
 ,p_last_updated_by=>'UWE'
-,p_last_upd_yyyymmddhh24miss=>'20250302164746'
+,p_last_upd_yyyymmddhh24miss=>'20250303171101'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(10420330775424614)
@@ -20625,7 +20628,7 @@ wwv_flow_api.create_page(
 ,p_page_is_public_y_n=>'Y'
 ,p_protection_level=>'C'
 ,p_last_updated_by=>'UWE'
-,p_last_upd_yyyymmddhh24miss=>'20250302164746'
+,p_last_upd_yyyymmddhh24miss=>'20250303171101'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(28507713439603422)
@@ -21078,7 +21081,7 @@ wwv_flow_api.create_page(
 ,p_page_is_public_y_n=>'Y'
 ,p_protection_level=>'C'
 ,p_last_updated_by=>'UWE'
-,p_last_upd_yyyymmddhh24miss=>'20250302164746'
+,p_last_upd_yyyymmddhh24miss=>'20250303171101'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(28490870768312612)

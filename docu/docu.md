@@ -477,6 +477,18 @@ Configuration of the **JSON-region**
 
 The query **SQL-Query for referenced JSON-schema** is only needed, in case a table for the handling of JSON-schema-reference is installed (see below **Server references with /defs/xyz**).
 
+When setting **Merge Schema**, you can specify an additional **partial JSON-schema**, which is merged with the JSON-schema retrievd from the database. For example:
+```JSON
+{
+  "properties": {
+    "creditcard": {"pattern": "[0-9]{4}( [0-9]{4}){3}"},
+    "validity":   {},
+    "securitycode": {"apex": {"itemtype": "password"}}
+  }
+}
+```
+adds the attribute **pattern** to the property creditcard and changes the securitycode item a password-item without displaying the entered data. It also fixes the order of the 3 properties **creditcard**, **validity**, **securitycode**, even the JSON-schema in the database returns another order.
+
 ### Generated JSON-schema as a base for a fixed JSON-schema
 
 With **No fixed schema** the JSON-schema will be generated based on the JSON-data. This could be used as a base for further improvements (adding other items, change the itemtype for properties, ...). This JSON-schema could be extracted from the Browser-console.
@@ -683,9 +695,9 @@ WHERE c.table_name='TAB' AND column_name='JSON_DATA'
 
 This retrievs the JSON-schema for column **TAB.JSON_DATA** from the data dictionary, as long as the constraint-text is less than 4000 char long (the full text isin a LONG-column, which is not easy to process). So changing this VALIDATE setting will automatically adopt the layout of the json-region in your APEX-UI.
 
-#### Relational-Duality-views
+#### JSON-Duality-views
 
-The JSON returned from a relational-duality view contains the Oracle-specific property "_metadata", which is be ignored and not displayed by the plugin.
+The JSON returned from a JSON-duality view contains the Oracle-specific property "_metadata", which is be ignored and not displayed by the plugin.
 
 ```JSON
 {
@@ -783,9 +795,11 @@ The result contains some Oracle-specific extensions of a JSON-schema.
 }
 ```
 When generating the UI the Oracle-specific attributes with names starting with "_" are ignored. The property "dbPrimaryKey" is ignored which is unfortunately part of "properties": {...}.
+Starting with Oracle 23.7 the JSON-schema looks a little bit different. For example it uses **oneOf** for not required properties and **"extendedType": "array"** for arrays.
 
-The "Lost Update Detection" of APEX does not work with the relational-duality-views. This is caused by the property **_metadata.asof**, which changes on each select (it's the current SCN of the database), so the checksum of the data changes per select.
-The Workarround: **switch off "Prevent Lost Updates"**
+The "Lost Update Detection" of APEX does not work with the JSON-duality-views. This is caused by the property **_metadata.asof**, which changes on each select (it's the current SCN of the database), so the checksum of the data changes per select.
+
+The Workarround: **switch off "Prevent Lost Updates"**.
 
 #### Validation of JSON-column with variable JSON-schema
 
