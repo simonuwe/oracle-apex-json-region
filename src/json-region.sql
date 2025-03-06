@@ -1,6 +1,6 @@
 /*
- * JSON-region-plugin
- * (c) Uwe Simon 2023,2024
+ * JSON-region-plugin 0.9.7.3
+ * (c) Uwe Simon 2023, 2025
  * Apache License Version 2.0
 */
 
@@ -106,6 +106,7 @@ FUNCTION render_region(p_region              IN apex_plugin.t_region,
   l_template            p_region.attribute_11%TYPE :=  NVL(p_region.attribute_11, 'floating');          -- Template used for input items        
   l_textareawidth       p_region.attribute_01%TYPE :=  NVL(p_region.attribute_01, 250);                 -- The limit when textarea is used for long tex inputs
   l_keepattributes      p_region.attribute_06%TYPE :=  NVL(p_region.attribute_06, 'N');                 -- keep additional attributes not mentioned in JSON-schema
+  l_additionalschema    p_region.attribute_14%TYPE := p_region.attribute_14;                            -- an additional schema merged with the "original" JSON-schema
   l_headers             p_region.attribute_07%TYPE :=  NVL(p_region.attribute_07, 'N');                 -- Show headers when sub-objects are in the JSON-schema
   l_hide                BOOLEAN                    :=  NVL(p_region.attribute_08, 'Y')='Y';             -- Hide the JSON-field (default is true)
   l_removenulls         BOOLEAN                    :=  NVL(p_region.attribute_09, 'Y')='Y';             -- Remove attributed from JSON with a NULL-value  
@@ -161,22 +162,23 @@ $end
        apex_javascript.add_value(apex_plugin.get_ajax_identifier) ||       
                                 '{' ||
          apex_javascript.add_attribute('isDynamic', l_query IS NOT NULL AND LENGTH(l_query)>0) ||                                
-         apex_javascript.add_attribute('generateSchema', (l_source = '0'))||                                
-         apex_javascript.add_attribute('queryitems',     l_queryitems) ||
-         apex_javascript.add_attribute('dataitem',       l_dataitem) ||
-         apex_javascript.add_attribute('name',           l_name) ||
-         apex_javascript.add_attribute('colwidth',       l_colwidth) ||
-         apex_javascript.add_attribute('readonly',       l_readonly) ||
-         apex_javascript.add_attribute('textareawidth',  l_textareawidth) ||
-         apex_javascript.add_attribute('keepAttributes', l_keepattributes!='N') ||
-         apex_javascript.add_attribute('headers',        l_headers!='N') ||
-         apex_javascript.add_attribute('hide',           l_hide) || 
-         apex_javascript.add_attribute('removeNulls',    l_removenulls) || 
-         apex_javascript.add_attribute('template',       l_template) || 
-         apex_javascript.add_attribute('schema',         l_schema) ||
-         apex_javascript.add_attribute('apex_files',     APEX_APPLICATION.G_IMAGE_PREFIX) ||
-         apex_javascript.add_attribute('nls_date_format',V('APP_NLS_DATE_FORMAT')) ||
-         apex_javascript.add_attribute('apex_version',   l_apex_version, false,false) ||
+         apex_javascript.add_attribute('generateSchema',   (l_source = '0'))||                                
+         apex_javascript.add_attribute('queryitems',       l_queryitems) ||
+         apex_javascript.add_attribute('dataitem',         l_dataitem) ||
+         apex_javascript.add_attribute('name',             l_name) ||
+         apex_javascript.add_attribute('colwidth',         l_colwidth) ||
+         apex_javascript.add_attribute('readonly',         l_readonly) ||
+         apex_javascript.add_attribute('textareawidth',    l_textareawidth) ||
+         apex_javascript.add_attribute('keepAttributes',   l_keepattributes!='N') ||
+         apex_javascript.add_attribute('headers',          l_headers!='N') ||
+         apex_javascript.add_attribute('hide',             l_hide) || 
+         apex_javascript.add_attribute('removeNulls',      l_removenulls) || 
+         apex_javascript.add_attribute('template',         l_template) || 
+         apex_javascript.add_attribute('schema',           l_schema) ||
+         apex_javascript.add_attribute('additionalschema', l_additionalschema) ||
+         apex_javascript.add_attribute('apex_files',       APEX_APPLICATION.G_IMAGE_PREFIX) ||
+         apex_javascript.add_attribute('nls_date_format',  V('APP_NLS_DATE_FORMAT')) ||
+         apex_javascript.add_attribute('apex_version',     l_apex_version, false,false) ||
                                 '});'
   );                                 
   RETURN l_result;

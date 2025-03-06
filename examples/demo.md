@@ -2,7 +2,12 @@
 
 An online-demo could be found **[here](https://tlodfjxbrej9i6r-uwe01.adb.eu-frankfurt-1.oraclecloudapps.com/ords/r/uwe/json-region-demo/home)**. 
 
-You can create create here new objects and edit existing with varying JSON-schemas. 
+This demo is compatible with **APEX21.2 and above**.
+
+When using the **JSON-duality-views**, **JSON-validate-constraints**, **JSON-collection-tables** and **JSON-collection-views**, at least **Oracle 23ai** is required.
+The **INSERT/UPDATE** on **JSON-collection-tables** requires at least **Oracle 23.7**, **JSON-collection-views** are always **readonly**.
+
+You can create here new objects and edit existing with varying JSON-schemas. 
 
 When creating a new object you can select one of the existings schemas in **object_types**. Type **Full-Example** and **Hotel** both together show the variaty of supported field-items/formats.
 

@@ -1,3 +1,16 @@
+# 0.9.7.3 2024-03-06
+
+## New Features
+
+  - #182 Merge generate JSON-schema with fixed JSON-schema
+  - #184 Support of 23ai COLLECTION TABLE/VIEW
+  - #185 Support of universal-scheme style **Redwood-light**
+
+## Fixed Isses
+
+  - #158 "additionalProperties": true does not remove data of conditional-schema expressions
+  - #186 Oracle 23.7: JSON-schema of Duality-view with "optional" items now uses "oneOf" 
+
 # 0.9.7.2 2024-01-25
 
 ## New Features

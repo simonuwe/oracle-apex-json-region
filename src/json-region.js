@@ -1,8 +1,8 @@
 "use strict"
 
 /*
- * JSON-region 0.9.7.2
- * Supports Oracle-APEX >=20.2
+ * JSON-region 0.9.7.3
+ * Supports Oracle-APEX >=20.2 <=24.2
  * 
  * APEX JSON-region plugin
  * (c) Uwe Simon 2023, 2024, 2025
@@ -15,9 +15,9 @@ const ORTL_VERSION = '2.0.1';
 apex.libVersions = apex.libVersions || {oraclejet: "11.0.0"};
 // apex.env does not not exists, apex.locale only partially
 apex.locale.toNumber = apex.locale.toNumber || function(pValue, pFormat) { 
-  pValue = ('' + pValue).replace(apex.locale.getCurrency(), '');  // remove currency $€...
-  pValue = ('' + pValue).replace(apex.locale.getISOCurrency(), ''); // remove EUR/USD/...
-  pValue = ('' + pValue).replace(apex.locale.getGroupSeparator(), '');  // remove Groupseperator
+  pValue = ('' + pValue).replace(apex.locale.getCurrency(), '');           // remove currency $€...
+  pValue = ('' + pValue).replace(apex.locale.getISOCurrency(), '');        // remove EUR/USD/...
+  pValue = ('' + pValue).replace(apex.locale.getGroupSeparator(), '');     // remove Groupseperator
   pValue = ('' + pValue).replace(apex.locale.getDecimalSeparator(), '.');  // convert DecimalSeperator to .
   return Number(pValue)
 }; 
@@ -25,7 +25,7 @@ apex.locale.toNumber = apex.locale.toNumber || function(pValue, pFormat) {
 apex.date = apex.date||{
   parse: function(pDate, pFormat) {
     let l_ret =null;
-    if(pDate.includes(' ')){  // contains time
+    if(pDate.includes(' ')){           // contains time
       pDate = pDate.replace('T', ' '); // except datetime with " " or "T" between date and time, APEX<22.1 " " delimiter
       l_ret = $.datepicker.parseDate(pFormat.match('[^ ]+')[0], pDate);
       l_ret = new Date(l_ret.getTime() - l_ret.getTimezoneOffset()*60000);
@@ -154,7 +154,7 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
     // the valid values for some keys
   const validValues = {
     "type":             [C_JSON_OBJECT, C_JSON_ARRAY, C_JSON_STRING, C_JSON_NUMBER, C_JSON_INTEGER, C_JSON_BOOLEAN],
-    "extendedType":     [C_JSON_STRING, C_JSON_NUMBER, C_ORACLE_DATE, C_ORACLE_TIMESTAMP],
+    "extendedType":     [C_JSON_STRING, C_JSON_NUMBER, C_ORACLE_DATE, C_ORACLE_TIMESTAMP, C_JSON_ARRAY, C_JSON_OBJECT],
     "contentMediaType": [C_JSON_IMAGE_GIF, C_JSON_IMAGE_JPG, C_JSON_IMAGE_PNG],
     "contentEncoding":  [C_JSON_ENCODING_BASE64],
     "apex": {
@@ -249,51 +249,32 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
     }
   }
 
+  function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));  
+  }
+
   /*
-   * Wait until the richtext-editor is initialized
+   * Wait until the richtext-editor < APEX-24.2 is initialized
    */
-  async function richtextHack(){
+  async function richtextHack(itemtypes){
     /*
      * Check whether the richtext-editor is initialized
     */
-    let editorElement = $('#' + pRegionId + ' a-rich-text-editor');;
-
-    function checkEditor(resolve) {
-      if(editorElement[0] && pOptions.apex_version <C_APEX_VERSION_2402 && !editorElement[0].getEditor()
-        ){
-        setTimeout(checkEditor.bind(this, resolve), 30);
-      }  else {
-        resolve();
-      }
-    }
-   /*
-     * Some hacks
-     * Wait for Richttext-Editor to be initialized
-     * otherwise apex.item('richtext-ITEM').setValue(...) will cause undefined error 
-    */
-    function waitForEditor() {
-      return new Promise(function (resolve, reject) {
-        checkEditor(resolve);
-      });
-    }
-
-    if(editorElement && editorElement.length){
+    if(pOptions.apex_version < C_APEX_VERSION_2402 && itemtypes.itemtype.richtext) {
+      let editorElement = $('#' + pRegionId + ' a-rich-text-editor');;
       apex.debug.trace ('wait for richtext-editor initializing ...');
-      await waitForEditor();
+      while(editorElement && editorElement.length && !editorElement[0].getEditor()){  // wait until editor is created
+        await sleep(10);
+      }
       apex.debug.trace ('wait for richtext-editor initialized');
     }
   }
 
 
   /*
-   * Wait until the richtext-editor is initialized
+   * Wait until the richtext-editor >= APEX24.2 is initialized
    */
   async function richtextOrtlHack(itemtypes){
-            
-    function sleep(ms) {
-      return new Promise(resolve => setTimeout(resolve, ms));  
-    }
-
     if(pOptions.apex_version>= C_APEX_VERSION_2402 && itemtypes.itemtype.richtext){
       let editorElement = $('#' + pRegionId + ' .ck-content');
       apex.debug.trace ('wait for richtext-editor initializing ...');
@@ -640,8 +621,18 @@ console.error('propagateShow if: not implemented', schema.if)
     apex.debug.trace(">>jsonRegion.propagateRequired", dataitem, schema, mode);
     let item = $('#' + dataitem);
     item.prop("required",mode);
+    if(pOptions.apex_version>=C_APEX_VERSION_2102) {   // always remove the required markers, will be added if nessessary
+      $('#' + dataitem + '_CONTAINER .t-Form-itemRequired-marker').remove();
+      $('#' + dataitem + '_CONTAINER .t-Form-itemRequired').remove();
+    }
     if(mode==true){
       item.closest(".t-Form-fieldContainer").addClass("is-required");
+      if(pOptions.apex_version>=C_APEX_VERSION_2102) { 
+            // add div t-Form-itemRequired-marker
+        $('#' + dataitem + '_CONTAINER .t-Form-inputContainer').prepend('<div class="t-Form-itemRequired-marker" aria-hidden="true"></div>');
+            // add div t-Form-itemRequired
+        $('#' + dataitem + '_CONTAINER .t-Form-itemAssistance').append('<div class="t-Form-itemRequired" aria-hidden="true">Required</div>');
+      }
     } else {
       item.closest(".t-Form-fieldContainer").removeClass("is-required");
     }
@@ -1068,7 +1059,7 @@ console.error('propagateShow if: not implemented', schema.if)
 
     if(Array.isArray(schema.oneOf)){
       let nr = 0;
-      for(const l_schema of schema.anyOf){
+      for(const l_schema of schema.oneOf){
         const l_obj = {...l_schema};
         l_obj.type = C_JSON_OBJECT;
         setObjectValues(genItemname(dataitem , nr++), dataitem, l_obj, schema.readOnly, data);
@@ -1631,6 +1622,16 @@ console.error('propagateShow if: not implemented', schema.if)
       return;
     }
 
+     // process Oracle's extendedTypes
+        // Oracle's extendedType for >= 23.7
+    if(Array.isArray(schema.oneOf) && schema.oneOf.length==2) {
+      schema.oneOf = schema.oneOf.filter(item => item.extendedType!='null') 
+      if(schema.oneOf.length==1){
+        schema.extendedType = schema.oneOf[0].extendedType;
+        delete(schema.oneOf);
+      }
+    }
+
     if(schema.extendedType) {   // Oracle specific datatype, could be a string or an array of string
       if(Array.isArray(schema.extendedType)){    // for nullable  properties it is ["type", null]
         const l_nullPos = schema.extendedType.indexOf('null'); 
@@ -1759,6 +1760,8 @@ console.error('propagateShow if: not implemented', schema.if)
         schema.type = C_JSON_STRING;
         schema.format=schema.format|| C_JSON_FORMAT_DATETIME;
       break;
+      case C_JSON_ARRAY:
+      case C_JSON_OBJECT:
       case C_JSON_STRING:
       case C_JSON_BOOLEAN:
         schema.type = schema.extendedType;
@@ -2972,11 +2975,17 @@ console.error('propagateShow if: not implemented', schema.if)
     if(l_generated.wrappertype){ // input items is generated
       let label = generateLabel(item.name, item);
       let l_error = '';
-      if(pOptions.apex_version>=C_APEX_VERSION_2201) { 
-          l_error = `
+      if(pOptions.apex_version>=C_APEX_VERSION_2102) { 
+        l_error = `
 <div class="t-Form-itemAssistance">
   <span id="#ID#_error_placeholder" class="a-Form-error u-visible" data-template-id="#DATATEMPLATE#"></span>
+`
+        if(item.isRequired){
+          l_error = l_error + `
   <div class="t-Form-itemRequired" aria-hidden="true">Required</div>
+`
+        }
+          l_error = l_error + `
 </div>
 ` 
       } else {
@@ -2999,7 +3008,7 @@ console.error('propagateShow if: not implemented', schema.if)
         <label for="#ID#" id="#ID#_LABEL" class="t-Form-label #LABELHIDDEN#">#TOPLABEL#</label>
       </div>
       <div class="t-Form-inputContainer #INPUTTEMPLATE#">
-        <div class="t-Form-itemRequired-marker" aria-hidden="true"></div>
+        #REQUIREDMARKER#
         <div class="t-Form-itemWrapper">
 ` + l_generated.html + 
 ` 
@@ -3039,6 +3048,7 @@ console.error('propagateShow if: not implemented', schema.if)
                                                      "PATTERN":      item.pattern?'pattern="'+item.pattern+'"':"",  
                                                      "REQUIRED":     item.isRequired?'required=""':"",
                                                      "ISREQUIRED":   item.isRequired?'is-required':"",
+                                                     "REQUIREDMARKER": item.isRequired?'<div class="t-Form-itemRequired-marker" aria-hidden="true"></div>':'',
                                                      "MIN":          ("minimum" in item)?([C_JSON_FORMAT_DATE, C_JSON_FORMAT_DATETIME, C_JSON_FORMAT_TIME].includes(item.format)?'min':'data-min')+'="'+item.minimum+'"':"",
                                                      "MAX":          ("maximum" in item)?([C_JSON_FORMAT_DATE, C_JSON_FORMAT_DATETIME, C_JSON_FORMAT_TIME].includes(item.format)?'max':'data-max')+ '="'+item.maximum+'"':"",
                                                      "VALUE":        l_value,
@@ -3301,8 +3311,9 @@ console.error('propagateShow if: not implemented', schema.if)
   async function refresh(newItem) {
     apex.debug.trace(">>jsonRegion.refresh");
     apex.debug.trace('jsonRegion.refresh', 'data', newItem, gData);
-
-    await richtextHack();
+    let l_itemtypes = null;
+    l_itemtypes = getItemtypes(pOptions.schema, l_itemtypes);
+    await richtextHack(l_itemtypes);
 
         // attach the fields to the generated UI
     attachObject(pOptions.dataitem, null, pOptions.schema, pOptions.readonly, gData, newItem, pOptions.schema, pOptions.dataitem);
@@ -3399,6 +3410,34 @@ console.error('propagateShow if: not implemented', schema.if)
     apex.debug.trace("<<adjustOptions", options); 
     return options;
   }
+
+  /*
+    merge to JSON-schema, so that the attributes of parameter staticSchema are preservered
+   */
+  function mergeSchema(staticSchema, genSchema){
+    let l_schema = undefined;
+    apex.debug.trace(">>mergeSchema", staticSchema, genSchema);
+    if(typeof genSchema == 'object'){
+      if(Array.isArray(genSchema)){
+        staticSchema = staticSchema || [];
+        l_schema = [ ...staticSchema ];
+        for (const [idx, entry] of genSchema.entries()) { 
+          l_schema[idx] = mergeSchema(staticSchema[idx], entry);
+        }
+      } else {
+        staticSchema = staticSchema || {};
+        l_schema = { ...staticSchema };
+        for(let [l_name, l_item] of Object.entries(genSchema)){ 
+          l_schema[l_name] = mergeSchema(staticSchema[l_name], genSchema[l_name]);
+        }
+      }
+    } else {
+      l_schema = staticSchema || genSchema;
+    }
+    apex.debug.trace("<<mergeSchema", l_schema); 
+    return(l_schema);
+  }
+
   /* -----------------------------------------------------------------
    * here the function code starts
   */
@@ -3415,6 +3454,15 @@ console.error('propagateShow if: not implemented', schema.if)
     pOptions.schema = {};
   }
 
+  if(pOptions.additionalschema) {
+    try{
+      pOptions.additionalschema = JSON.parse(pOptions.additionalschema);
+    } catch(e) {
+      apex.debug.error('json-region: additionalschema', e, pOptions.additionalschema);
+      pOptions.additionalschema = {};
+    }
+  }
+
     // generate the JSON from dataitem-field
   try {
     const l_data = apex.item(pOptions.dataitem).getValue();
@@ -3429,10 +3477,15 @@ console.error('propagateShow if: not implemented', schema.if)
 
   if(pOptions.generateSchema){  // generate JSON-schema based on JSON-data
     let l_schema ={};
+    apex.debug.trace('static-schema', JSON.stringify(pOptions.schema));
     l_schema = generateSchema(l_schema, gData||{});
-    console.info('+++JSON-schema+++', JSON.stringify(l_schema));
-    pOptions.schema = l_schema;
+    console.info('+++JSON-schema+++', JSON.stringify(pOptions.schema));
   }
+
+  if(pOptions.additionalschema){  // have to merge the JSON-schema
+    pOptions.schema = mergeSchema(pOptions.additionalschema, pOptions.schema);
+  }
+
 
   pOptions = adjustOptions(pOptions);
 
@@ -3497,7 +3550,7 @@ console.error('propagateShow if: not implemented', schema.if)
                 apex.debug.trace('pOptions:', pOptions);
                 showFields(l_itemtypes, true);
                 await loadRequiredFiles(l_itemtypes);
-                await richtextHack();
+                await richtextHack(l_itemtypes);
                 gData = null;
 //                gData = defaultValues(pOptions.schema);
 //                removeNulls(gData);
