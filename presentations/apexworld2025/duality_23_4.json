@@ -1,0 +1,133 @@
+{
+  "title" : "JSON23AI",
+  "dbObject" : "UWE.JSON23AI",
+  "dbObjectType" : "dualityView",
+  "dbObjectProperties" :
+  [
+    "insert",
+    "update",
+    "delete",
+    "check"
+  ],
+  "type" : "object",
+  "properties" :
+  {
+    "_id" :
+    {
+      "extendedType" : "number",
+      "sqlScale" : 0,
+      "generated" : true,
+      "dbFieldProperties" :
+      [
+        "check"
+      ]
+    },
+    "_metadata" :
+    {
+      "etag" :
+      {
+        "extendedType" : "string",
+        "maxLength" : 200
+      },
+      "asof" :
+      {
+        "extendedType" : "string",
+        "maxLength" : 20
+      }
+    },
+    "dbPrimaryKey" :
+    [
+      "_id"
+    ],
+    "name" :
+    {
+      "extendedType" : "string",
+      "maxLength" : 255,
+      "dbFieldProperties" :
+      [
+        "update",
+        "check"
+      ]
+    },
+    "points" :
+    {
+      "extendedType" : "number",
+      "sqlScale" : 0,
+      "dbFieldProperties" :
+      [
+        "update",
+        "check"
+      ]
+    },
+    "driver" :
+    {
+      "type" : "array",
+      "items" :
+      {
+        "type" : "object",
+        "properties" :
+        {
+          "_id" :
+          {
+            "extendedType" : "number",
+            "sqlScale" : 0,
+            "generated" : true,
+            "dbFieldProperties" :
+            [
+              "check"
+            ]
+          },
+          "dbPrimaryKey" :
+          [
+            "_id"
+          ],
+          "name" :
+          {
+            "extendedType" : "string",
+            "maxLength" : 255,
+            "dbFieldProperties" :
+            [
+              "update",
+              "check"
+            ]
+          },
+          "points" :
+          {
+            "extendedType" : "number",
+            "sqlScale" : 0,
+            "dbFieldProperties" :
+            [
+              "update"
+            ]
+          },
+          "birthdate" :
+          {
+            "extendedType" :
+            [
+              "date",
+              "null"
+            ],
+            "dbFieldProperties" :
+            [
+              "update"
+            ]
+          }
+        },
+        "required" :
+        [
+          "name",
+          "points",
+          "_id"
+        ],
+        "additionalProperties" : false
+      }
+    }
+  },
+  "required" :
+  [
+    "name",
+    "points",
+    "_id"
+  ],
+  "additionalProperties" : false
+}

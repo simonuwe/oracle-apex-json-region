@@ -1,4 +1,8 @@
-# 0.9.7.3 2024-03-06
+# 0.9.7.3a 2024-03-31
+
+## Fixed Isses
+
+  - #188 Generate JSON-schema from data is broken with 0.9.7.3
 
 ## New Features
 

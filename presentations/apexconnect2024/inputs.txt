@@ -1,0 +1,61 @@
+------------------------------------
+Im Page-Designer
+  Anlegen Region
+  Title:  json-region
+  Type:   Json-Region
+  Attributes:
+  JSON-item:  P3_DATA
+
+
+Static Schema:
+{
+  "type": "object",
+  "required": [ "address_type", "town", "zipcode" ],
+  "properties": {
+    "address_type": { 
+      "type": "string", 
+      "enum": [ "private", "business" ]
+    },
+    "zipcode":  { "type": "string" },
+    "town":     { "type": "string" },
+    "street":   { "type": "string" },
+    "verified": { "type": "boolean" }
+  }
+}
+
+In Applikation
+  objects->Create
+
+In Page-Designer
+  Static Schema Zeile einfügen
+    "country":  { "type": "string" },
+
+------------------------------------
+Im Page-Designer
+  SQL-Query:
+  select object_schema 
+  from object_type
+  where object_type_id=:P3_OBJECT_TYPE_ID
+
+  Page 3 Content Body:
+  P3_OBJECT_TYPE_ID
+    Create dynamic action
+    Name: changed
+    True:
+      Action:         Refresh
+      Selection-type: Region
+      Region:         json-region
+
+ReadOnly:
+  When Item IS NOT NULL
+  object_type_id
+  
+In Applikation
+  objects->Create->Object-Type: simple-address 
+
+
+------------------------------------
+
+------------------------------------
+
+demo-23c.sql

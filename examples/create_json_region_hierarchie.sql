@@ -31,6 +31,10 @@ insert into json_region_hierarchie values(234, 23, 'val-234');
 
 commit;
 
+Insert into json_region_schema (path,schema,sqlquery) values ('/enums/hierarchie',  null, q'[SELECT json_region_generate_cascade_enums('select id, text FROM json_region_hierarchie WHERE parent_id=:1 OR (:1<0 and parent_id IS NULL) ORDER BY text', -1, 1, 'sel1,sel2,sel3,sel4') from dual]');
+COMMIT;
+
+
 /*
 select Lpad(' ',2*level)||t.text,  t.*, level from json_region_hierarchie t
 connect by (prior id = parent_id)
@@ -133,5 +137,5 @@ BEGIN
 END json_region_generate_cascade_enums;
 /
 
-select json_region_generate_enum('select id, text from json_region_hierarchie where parent_id=:1 OR (:1<0 and parent_id IS NULL) ORDER BY text', 5) from dual;
-select json_region_generate_cascade_enums('select id, text from json_region_hierarchie where parent_id=:1 OR (:1<0 and parent_id IS NULL) ORDER BY text', -1, 1, 'sel,sel1,sel2,sel3') from dual;
+--select json_region_generate_enum('select id, text from json_region_hierarchie where parent_id=:1 OR (:1<0 and parent_id IS NULL) ORDER BY text', 5) from dual;
+--select json_region_generate_cascade_enums('select id, text from json_region_hierarchie where parent_id=:1 OR (:1<0 and parent_id IS NULL) ORDER BY text', -1, 1, 'sel,sel1,sel2,sel3') from dual;

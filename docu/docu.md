@@ -911,7 +911,9 @@ Cascading selects could be implemented using **if**, **then** ald **allOf**. Thi
 - When using a CLOB for the JSONs use check constraint **IS JSON(STRICT)** to enforce that the JSON is returned with **"** enclosed keys..
 - In APEX 22.1 there is a general issue (with plugin and without) with "**Modal Dialog** with template **Drawer**", this causes a jquery-error (looks like a datepicker issue). Without "Drawer" all work fine. 
 - In APEX 20.2 the validation for **integer**/**number** doesn't show any errormessages - invalid entries are converted to **null**.
-- Invalid keys/values are ignoered, no message in log
+- With Oracle <23.7 an INSERT/UPDATE of a JSON string into a JSON-collection-table returns ORA-00932.
+- With Oracle >=23.7 an UPDATE of a JSON-collection-table with VALIDATE-JSON-constraint returns an ORA-00932.
+
 
 ## Next steps
 

@@ -8,7 +8,6 @@ CREATE TABLE json_region_schema(
 Insert into json_region_schema (path,schema,sqlquery) values ('/defs/address',     '{"type": "object", "properties": {"zip": {"type": "string"}, "city": {"type": "string"}, "street": {"type": "string"}}}',null);
 Insert into json_region_schema (path,schema,sqlquery) values ('/enums/object_type', null, q'[SELECT json_region_generate_enum('select object_type_id, object_type_name FROM object_type ORDER BY object_type_name', null) FROM DUAL]');
 Insert into json_region_schema (path,schema,sqlquery) values ('/defs/boolean',      null, q'[SELECT object_schema FROM object_type WHERE object_type_name='test-boolean-1']');
-Insert into json_region_schema (path,schema,sqlquery) values ('/enums/hierarchie',  null, q'[SELECT json_region_generate_cascade_enums('select id, text FROM json_region_hierarchie WHERE parent_id=:1 OR (:1<0 and parent_id IS NULL) ORDER BY text', -1, 1, 'sel1,sel2,sel3,sel4') from dual]');
 COMMIT;
 
 /*

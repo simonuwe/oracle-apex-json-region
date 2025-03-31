@@ -1,0 +1,125 @@
+------------------------------------
+Im Page-Designer
+
+Import Plugin in shared-components:
+
+SQL-Query:
+SELECT schema, sqlquery
+FROM json_region_schema
+WHERE path=:p1
+
+Page 15 object_gen:
+  Anlegen Region
+  Title:  json-region
+  Type:   Json-Region
+  Attributes:
+  JSON-item:  P3_DATA
+
+  generate Schema:
+  1.  alles default
+  2.  readonly = Always
+
+Page 3 object:
+Static Schema:
+{
+  "type": "object",
+  "required": [ "address_type", "town", "zipcode" ],
+  "properties": {
+    "address_type": { 
+      "type": "string", 
+      "enum": [ "private", "business" ]
+    },
+    "zipcode":  { "type": "string" },
+    "town":     { "type": "string" },
+    "street":   { "type": "string" },
+    "verified": { "type": "boolean" }
+  }
+}
+
+In Applikation
+  objects->Create
+
+In Page-Designer
+  Static Schema Zeile einfügen
+    "country":  { "type": "string" },
+
+------------------------------------
+Im Page-Designer
+  SQL-Query:
+  select object_schema 
+  from object_type
+  where object_type_id=:P3_OBJECT_TYPE_ID
+
+  Page 3 Content Body:
+  P3_OBJECT_TYPE_ID
+    Create dynamic action
+    Name: changed
+    True:
+      Action:         Refresh
+      Selection-type: Region
+      Region:         json-region
+
+ReadOnly:
+  When Item IS NOT NULL
+  object_type_id
+  
+In Applikation
+  objects->Create->Object-Type: simple-address 
+
+In SQLDeveloper:
+ALTER TABLE object23ai DROP CONSTRAINT object23ai_ck_1;
+ALTER TABLE object23ai ADD CONSTRAINT object23ai_ck_1 check (data is json validate q'[{
+  "type"       : "object",
+  "properties" : {"fruit"    : {"type"      : "string",
+                                "minLength" : 1,
+                                "maxLength" : 10},
+                  "quantity" : {"type"      : "number",
+                                "minimum"   : 0,
+                                "maximum"   : 100},
+                  "orderdate": {"type": "string",
+                                "default": "NOW",
+                                "format": "date"}
+  },
+  "required"   : ["fruit", "quantity"]
+}]');
+
+INSERT INTO object23ai (object_name, data) VALUES('xx', q'[{
+  "fruit": "xx", "quantity": 1
+}]');
+
+------------------------------------
+Page 7 object23ai:
+JSON-region "static"
+
+ALTER TABLE object23ai DROP CONSTRAINT object23ai_ck_1;
+ALTER TABLE object23ai ADD CONSTRAINT object23ai_ck_1 check (data is json validate q'[{
+  "type"       : "object",
+  "properties" : {"fruit"    : {"type"      : "string",
+                                "minLength" : 1,
+                                "maxLength" : 10},
+                  "quantity" : {"type"      : "number",
+                                "minimum"   : 0,
+                                "maximum"   : 100},
+                  "in_stock":  {"type": "boolean"},
+                  "orderdate": {"type": "string",
+                                "default": "NOW",
+                                "format": "date"}
+  },
+  "required"   : ["fruit", "quantity"]
+}]');
+
+
+
+------------------------------------
+Im Page-Designer shared components
+	json-source
+source: json_source.json
+
+	duality-source
+
+create page tables23ai
+	with detail
+
+------------------------------------
+
+demo-23c.sql
