@@ -1,0 +1,14 @@
+{
+  "type"       : "object",
+  "properties" : {"fruit"    : {"type"      : "string",
+                                "minLength" : 1,
+                                "maxLength" : 10},
+                  "quantity" : {"type"      : "number",
+                                "minimum"   : 0,
+                                "maximum"   : 100},
+                  "orderdate": {"type": "string",
+                                "default": "NOW",
+                                "format": "date"}
+  },
+  "required"   : ["fruit", "quantity"]
+}

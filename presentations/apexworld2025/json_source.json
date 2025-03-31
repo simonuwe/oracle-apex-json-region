@@ -1,0 +1,15 @@
+{
+  "type": "object",
+  "required": [ "address_type", "town", "zipcode" ],
+  "properties": {
+    "address_type": {
+      "type": "string",
+      "enum": [ "private", "business" ]
+    },
+    "_id":      { "type": "integer"},
+    "zipcode":  { "type": "string" },
+    "town":     { "type": "string" },
+    "street":   { "type": "string" },
+    "verified": { "type": "boolean" }
+  }
+}

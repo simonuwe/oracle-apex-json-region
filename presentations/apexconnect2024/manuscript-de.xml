@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<indexing>
+ <paragraph index="9" node_type="writer">Abbildung : Beispiel JSON</paragraph>
+ <paragraph index="12" node_type="writer">Abbildung : JSON-Daten und JSON-Schema</paragraph>
+ <paragraph index="15" node_type="writer">Abbildung : Komplexes JSON-Schema</paragraph>
+ <paragraph index="18" node_type="writer">2024-04-24	Uwe Simon Database Contulting	</paragraph>
+ <paragraph index="24" node_type="writer">Abbildung : JSON-Schema</paragraph>
+ <paragraph index="27" node_type="writer">Abbildung : APEX-UI</paragraph>
+ <paragraph index="30" node_type="writer">Abbildung : Meldungen bei Validierungsfehlern</paragraph>
+ <paragraph index="33" node_type="writer">Abbildung : Oracle 23C JSON-Validierung</paragraph>
+ <paragraph index="36" node_type="writer">Abbildung : Darstellung in der Plugin-Region</paragraph>
+ <object alt="" name="Bild1" object_type="graphic"/>
+ <paragraph index="42" node_type="writer">Abbildung : Trigger zur Synchronisierung von &quot;enum&quot;</paragraph>
+ <paragraph index="50" node_type="writer">JSON-Region: </paragraph>
+ <paragraph index="51" node_type="writer">Ein Plugin für dynamische APEX-Seiten basierend auf JSON-Schema</paragraph>
+ <paragraph index="62" node_type="writer">APEX-Connect 2024</paragraph>
+ <paragraph index="64" node_type="writer">Uwe Simon Database Consulting</paragraph>
+ <paragraph index="65" node_type="writer">2024-04-24</paragraph>
+ <object index="66" name="Inhaltsverzeichnis1" object_type="section"/>
+ <object index="67" name="Inhaltsverzeichnis1_Head" object_type="section"/>
+ <paragraph index="68" node_type="writer" parent_index="67">Inhaltsverzeichnis</paragraph>
+ <paragraph index="70" node_type="writer" parent_index="66">Einleitung	3</paragraph>
+ <paragraph index="71" node_type="writer" parent_index="66">Idee	4</paragraph>
+ <paragraph index="72" node_type="writer" parent_index="66">JSON-Schema	5</paragraph>
+ <paragraph index="73" node_type="writer" parent_index="66">JSON-Schema und APEX-UI	7</paragraph>
+ <paragraph index="74" node_type="writer" parent_index="66">Fehlermeldungen	8</paragraph>
+ <paragraph index="75" node_type="writer" parent_index="66">Konfiguration im Page-Designer	9</paragraph>
+ <paragraph index="76" node_type="writer" parent_index="66">Anpassung der APEX-UI	10</paragraph>
+ <paragraph index="77" node_type="writer" parent_index="66">Unterstützung von Oracle23c-Features	11</paragraph>
+ <paragraph index="78" node_type="writer" parent_index="66">Sonstiges	12</paragraph>
+ <paragraph index="79" node_type="writer" parent_index="66">Next Steps	13</paragraph>
+ <paragraph index="82" node_type="writer">Einleitung</paragraph>
+ <paragraph index="83" node_type="writer">Um das Jahr 2000 mit der Verbreitung von SOAP (Simple Object Access Protocol) wurden die generische Datenstrukturen mittels XML (Extensible Markup Language) abgebildet. Für die Beschreibung der Struktur der XML-Daten wird dabei XSD (XML-Schema-Definition) genutzt. Der Nachteil von XML ist der relativ hohe Overhead durch die Tags (jeweils &lt;xxxxxx&gt;abc&lt;/xxxxxx&gt;), besonders, wenn die Tags „sprechend“ sind.</paragraph>
+ <paragraph index="84" node_type="writer">Um 2014 wurde dann REST (Representational State Transfer) eingeführt, hier wird nun JSON genutzt, JSON jhat den großen Vorteil, dass es auch „lesbarer Text“ ist, aber deutlich weniger Overhead wie XML hat ( „“xxxx“:“abc“).</paragraph>
+ <paragraph index="85" node_type="writer">Mit Oracle 9i wird XML mit dem Datentyp XMLType unterstützt. Seit Oracle 12c kam die erste Unterstützung von JSON in VARCHAR2/CLOB-Spalten (Check-Constraint IS JSON) und Funktionen für den Zugriff auf JSON-Attribute dazu. IMit Oracle 23c gibt es jetzt auch einen JSON-Datentyp, den Constraint IS JSON VALIDATE ‘…‘, die Relational-JSON-Duality etc.</paragraph>
+ <paragraph index="86" node_type="writer">Es gibt etliche Anwendungsfälle, in denen JSON-Daten genutzt werden, wie z.B.</paragraph>
+ <paragraph index="87" node_type="writer">Konfigurierbare Workflows: Die Daten für den Workflow sind in JSON-Feldern abgelegt.</paragraph>
+ <paragraph index="88" node_type="writer">Konfigurierbare Asset-Management-Systeme: Attribute die vom Assettyp abhängen liegen in JSON-Feldern.</paragraph>
+ <paragraph index="89" node_type="writer">Formular-Tools: Formularstruktur liegt im JSON-Schema und Formulardaten liegen in JSON-Feldern.</paragraph>
+ <paragraph index="90" node_type="writer">Umfrage-Tools: Fragen liegen in JSON-Schema und Daten dann in JSON-Feldern.</paragraph>
+ <paragraph index="91" node_type="writer">Durch den Kunden anpassbare Anwendungen: Customizing erfolgt über JSON-Felder.</paragraph>
+ <paragraph index="92" node_type="writer">JSON-Schema wird auch zur Beschreibung/Validierung von REST-APIs mit OpenAPI (bzw. Swagger) genutzt.</paragraph>
+ <paragraph index="93" node_type="writer">Da Oracle-APEX keine Out-Of-The-Box-Lösung für die Ein-/Ausgabe der Attribute von JSON-Feldern hat, ist die erste Idee diese Funktionalität durch ein APEX-Plugin bereitzustellen.  </paragraph>
+ <paragraph index="94" node_type="writer">Idee</paragraph>
+ <paragraph index="95" node_type="writer">Die APEX-UI soll dabei durch das JSON-Schema der JSON-Daten beschrieben werden. </paragraph>
+ <paragraph index="96" node_type="writer">Da die JSON-Daten typischerweise mehr als ein Attribut haben, wird dies mit dem Region-Plugin JSON-Region implementiert.</paragraph>
+ <paragraph index="97" node_type="writer">Das Plugin sollte dabei so flexibel wie möglich sein. </paragraph>
+ <paragraph index="98" node_type="writer">Anforderungen:</paragraph>
+ <paragraph index="99" node_type="writer">Aus einem JSON-Schema dynamisch zur Laufzeit eine APEX-UI generieren,</paragraph>
+ <paragraph index="100" node_type="writer">Je Datensatz ggf. je nach „Datensatztyp“ unterschiedliche JSON-Schema</paragraph>
+ <paragraph index="101" node_type="writer">Keine Modifikationen am APEX-Code bei Änderungen des JSON-Schema</paragraph>
+ <paragraph index="102" node_type="writer">Anpassungsmöglichkeiten des APEX-UI-Layouts zur Unterstützung von weiteren APEX-Item-Typen</paragraph>
+ <paragraph index="103" node_type="writer">Für  die flexible Nutzung von JSON-Daten und JSON-Schema wird man typischerweise in dem Datenmodell Tabellen mit den JSON-Daten und Lookup-Tabellen mit dem zugehörenden JSON-Schema enthalten.</paragraph>
+ <paragraph index="105" node_type="writer">JSON-Schema</paragraph>
+ <paragraph index="106" node_type="writer">Hier eine kurze Beschreibung von JSON-Schema. Die komplette Dokumentation zu JSON-Schema befindet sich  unter https://json-schema.org/</paragraph>
+ <paragraph index="107" node_type="writer">Die Beschreibung jedes Feld (Property) besteht dabei aus</paragraph>
+ <paragraph index="108" node_type="writer">Mussfeld (“required“), </paragraph>
+ <paragraph index="109" node_type="writer">Datentyp (“type“) </paragraph>
+ <paragraph index="110" node_type="writer">Format (“format“)</paragraph>
+ <paragraph index="111" node_type="writer">Aufzählung (“enum“) </paragraph>
+ <paragraph index="112" node_type="writer">Muster (“pattern“)</paragraph>
+ <paragraph index="113" node_type="writer">Ein einfaches JSON-Schema sieht dabei wie folgt aus</paragraph>
+ <paragraph index="116" node_type="writer">JSON-Schema kann  auch komplexere Strukturen abbilden,</paragraph>
+ <paragraph index="117" node_type="writer">Konstante Werte: “const“: “constant Value“</paragraph>
+ <paragraph index="118" node_type="writer">Rekursive: { “type“: “object“, “properties“: {...}}</paragraph>
+ <paragraph index="119" node_type="writer">Listen: { “type“: “array“, “items“: […] }
+Plugin-Unterstützung: nur String-Array für “multiselect“/“checkbox-group“)</paragraph>
+ <paragraph index="120" node_type="writer">Schema-Referenzen zur Vermeidung von Redundanzen
+“$ref“: “#/$defs/schemaX“ 
+Plugin-Unterstützung: nur für Referenzen im gleichen JSON-Schema </paragraph>
+ <paragraph index="121" node_type="writer">Conditional Required, ein Feld wird Mussfeld, wenn ein andere Felder nicht leer ist “dependentRequired“: {“field1“: [“field2“, …]}
+ z.B. Kreditkartentyp, Kreditkartennummer, Gültigkeit, Securitycode</paragraph>
+ <paragraph index="122" node_type="writer">“dependentSchema“, die Daten eines Subschema werden benötigt, wenn ein anderes Feld nicht leer ist, </paragraph>
+ <paragraph index="123" node_type="writer">Conditional Schema, je nach Wert eines Feldes, weitere Felder (z.B. bei „abweichende Rechnungsanschrift“ = true, Felder der 2. Anschrift) mittels
+“if“: {...}, “then“: {...}, “else“: {...}</paragraph>
+ <paragraph index="124" node_type="writer">Ein komplexes JSON-Schema sieht dann z.B. wie folgt aus</paragraph>
+ <paragraph index="126" node_type="writer">JSON-Schema und APEX-UI</paragraph>
+ <paragraph index="127" node_type="writer">Mit einem JSON-Schema kann das Plugin nun eine Region in der APEX-UI generieren.</paragraph>
+ <paragraph index="128" node_type="writer">Die Attribute werden in der gleichen Reihenfolge wie im JSON-Schema angezeigt. Je nach “type“/“format“ wird per Default ein passender „APEX-Item-Typ“ für die Ein-/Ausgabe genutzt</paragraph>
+ <paragraph index="129" node_type="writer">string  	Text Field bzw. Textarea (je nach Länge)</paragraph>
+ <paragraph index="130" node_type="writer">integer/number 	Numerisches Feld</paragraph>
+ <paragraph index="131" node_type="writer">boolean	Checkbox</paragraph>
+ <paragraph index="132" node_type="writer">date/date-time	Date-Picker/ Date-Picker+Time</paragraph>
+ <paragraph index="133" node_type="writer">enum	Pulldown</paragraph>
+ <paragraph index="134" node_type="writer">email 	Text Field mit Subtyp Email</paragraph>
+ <paragraph index="135" node_type="writer">uri	Text Field mit Subtype URL</paragraph>
+ <paragraph index="136" node_type="writer">…</paragraph>
+ <paragraph index="137" node_type="writer">Anzeigename des APEX-Items ist standardmäßig der Name des Attributes (1. Zeichen je Wort groß und „_“ bzw. „-“ werden durch „ „ ersetzt, ... wie Default-Title im Page-Designer). Hier ein Beispiel wie aus dem JSON-Schema die APEX-UI-Region erzeugt wird.</paragraph>
+ <paragraph index="141" node_type="writer">Fehlermeldungen</paragraph>
+ <paragraph index="142" node_type="writer">Oracle-APEX unterstützt die Validierung von Einagben. Dies erfolgt bei dem „JSON-Region-Plugin“ ebenfalls. Es werden die Standard-Validierungen und Meldungen von APEX genutzt (mit den gleichen „Problemchen“).</paragraph>
+ <paragraph index="143" node_type="writer">Vom Plugin unterstützte Validierungen</paragraph>
+ <paragraph index="144" node_type="writer">Integer, Number</paragraph>
+ <paragraph index="145" node_type="writer">Date, Date-Time</paragraph>
+ <paragraph index="146" node_type="writer">Regex-Pattern</paragraph>
+ <paragraph index="147" node_type="writer">Email-Adresse</paragraph>
+ <paragraph index="148" node_type="writer">URI</paragraph>
+ <paragraph index="149" node_type="writer">Minimum, Maximum</paragraph>
+ <paragraph index="150" node_type="writer">Maximale Länge</paragraph>
+ <paragraph index="151" node_type="writer">Die Darstellung sieht hier dann z.B. wie folgt aus. Hierbei sind in der ersten Zeile der Seite „normale“ APEX-Items.</paragraph>
+ <paragraph index="154" node_type="writer">Konfiguration im Page-Designer</paragraph>
+ <paragraph index="155" node_type="writer">Die Konfiguration im APEX-Page-Designer ist recht einfach. Nachdem auf der Seite eine „JSON-Region“ eingefügt wurde, muss hier nur das Feld angegeben werden, in dem die JSON-Daten stehen und das JSON-Schema. Beim JSON-Schema kann ein „statisches Schema“ direkt im in den Attributen der Region angegeben werden, bzw. eine Query, die aus mit Hilfe eines Typefeldes das Schema per SQL-Query ermittelt, dies Query muss genau eine Zeile mit einer Spalte, die das JSON-Schema enthält, zurückliefern. Ferner wird noch das „Read Only“ Attribut unterstützt.</paragraph>
+ <paragraph index="167" node_type="writer">Konfigurationen:</paragraph>
+ <paragraph index="168" node_type="writer">JSON-Item	Das Item welches die JSON-Daten enthält</paragraph>
+ <paragraph index="169" node_type="writer">Source	„Statisch“, „SQL-Query“</paragraph>
+ <paragraph index="170" node_type="writer">Statisches Schema	Wenn Source=“Static“, dann das JSON-Schema</paragraph>
+ <paragraph index="171" node_type="writer">SQL-Qeury	Wenn Source=“SQL-Query“, dann die SQL-Query</paragraph>
+ <paragraph index="172" node_type="writer">Keep additional Attributes	Wenn die JSON-Daten mehr Attribute als das
+	Schema enthalten, bleiben diese Attribute erhalten</paragraph>
+ <paragraph index="173" node_type="writer">Headers	Ausgabe der Namen bei Subschema als Überschrift</paragraph>
+ <paragraph index="174" node_type="writer">Hide-JSON-Item	Das JSON-Feld wurd automatisch unsichtbar</paragraph>
+ <paragraph index="175" node_type="writer">Remove NULLS from JSON	Zur Reduktion der Größe des JSON werden leere
+	Felder aus dem JSON entfernt	</paragraph>
+ <paragraph index="177" node_type="writer">Anpassung der APEX-UI</paragraph>
+ <paragraph index="178" node_type="writer">APEX hat in der UI für einige Datentypen mehrere Darstellungsformen. Ferner soll die Darstellung auch anpassbar sein</paragraph>
+ <paragraph index="179" node_type="writer">Ein JSON-Schema kann durch eigene Properties erweitert werden. Darum gibt es für APEX-spezifische Konfiguration das neue Property “apex“: {…}</paragraph>
+ <paragraph index="180" node_type="writer">Attribute “itemtype“ zur Konfiguration des APEX-UI-Items </paragraph>
+ <paragraph index="181" node_type="writer">“itemtype&quot;: &quot;starrating&quot;	Integer-Feld als Starrating </paragraph>
+ <paragraph index="182" node_type="writer">&quot;itemtype&quot;: &quot;switch&quot;	Boolean-Feld als Switch</paragraph>
+ <paragraph index="183" node_type="writer">Ab APEX 23.2</paragraph>
+ <paragraph index="184" node_type="writer">&quot;itemtype&quot;: &quot;richtext&quot;	Für lange Strings Richtext-Editor</paragraph>
+ <paragraph index="185" node_type="writer">&quot;itemtype&quot;: &quot;combobox&quot;	Für Multiselect Combobox mit „Chips“</paragraph>
+ <paragraph index="186" node_type="writer">Weitere Attribute unter „apex“</paragraph>
+ <paragraph index="187" node_type="writer">„label“: “Text“	Text als Label für das Feld</paragraph>
+ <paragraph index="188" node_type="writer">&quot;newRow&quot;: true	Neue Zeile vor dem Feld, </paragraph>
+ <paragraph index="189" node_type="writer">&quot;textBefore&quot;: &quot;Text&quot;	statische Text vor dem Feld</paragraph>
+ <paragraph index="190" node_type="writer">&quot;lines&quot;: 10	Anzahl der Zeilen bei Textarea/Richtext-Editor</paragraph>
+ <paragraph index="191" node_type="writer">&quot;colSpan&quot;: 6	Breite des Feldes (1-12)</paragraph>
+ <paragraph index="192" node_type="writer">“readonly“: true	Feld ist nur zur Anzeige</paragraph>
+ <paragraph index="193" node_type="writer">“direction“: “horizontal“	Radio/Checkbox horizontal</paragraph>
+ <paragraph index="196" node_type="writer">Unterstützung von Oracle23c-Features</paragraph>
+ <paragraph index="197" node_type="writer">Mir Oracle23c kann man im Check-Constraint einer JSON-Spalte auch das JSON-Schema angeben. Was liegt da näher, als dieses auch für die APEX-UI zu nutzen. Damit wird dann eine Änderung am CHECK-Constraint sofort in der APEX-UI sichtbar.</paragraph>
+ <paragraph index="198" node_type="writer">Achtung:</paragraph>
+ <paragraph index="199" node_type="writer">Leider unterstützt Oracle nicht die kompletten Möglichkeiten des JSON-Schema z.B. wird “$ref“: “…“ ignoriert</paragraph>
+ <paragraph index="200" node_type="writer">Ferner gibt es noch Oracle-spezifische Erweiterungen z.B. “extendedType“: “...“ (Wird von Plugin unterstützt) .</paragraph>
+ <paragraph index="205" node_type="writer">Sonstiges</paragraph>
+ <paragraph index="206" node_type="writer">Häufig müssen in einem JSON-Schema “enum“-Attribute mit Lookup-Tabellen synchron gehalten werden</paragraph>
+ <paragraph index="207" node_type="writer">Lösung: </paragraph>
+ <paragraph index="208" node_type="writer">Statement-Trigger auf die Lookup-Tabelle</paragraph>
+ <paragraph index="209" node_type="writer">Hier wird bei Änderungen in der Tabelle HOTEL_FEATURES im JSON-Schema des Objekttypes „Hotel“ das Feld </paragraph>
+ <paragraph index="210" node_type="writer">{
+ 	“properties“: {
+ 		“features“: {
+ 			“items“: {
+ 				“enum“: []
+ 			}
+ 		}
+ 	}
+}</paragraph>
+ <paragraph index="211" node_type="writer">aktualisiert.</paragraph>
+ <paragraph index="215" node_type="writer">Next Steps</paragraph>
+ <paragraph index="216" node_type="writer">Das Plugin hat noch Potential für Verbesserungen.</paragraph>
+ <paragraph index="217" node_type="writer">Formatierung von JSON-Spalten in Listen/Reports  mittels JSON-Path (Rel 0.9.0)
+&quot;apex&quot;: {
+ 	&quot;display&quot;: { &quot;list1&quot;: &quot;Model: #$.model#, Vendor: #$.vendor#&quot; }
+}</paragraph>
+ <paragraph index="218" node_type="writer">Images (Rel 0.9.0)
+JSON-Schema unterstützt Strings mit base64 codierten Daten.
+{
+	&quot;type&quot;: &quot;string&quot;, 
+	&quot;contentEncoding&quot;: &quot;base64&quot;, 
+	&quot;contentMediaType&quot;: &quot;image/png&quot;
+}</paragraph>
+ <paragraph index="219" node_type="writer">JSON-Relational-Duality
+UI aus der Oracle23c JSON-Duality-View generieren</paragraph>
+ <paragraph index="220" node_type="writer">Weitere Unterstützung von “array“
+Analog Interactive Grid</paragraph>
+ <object name="Bild mit Transparenz 1" alt="" object_type="shape" description=""/>
+ <object name="Bild mit Transparenz 2" alt="" object_type="shape" description=""/>
+ <object name="Bild mit Transparenz 3" alt="" object_type="shape" description=""/>
+ <object name="Bild mit Transparenz 4" alt="" object_type="shape" description=""/>
+ <paragraph index="0" node_type="common" object_name="Bild mit Transparenz 4"></paragraph>
+ <object name="Bild mit Transparenz 5" alt="" object_type="shape" description=""/>
+ <object name="Linie 1" alt="" object_type="shape" description=""/>
+ <object name="Linie 2" alt="" object_type="shape" description=""/>
+ <object name="Linie 3" alt="" object_type="shape" description=""/>
+ <object name="Linie 4" alt="" object_type="shape" description=""/>
+ <object name="Linie 5" alt="" object_type="shape" description=""/>
+ <object name="Bild mit Transparenz 6" alt="" object_type="shape" description=""/>
+ <paragraph index="0" node_type="common" object_name="Bild mit Transparenz 6"></paragraph>
+ <object name="Bild mit Transparenz 7" alt="" object_type="shape" description=""/>
+ <object name="Bild mit Transparenz 8" alt="" object_type="shape" description=""/>
+ <object name="Bild mit Transparenz 9" alt="" object_type="shape" description=""/>
+ <object name="Bild mit Transparenz 10" alt="" object_type="shape" description=""/>
+ <object name="Bild mit Transparenz 11" alt="" object_type="shape" description=""/>
+</indexing>

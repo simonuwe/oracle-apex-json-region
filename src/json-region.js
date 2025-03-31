@@ -1,7 +1,7 @@
 "use strict"
 
 /*
- * JSON-region 0.9.7.3
+ * JSON-region 0.9.7.3a
  * Supports Oracle-APEX >=20.2 <=24.2
  * 
  * APEX JSON-region plugin
@@ -3476,9 +3476,8 @@ console.error('propagateShow if: not implemented', schema.if)
   let newItem = !(gData && Object.keys(gData).length);
 
   if(pOptions.generateSchema){  // generate JSON-schema based on JSON-data
-    let l_schema ={};
     apex.debug.trace('static-schema', JSON.stringify(pOptions.schema));
-    l_schema = generateSchema(l_schema, gData||{});
+    pOptions.schema = generateSchema(pOptions.schema, gData||{});
     console.info('+++JSON-schema+++', JSON.stringify(pOptions.schema));
   }
 
