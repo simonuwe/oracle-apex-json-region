@@ -1,6 +1,7 @@
 # 0.9.7.4
 
 ## Fixed Isses
+  - #192 "type": "null" and "const": "...." causes a console error output
 
 ## New Features
 
