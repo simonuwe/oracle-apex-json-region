@@ -1,7 +1,7 @@
 "use strict"
 
 /*
- * JSON-region 0.9.7.3a
+ * JSON-region 0.9.7.4
  * Supports Oracle-APEX >=20.2 <=24.2
  * 
  * APEX JSON-region plugin
@@ -79,6 +79,7 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
   const C_JSON_INTEGER          = 'integer';
   const C_JSON_NUMBER           = 'number';
   const C_JSON_BOOLEAN          = 'boolean';
+  const C_JSON_NULL             = 'null';
   const C_JSON_CONST            = 'const';
   const C_JSON_FORMAT_DATE      = 'date';
   const C_JSON_FORMAT_DATETIME  = 'date-time';
@@ -153,7 +154,7 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
 
     // the valid values for some keys
   const validValues = {
-    "type":             [C_JSON_OBJECT, C_JSON_ARRAY, C_JSON_STRING, C_JSON_NUMBER, C_JSON_INTEGER, C_JSON_BOOLEAN],
+    "type":             [C_JSON_OBJECT, C_JSON_ARRAY, C_JSON_STRING, C_JSON_NUMBER, C_JSON_INTEGER, C_JSON_BOOLEAN, C_JSON_NULL],
     "extendedType":     [C_JSON_STRING, C_JSON_NUMBER, C_ORACLE_DATE, C_ORACLE_TIMESTAMP, C_JSON_ARRAY, C_JSON_OBJECT],
     "contentMediaType": [C_JSON_IMAGE_GIF, C_JSON_IMAGE_JPG, C_JSON_IMAGE_PNG],
     "contentEncoding":  [C_JSON_ENCODING_BASE64],
@@ -978,7 +979,7 @@ console.error('propagateShow if: not implemented', schema.if)
     switch(schema.type){
     case null:
     case undefined:
-      if(!'const' in schema) {  // const has no type
+      if(!C_JSON_CONST in schema) {  // const has no type
         logSchemaError('missing "type" at', dataitem);
       }
     break;
@@ -995,8 +996,8 @@ console.error('propagateShow if: not implemented', schema.if)
     case C_JSON_ARRAY:   
       setArrayValues(dataitem, dataitem, schema, schema.readOnly, data);
     break;
-    case 'const':  // a const value
-    case 'null':  // empty object do nothing
+    case C_JSON_CONST: // a const value
+    case C_JSON_NULL:  // empty object do nothing
     break;
     case C_JSON_BOOLEAN:
       apex.item(dataitem).setValue(l_value=='Y'?'Y':'N');
@@ -1130,7 +1131,7 @@ console.error('propagateShow if: not implemented', schema.if)
     switch(schema.type){
     case null:
     case undefined:
-      if(!'const' in schema) {  // const has no type
+      if(!C_JSON_CONST in schema) {  // const has no type
         logSchemaError('missing "type" at', dataitem);
       }
     break;
@@ -1361,14 +1362,15 @@ console.error('propagateShow if: not implemented', schema.if)
           for(let [l_name, l_schema] of Object.entries(schema.properties)){
             const l_itemname = genItemname(dataitem, l_name);
             let l_propertyname = l_name;
-            if(!(''+l_name).startsWith('_')){
+            if(!C_JSON_CONST in l_schema && l_schema.type!=C_JSON_NULL && !(''+l_name).startsWith('_')){
+                // no const, no type null and name does not start with _, there is a UI-item
               l_propertyname = $('#' + l_itemname + '_CONTAINER').attr('json-property');
             }
             l_json[l_propertyname]=getObjectValues(l_itemname, l_name, l_schema, null, oldJson[l_name]);
           }
         }
       break;
-      case 'null':
+      case C_JSON_NULL:
         l_json = null;
       break;
       case C_JSON_ARRAY: { 
@@ -1376,7 +1378,7 @@ console.error('propagateShow if: not implemented', schema.if)
         if(Array.isArray(schema.items.enum)){  // array for multiple selection
           let l_data = apex.item(dataitem).getValue();
           l_json = itemValue2Json(schema, l_data);
-          if([C_JSON_INTEGER, C_JSON_NUMBER].includes(schema.items.type)) { // when numeric, conwert string to numeric
+          if([C_JSON_INTEGER, C_JSON_NUMBER].includes(schema.items.type)) { // when numeric, convert string to numeric
             l_json = l_json.map( x=> Number(x));
           }
         } else {
@@ -1647,7 +1649,7 @@ console.error('propagateShow if: not implemented', schema.if)
 
       // check for valid values
     if(schema.extendedType && !validValues.extendedType.includes(schema.extendedType))    { logSchemaError(name, 'invalid extendedtype', schema.extendedType)}
-    if(!conditional && !schema.extendedType && name && !name.startsWith('_') && !validValues.type.includes(schema.type)) 
+    if(!C_JSON_CONST in schema && !conditional && !schema.extendedType && name && !name.startsWith('_') && !validValues.type.includes(schema.type)) 
       { logSchemaError(name, 'invalid type', schema.type)}
     if(schema.apex.itemtype && !validValues.apex.itemtype.includes(schema.apex.itemtype)) { logSchemaError(name, 'invalid itemtype', schema.apex.itemtype)}
     if(schema.apex.template && !validValues.apex.template.includes(schema.apex.template)) { logSchemaError(name, 'invalid template', schema.apex.template)}
@@ -2967,8 +2969,13 @@ console.error('propagateShow if: not implemented', schema.if)
     case C_JSON_NUMBER:
       l_generated = generateForNumeric(item, data, id);
     break;
+    case C_JSON_NULL:
+      l_generated.items = 0;
+    break;
     default:
-      logSchemaError('unknown type:', item.type);
+      if(!C_JSON_CONST in item){
+        logSchemaError('unknown type:', item.type);
+      }
     break;    
     }
 

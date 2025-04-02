@@ -37,8 +37,7 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
                           },
     "comment":     {"type": "string", "maxLength": 500},
     "lastlogin":   {"type": "string", "format": "date-time", "default": "2023-01-02T12:10:20"},
-    "source":      {"const": "via APEX-a]')
-|| TO_CLOB(q'[pplication"},
+    "source":      {"const": "via APEX-application"},
     "dummy":       {"type": "null"}
   },
   "$defs":{
@@ -748,6 +747,18 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
     }
   }
 }]'));
+
+Insert into OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('test-const-1','{
+  "type": "object",
+  "properties": {
+    "string":       {"type": "string"},
+    "string_const": {"const": "const-abc"},
+    "bool_const":   {"const": true},
+    "num_const":    {"const": 123},
+    "null_type":    {"type": "null"}
+  }
+}');
+
 Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('2368','test-countries',TO_CLOB(q'[{
   "properties": {
     "region": {
