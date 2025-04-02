@@ -1,3 +1,11 @@
+# 0.9.7.4
+
+## Fixed Isses
+
+## New Features
+
+ - #135 APEX-deprecate info: change plugin-callbacks to procedure
+
 # 0.9.7.3a 2024-03-31
 
 ## Fixed Isses
