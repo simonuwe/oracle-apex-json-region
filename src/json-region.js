@@ -1848,7 +1848,7 @@ console.error('propagateShow if: not implemented', schema.if)
 
         // set apex.formats
     if(pOptions.apex_version <C_APEX_VERSION_2401){ // check for new itemtype in old releases, remove them and log error
-      if([C_APEX_SELECTONE, C_APEX_SELECTMANY].includes(schema.apex.itemtype)){
+      if([C_APEX_SELECTONE, C_APEX_SELECTMANY, C_APEX_SHUTTLE].includes(schema.apex.itemtype)){
         logSchemaError('itemtype not supported in APEX-version', schema.apex.itemtype, pOptions.apex_version);
         delete schema.apex.itemtype;
       }
@@ -1933,12 +1933,12 @@ console.error('propagateShow if: not implemented', schema.if)
     apex.debug.trace(">>jsonRegion.generateForShuttle", schema, data, itemtype, schemaApex);
     if(schema.readOnly){
       let l_html = `
-<ul id="#ID#_DISPLAY" class="display_only">
+<span class="display_only apex-item-display-only">
 `;
 
       for(const l_option of data ||[]){
         l_html += apex.util.applyTemplate(`
-  <li>#DISPLAYVALUE#</li>
+  <div>#DISPLAYVALUE#</div>
 `,                                                 {
                                                     placeholders: {
                                                       "DISPLAYVALUE": ['boolean', 'number'].includes(typeof schema.apex.enum[l_option])?jsonValue2Item(schema, schema.apex.enum[l_option]):(schema.apex.enum[l_option]||l_option)
@@ -1947,12 +1947,13 @@ console.error('propagateShow if: not implemented', schema.if)
       }
 
       l_html += `
-</ul>
+</span>
 `;
+
 
       l_generated = {
         items:       1,
-        wrappertype: 'apex-item-wrapper--shuttle',
+        wrappertype: 'apex-item-wrapper--text-field',
         html:        l_html
       };
 
