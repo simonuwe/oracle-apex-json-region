@@ -116,7 +116,6 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
   const C_APEX_PASSWORD     = 'password';
   const C_APEX_STARRATING   = 'starrating';
   const C_APEX_QRCODE       = 'qrcode';
-  const C_APEX_IMAGE        = 'image';
   const C_APEX_CURRENCY     = 'currency';
   const C_APEX_HORIZONTAL   = 'horizontal';
   const C_APEX_VERTICAL     = 'vertical';
@@ -126,6 +125,9 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
   const C_APEX_SELECTMANY   = 'selectmany';
   const C_APEX_SHUTTLE      = 'shuttle';
   const C_APEX_COLOR        = 'color';
+  const C_APEX_FILEUPLOAD   = 'fileupload';
+  const C_APEX_IMAGEDISPLAY = 'image';
+  const C_APEX_IMAGEUPLOAD  = 'imageupload';
 
   const C_APEX_ALIGN        = 'align';
   const C_APEX_LEFT         = 'left';
@@ -152,6 +154,8 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
  // delimiter between values for multiselect items
   const C_VALUESEPARATOR    = '|';
 
+  const C_MAX_UPLOADSIZE    = 1024;
+  
     // the valid values for some keys
   const validValues = {
     "type":             [C_JSON_OBJECT, C_JSON_ARRAY, C_JSON_STRING, C_JSON_NUMBER, C_JSON_INTEGER, C_JSON_BOOLEAN, C_JSON_NULL],
@@ -159,7 +163,10 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
     "contentMediaType": [C_JSON_IMAGE_GIF, C_JSON_IMAGE_JPG, C_JSON_IMAGE_PNG],
     "contentEncoding":  [C_JSON_ENCODING_BASE64],
     "apex": {
-      "itemtype": [C_APEX_COMBO, C_APEX_CHECKBOX, C_APEX_COLOR, C_APEX_CURRENCY, C_APEX_IMAGE, C_APEX_QRCODE, C_APEX_PASSWORD, C_APEX_PCTGRAPH, C_APEX_STARRATING, C_APEX_RADIO, C_APEX_TEXTAREA, C_APEX_RICHTEXT,C_APEX_SELECT, C_APEX_SELECTMANY, C_APEX_SELECTONE, C_APEX_SHUTTLE, C_APEX_SWITCH,],
+      "itemtype": [C_APEX_COMBO, C_APEX_CHECKBOX, C_APEX_COLOR, C_APEX_CURRENCY, C_APEX_QRCODE, C_APEX_PASSWORD, 
+        C_APEX_PCTGRAPH, C_APEX_STARRATING, C_APEX_RADIO, C_APEX_TEXTAREA, C_APEX_RICHTEXT, 
+        C_APEX_SELECT, C_APEX_SELECTMANY, C_APEX_SELECTONE, C_APEX_SHUTTLE, C_APEX_SWITCH, 
+        C_APEX_FILEUPLOAD, C_APEX_IMAGEDISPLAY, C_APEX_IMAGEUPLOAD],
       "template": [C_APEX_TEMPLATE_LABEL_ABOVE, C_APEX_TEMPLATE_LABEL_FLOATING, C_APEX_TEMPLATE_LABEL_HIDDEN, C_APEX_TEMPLATE_LABEL_LEFT]
     }
   }
@@ -205,6 +212,33 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
 
   pOptions.datatemplateET = $($('.a-Form-error[data-template-id]')[0]).attr('data-template-id') || 'xx_ET';
 
+// Helperfunction for File Upload/Download
+function arrayBufferToBase64(buffer) {
+    // Create a Uint8Array from the ArrayBuffer
+    const byteArray = new Uint8Array(buffer);
+    // Convert the byte array to a string
+    let binaryString = '';
+    for (let i = 0; i < byteArray.byteLength; i++) {
+        binaryString += String.fromCharCode(byteArray[i]);
+    }
+    // Encode the binary string to Base64
+    return btoa(binaryString);
+}
+
+function base64ToBlob(base64, type) {
+    // Decode the Base64 string
+    const binaryString = atob(base64);
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+
+    // Convert binary string to byte array
+    for (let i = 0; i < len; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+    }
+
+    // Create a Blob from the byte array
+    return new Blob([bytes], { type: type });
+}
 
 
   const tempObjectAttributes = [C_JSON_ITEMS, C_JSON_PROPERTIES, C_JSON_REQUIRED, C_JSON_COND_IF, C_JSON_COND_ELSE, C_JSON_COND_THEN, C_JSON_COND_ALL_OF, C_JSON_COND_ANY_OF, C_JSON_COND_ONE_OF]
@@ -1029,12 +1063,19 @@ console.error('propagateShow if: not implemented', schema.if)
       }
 
       if(!schema.readOnly || [C_APEX_QRCODE].includes(schema.apex.itemtype)){
-        if(pOptions.apex_version>=C_APEX_VERSION_2202 || ( 
+        if((pOptions.apex_version>=C_APEX_VERSION_2202 || ( 
              ![C_JSON_FORMAT_DATETIME, C_JSON_FORMAT_DATE].includes(schema.format) &&
              ![C_APEX_STARRATING].includes(schema.apex.itemtype)
-           )
+           )) &&
+           ![C_APEX_FILEUPLOAD, C_APEX_IMAGEUPLOAD].includes(schema.apex.itemtype)
         ){  // hack for old jet-data-picker, starrating
           apex.item(dataitem).setValue(l_value||'');
+        }
+        if([C_APEX_FILEUPLOAD, C_APEX_IMAGEUPLOAD].includes(schema.apex.itemtype)){ // for file/image upload store data in jquery-object
+          $('#' + dataitem).data(schema.apex.itemtype, l_value);
+          if(l_value){
+            $('#' + dataitem + ' .a-FileDrop-download').attr('download', l_value.name); //APEX HACK, force download of file
+          }
         }
       }
     break;
@@ -1120,6 +1161,7 @@ console.error('propagateShow if: not implemented', schema.if)
     apex.debug.trace("<<jsonRegion.getConditionalItems", l_items);
     return(l_items);
   }
+
   /*
    * attach the generated fields of the JSON-schma to APEX
   */
@@ -1181,17 +1223,32 @@ console.error('propagateShow if: not implemented', schema.if)
         case C_APEX_RADIO:
           apex.widget.checkboxAndRadio('#'+ dataitem, C_APEX_RADIO);
         break;
-        case C_APEX_IMAGE:  // display only
+        case C_APEX_FILEUPLOAD:
+        case C_APEX_IMAGEUPLOAD:
+          apex.item.create(dataitem, {});
+          $('#' + dataitem).on("change", function(event){ 
+            const l_file = this.files[0];
+            console.log("FileUpload: ", l_file);
+            var reader = new FileReader();      
+            reader.onload = function(event){
+              var contents = event.target.result;     
+              const l_data =arrayBufferToBase64(event.target.result);
+              $('#' + dataitem).data(schema.apex.itemtype, {name: l_file.name, size: l_file.size, type: l_file.type, content: l_data});
+              console.log('File: ', l_file);              
+            };      
+            reader.onerror = function(event){
+              console.error("File could not be read! Code " + event.target.error.code);
+            };  
+            if(l_file && l_file.size <= (schema.apex.maxFilesize||C_MAX_UPLOADSIZE) * 1024){    
+              reader.readAsArrayBuffer(l_file);        
+            }
+          });
+        break;
+        case C_APEX_IMAGEDISPLAY:  // display only
         case C_APEX_QRCODE: // display only
         break;
         case C_APEX_RICHTEXT:
           if(pOptions.apex_version >= C_APEX_VERSION_2402) {
-            /*
-            apex.widget.markdown('#' + dataitem, {
-                                                   previewEmptyMessage: "'Nothing To Preview'",
-                                                   syntaxHighlighting: true,
-                                                   toolbar: "SIMPLE"});
-            */
             apex.widget.rte('#' + dataitem, {
                 mode:             'markdown',
                 allowCustomHtml:  false,
@@ -1408,8 +1465,14 @@ console.error('propagateShow if: not implemented', schema.if)
       case C_JSON_INTEGER:
       case C_JSON_NUMBER:
       case C_JSON_BOOLEAN:{
-        let l_data = apex.item(dataitem).getValue();
-        let l_value = itemValue2Json(schema, l_data);
+        let l_data = null;
+        let l_value = null;
+        if(schema.type == C_JSON_STRING && [C_APEX_IMAGEUPLOAD, C_APEX_FILEUPLOAD].includes(schema.apex.itemtype)){  // Fileupload has store data in jquery object
+          l_value = l_data = $('#' + dataitem).data(schema.apex.itemtype);
+        } else {
+          l_data = apex.item(dataitem).getValue();
+          l_value = itemValue2Json(schema, l_data);
+        }
         if(l_value!=null){
           l_json = l_value;
         } else {
@@ -1798,19 +1861,23 @@ console.error('propagateShow if: not implemented', schema.if)
         }
       break;
       case C_JSON_STRING:
-        if([C_APEX_QRCODE, C_APEX_IMAGE].includes(schema.apex.itemtype) || schema.contentEncoding == C_JSON_ENCODING_BASE64){
+        if([C_APEX_QRCODE, C_APEX_IMAGEDISPLAY].includes(schema.apex.itemtype) && schema.contentEncoding == C_JSON_ENCODING_BASE64){
           schema.readOnly   = true;  // can not be changed
           schema.isRequired = false; // not required
         };
 
         if(schema.contentEncoding){   // encoded string
           if(schema.contentEncoding== C_JSON_ENCODING_BASE64){
-            schema.apex.image=schema.contentMediaType;
-            schema.apex.itemtype = C_APEX_IMAGE;
-            if(![C_JSON_IMAGE_GIF, C_JSON_IMAGE_JPG, C_JSON_IMAGE_PNG].includes(schema.contentMediaType)){  //
-              apex.debug.error('unknown string contentMediaType "%s"', schema.contentMediaType);
+            if([C_JSON_IMAGE_GIF, C_JSON_IMAGE_JPG, C_JSON_IMAGE_PNG].includes(schema.contentMediaType)){
+              schema.apex.image=schema.contentMediaType;
+              schema.apex.itemtype = schema.apex.itemtype==C_APEX_IMAGEUPLOAD?C_APEX_IMAGEUPLOAD:C_APEX_IMAGEDISPLAY;
+            } else {
+              if(![C_APEX_FILEUPLOAD, C_APEX_IMAGEUPLOAD].includes(schema.apex.itemtype)){
+                apex.debug.error('unknown string contentMediaType "%s"', schema.contentMediaType);
               // default is JPG
-              schema.contentMediaType = C_JSON_IMAGE_JPG;
+                schema.contentMediaType = C_JSON_IMAGE_JPG;
+                schema.apex.image=schema.contentMediaType;
+              }
             }
           } else {
             apex.debug.error('unknown string encoding "%s"', schema.contentEncoding);  
@@ -1838,13 +1905,20 @@ console.error('propagateShow if: not implemented', schema.if)
     }
 
         // set apex.formats
+    if(pOptions.apex_version <C_APEX_VERSION_2302){ // check for new itemtype
+      if([C_APEX_IMAGEUPLOAD, C_APEX_FILEUPLOAD].includes(schema.apex.itemtype)){
+        logSchemaError('itemtype not supported in APEX-version', schema.apex.itemtype, pOptions.apex_version);
+        delete schema.apex.itemtype;
+      }
+    }
+
+        // set apex.formats
     if(pOptions.apex_version <C_APEX_VERSION_2301){ // check for new itemtype in old releases, remove them and log error
       if([C_APEX_COLOR].includes(schema.apex.itemtype)){
         logSchemaError('itemtype not supported in APEX-version', schema.apex.itemtype, pOptions.apex_version);
         delete schema.apex.itemtype;
       }
     }
-
 
         // set apex.formats
     if(pOptions.apex_version <C_APEX_VERSION_2401){ // check for new itemtype in old releases, remove them and log error
@@ -2233,7 +2307,7 @@ console.error('propagateShow if: not implemented', schema.if)
     apex.debug.trace(">>jsonRegion.generateForString", schema, data);
     if(schema.readOnly){
       switch(schema.apex.itemtype){
-      case C_APEX_IMAGE:
+      case C_APEX_IMAGEDISPLAY:
         if(schema.format==C_JSON_FORMAT_URI){  //use url for the image
           l_generated = {
             items: 1,
@@ -2394,6 +2468,17 @@ console.error('propagateShow if: not implemented', schema.if)
 <input type="text" id="#ID#" name="#ID#" #REQUIRED# #MINLENGTH# #MAXLENGTH# value="#VALUE#" #PLACEHOLDER# #PATTERN# #TEXTCASE# class="#ALIGN# text_field apex-item-text" size="32" data-trim-spaces="#TRIMSPACES#" aria-describedby="#ID#_error">
 `};
           switch (schema.apex.itemtype){
+          case C_APEX_FILEUPLOAD:
+          case C_APEX_IMAGEUPLOAD:
+            l_generated = {
+              items: 1,
+              wrappertype: 'apex-item-wrapper--file',
+              html: `
+<a-file-upload id="#ID#" #REQUIRED# upload-type="#UPLOADTYPE#" display-style="#DISPLAYSTYLE#" accept="#MIMETYPES#" size="30" label="Drop file" description="Select a file or drop one here." max-file-size="#MAXFILESIZE#" filename="#FILENAME#" file-size="#FILESIZE#" mimetype="#MIMETYPE#" show-clear-button="#CLEARBUTTON#" link="#URL#" download-link="true" readonly="#READONLY#">
+  <input id="#ID#_input"/>
+</a-file-upload>
+`};        
+          break;
           case C_APEX_COLOR:
             l_generated = {
               items: 1,                
@@ -3066,8 +3151,25 @@ console.error('propagateShow if: not implemented', schema.if)
                                                      "JSONPROPERTY": item.name
                                                     }
                                     })
+        }
+        if([C_APEX_FILEUPLOAD, C_APEX_IMAGEUPLOAD].includes(item.apex.itemtype)){
+        console.log('UPLOAD_TEMPLATE:', id, l_value);
+        console.dir(l_generated);
+          l_generated.html = apex.util.applyTemplate( l_generated.html, {
+            placeholders: {
+                "UPLOADTYPE":   item.apex.itemtype==C_APEX_FILEUPLOAD?'FILE':'IMAGE',
+                "DISPLAYSTYLE": 'DROPZONE_INLINE',
+                "CLEARBUTTON":  item.isRequired?"false":"true",
+                "MAXFILESIZE":  item.apex.maxFilesize||C_MAX_UPLOADSIZE,
+                "MIMETYPES":    item.apex.mimetypes,
+                "URL":          l_value?URL.createObjectURL(base64ToBlob(l_value.content, l_value.type)):null,
+                "FILENAME":     l_value.name||'',
+                "MIMETYPE":     l_value.type||'',
+                "FILESIZE":     l_value.size||0
+        }});
       }
     }
+
     apex.debug.trace("<<jsonRegion.generateForItem", l_generated);
     return(l_generated);
   }
@@ -3267,6 +3369,10 @@ console.error('propagateShow if: not implemented', schema.if)
       }
       if(!customElements.get('a-qrcode')  && itemtypes.itemtype.qrcode){ // combobox is used, so load files for new combobox
         l_scripts.push('libraries/apex/minified/item.QRcode.min.js');
+      }
+
+      if(!customElements.get('a-file-upload')  && itemtypes.itemtype.fileupload){ // fileupload is used, so load files for fileupload
+        l_scripts.push('libraries/apex/minified/item.FileUpload.min.js');
       }
 
       if(itemtypes.itemtype.richtext){  // richtext is used, so load files for rich-text-editor
