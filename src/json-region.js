@@ -3180,10 +3180,10 @@ console.error('propagateShow if: not implemented', schema.if)
                 "UPLOADTYPE":   item.apex.itemtype==C_APEX_FILEUPLOAD?'FILE':'IMAGE',
                 "DISPLAYSTYLE": 'DROPZONE_INLINE',
                 "CLEARBUTTON":  item.isRequired?"false":"true",
-                "DOWNLOAD":     item.apex.download?"true":"false",
+                "DOWNLOAD":     (l_value && item.apex.download)?"true":"false",
                 "MAXFILESIZE":  item.apex.maxFilesize||C_MAX_UPLOADSIZE,
                 "MIMETYPES":    item.apex.mimetypes,
-                "URL":          l_value?URL.createObjectURL(base64ToBlob(l_value.content, l_value.type)):null,
+                "URL":          l_value?URL.createObjectURL(base64ToBlob(l_value.content, l_value.type)):'',
                 "FILENAME":     l_value.name||'',
                 "MIMETYPE":     l_value.type||'',
                 "FILESIZE":     l_value.size||0
