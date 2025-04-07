@@ -3201,6 +3201,7 @@ console.error('propagateShow if: not implemented', schema.if)
    * returns {items:0, wrappertype: "xxx", html: "xxx"}
   */
   function generateForItems(schema, data, id, startend, newItem){
+    schema.apex = schema.apex || {};
     apex.debug.trace(">>jsonRegion.generateForItems", schema, data, id, startend, newItem);
     let l_generated = {items: 0, wrappertype: null, html: ''};
     if([C_APEX_FILEUPLOAD, C_APEX_IMAGEUPLOAD].includes(schema.apex.itemtype)){ // file/image upload are special objects
