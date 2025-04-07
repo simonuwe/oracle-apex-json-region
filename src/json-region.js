@@ -154,6 +154,7 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
  // delimiter between values for multiselect items
   const C_VALUESEPARATOR    = '|';
 
+  const C_DATA_DOWNLOAD     = 'download';   // Key for download data in jquery
   const C_MAX_UPLOADSIZE    = 1024;
   
     // the valid values for some keys
@@ -551,7 +552,7 @@ function base64ToBlob(base64, type) {
     itemtypes.type[schema.type]=true;
     switch(schema.type){
     case C_JSON_OBJECT:
-      for(let [l_name, l_property] of Object.entries(schema.properties)){
+      for(let [l_name, l_property] of Object.entries(schema.properties||{})){
         itemtypes = getItemtypes(l_property, itemtypes);
       }
     break;
@@ -565,12 +566,13 @@ function base64ToBlob(base64, type) {
       if(schema.format){
         itemtypes.format[schema.format] = true;
       }
-      if(schema.apex){
-        itemtypes.itemtype[schema.apex.itemtype] = true;
-      }
     break;
     }
- 
+
+    if(schema.apex){
+      itemtypes.itemtype[schema.apex.itemtype] = true;
+    }
+
     apex.debug.trace("<<jsonRegion.getItemtypes", itemtypes);
     return(itemtypes);
   }
@@ -1018,11 +1020,20 @@ console.error('propagateShow if: not implemented', schema.if)
       }
     break;
     case C_JSON_OBJECT:
-      if(typeof schema.properties == 'object'){
-        data = data ||{};
-        for(let [l_name, l_schema] of Object.entries(schema.properties)){
-          if(!(''+l_name).startsWith('_')){   // ignore properties having names starting with "_"
-            setObjectValues(genItemname(dataitem, l_name), dataitem, l_schema, schema.readOnly, data[l_name]);
+      if([C_APEX_FILEUPLOAD, C_APEX_IMAGEUPLOAD].includes(schema.apex.itemtype)){ // for file/image upload store data in jquery-object
+        if(pOptions.apex_version>=C_APEX_VERSION_2302){
+          $('#' + dataitem).data(C_DATA_DOWNLOAD, l_value);
+          if(l_value){
+            $('#' + dataitem + ' .a-FileDrop-download').attr(C_DATA_DOWNLOAD, l_value.name); //APEX HACK, force download of file
+          }
+        }
+      } else {      
+        if(typeof schema.properties == 'object'){
+          data = data ||{};
+          for(let [l_name, l_schema] of Object.entries(schema.properties)){
+            if(!(''+l_name).startsWith('_')){   // ignore properties having names starting with "_"
+              setObjectValues(genItemname(dataitem, l_name), dataitem, l_schema, schema.readOnly, data[l_name]);
+            }
           }
         }
       }
@@ -1063,19 +1074,12 @@ console.error('propagateShow if: not implemented', schema.if)
       }
 
       if(!schema.readOnly || [C_APEX_QRCODE].includes(schema.apex.itemtype)){
-        if((pOptions.apex_version>=C_APEX_VERSION_2202 || ( 
+        if(pOptions.apex_version>=C_APEX_VERSION_2202 || ( 
              ![C_JSON_FORMAT_DATETIME, C_JSON_FORMAT_DATE].includes(schema.format) &&
              ![C_APEX_STARRATING].includes(schema.apex.itemtype)
-           )) &&
-           ![C_APEX_FILEUPLOAD, C_APEX_IMAGEUPLOAD].includes(schema.apex.itemtype)
+           )
         ){  // hack for old jet-data-picker, starrating
           apex.item(dataitem).setValue(l_value||'');
-        }
-        if([C_APEX_FILEUPLOAD, C_APEX_IMAGEUPLOAD].includes(schema.apex.itemtype)){ // for file/image upload store data in jquery-object
-          $('#' + dataitem).data(schema.apex.itemtype, l_value);
-          if(l_value){
-            $('#' + dataitem + ' .a-FileDrop-download').attr('download', l_value.name); //APEX HACK, force download of file
-          }
         }
       }
     break;
@@ -1178,12 +1182,38 @@ console.error('propagateShow if: not implemented', schema.if)
       }
     break;
     case C_JSON_OBJECT:
-      if(typeof schema.properties == 'object'){
-        data = data ||{};
-        for(let [l_name, l_schema] of Object.entries(schema.properties)){
-          if(!(''+l_name).startsWith('_')){   // ignore properties having names starting with "_"
-            const l_item = genItemname(dataitem, l_name)
-            attachObject(l_item, dataitem, l_schema, schema.readOnly, data[l_name], newItem, l_schema, l_item);
+      if([C_APEX_FILEUPLOAD, C_APEX_IMAGEUPLOAD].includes(schema.apex.itemtype)){  // handling for file-/image-upload object
+        apex.item.create(dataitem, {});
+        $('#' + dataitem).on("change", function(event){ 
+          const l_file = this.files[0];
+          console.log("FileUpload: ", l_file);
+          if(l_file){
+            var reader = new FileReader();      
+            reader.onload = function(event){
+              var contents = event.target.result;     
+              const l_data =arrayBufferToBase64(event.target.result);
+                // store file info in JQuery-object
+              $('#' + dataitem).data(C_DATA_DOWNLOAD, {name: l_file.name, size: l_file.size, type: l_file.type, content: l_data});
+              console.log('File: ', l_file);              
+            };      
+            reader.onerror = function(event){
+              console.error("File could not be read! Code " + event.target.error.code);
+            }
+          } else {  // no files, so empty data in JQuery object 
+            $('#' + dataitem).data(C_DATA_DOWNLOAD, null);
+          };  
+          if(l_file && l_file.size <= (schema.apex.maxFilesize||C_MAX_UPLOADSIZE) * 1024){    
+              reader.readAsArrayBuffer(l_file);        
+          }
+        });
+      } else {
+        if(typeof schema.properties == 'object'){
+          data = data ||{};
+          for(let [l_name, l_schema] of Object.entries(schema.properties)){
+            if(!(''+l_name).startsWith('_')){   // ignore properties having names starting with "_"
+              const l_item = genItemname(dataitem, l_name)
+              attachObject(l_item, dataitem, l_schema, schema.readOnly, data[l_name], newItem, l_schema, l_item);
+            }
           }
         }
       }
@@ -1222,27 +1252,6 @@ console.error('propagateShow if: not implemented', schema.if)
         switch (schema.apex.itemtype){
         case C_APEX_RADIO:
           apex.widget.checkboxAndRadio('#'+ dataitem, C_APEX_RADIO);
-        break;
-        case C_APEX_FILEUPLOAD:
-        case C_APEX_IMAGEUPLOAD:
-          apex.item.create(dataitem, {});
-          $('#' + dataitem).on("change", function(event){ 
-            const l_file = this.files[0];
-            console.log("FileUpload: ", l_file);
-            var reader = new FileReader();      
-            reader.onload = function(event){
-              var contents = event.target.result;     
-              const l_data =arrayBufferToBase64(event.target.result);
-              $('#' + dataitem).data(schema.apex.itemtype, {name: l_file.name, size: l_file.size, type: l_file.type, content: l_data});
-              console.log('File: ', l_file);              
-            };      
-            reader.onerror = function(event){
-              console.error("File could not be read! Code " + event.target.error.code);
-            };  
-            if(l_file && l_file.size <= (schema.apex.maxFilesize||C_MAX_UPLOADSIZE) * 1024){    
-              reader.readAsArrayBuffer(l_file);        
-            }
-          });
         break;
         case C_APEX_IMAGEDISPLAY:  // display only
         case C_APEX_QRCODE: // display only
@@ -1415,15 +1424,19 @@ console.error('propagateShow if: not implemented', schema.if)
       switch(schema.type){
       case C_JSON_OBJECT:
         oldJson = oldJson||{};
-        if(schema.properties){
-          for(let [l_name, l_schema] of Object.entries(schema.properties)){
-            const l_itemname = genItemname(dataitem, l_name);
-            let l_propertyname = l_name;
-            if(!C_JSON_CONST in l_schema && l_schema.type!=C_JSON_NULL && !(''+l_name).startsWith('_')){
+        if([C_APEX_IMAGEUPLOAD, C_APEX_FILEUPLOAD].includes(schema.apex.itemtype)){  // Fileupload has store data in jquery object
+          l_json = $('#' + dataitem).data(C_DATA_DOWNLOAD);
+        } else {
+          if(schema.properties){
+            for(let [l_name, l_schema] of Object.entries(schema.properties)){
+              const l_itemname = genItemname(dataitem, l_name);
+              let l_propertyname = l_name;
+              if(!C_JSON_CONST in l_schema && l_schema.type!=C_JSON_NULL && !(''+l_name).startsWith('_')){
                 // no const, no type null and name does not start with _, there is a UI-item
-              l_propertyname = $('#' + l_itemname + '_CONTAINER').attr('json-property');
+                l_propertyname = $('#' + l_itemname + '_CONTAINER').attr('json-property');
+              }
+              l_json[l_propertyname]=getObjectValues(l_itemname, l_name, l_schema, null, oldJson[l_name]);
             }
-            l_json[l_propertyname]=getObjectValues(l_itemname, l_name, l_schema, null, oldJson[l_name]);
           }
         }
       break;
@@ -1467,12 +1480,8 @@ console.error('propagateShow if: not implemented', schema.if)
       case C_JSON_BOOLEAN:{
         let l_data = null;
         let l_value = null;
-        if(schema.type == C_JSON_STRING && [C_APEX_IMAGEUPLOAD, C_APEX_FILEUPLOAD].includes(schema.apex.itemtype)){  // Fileupload has store data in jquery object
-          l_value = l_data = $('#' + dataitem).data(schema.apex.itemtype);
-        } else {
-          l_data = apex.item(dataitem).getValue();
-          l_value = itemValue2Json(schema, l_data);
-        }
+        l_data = apex.item(dataitem).getValue();
+        l_value = itemValue2Json(schema, l_data);
         if(l_value!=null){
           l_json = l_value;
         } else {
@@ -1760,14 +1769,11 @@ console.error('propagateShow if: not implemented', schema.if)
 
         // propagate the dependentRequired directly to the properties 
     if(schema.type==C_JSON_OBJECT){ 
-      if(schema.properties){
-        // if(Object.keys(schema.properties).length==0){  // items should have at least one entry
-        //  apex.debug.warn('object should have at least 1 property')
-        //}
-      } else {
+      if(!schema.properties && ![C_APEX_FILEUPLOAD, C_APEX_IMAGEUPLOAD].includes(schema.apex.itemtype)){
         logSchemaError('missing "properties" for "type": "object"');
         schema.properties={}; 
       }
+
       schema.additionalProperties = booleanIfNotSet(schema.additionalProperties, additionalProperties);
       if(schema.dependentRequired){
         for(let [l_name, l_schema] of Object.entries(schema.dependentRequired)){
@@ -2468,17 +2474,6 @@ console.error('propagateShow if: not implemented', schema.if)
 <input type="text" id="#ID#" name="#ID#" #REQUIRED# #MINLENGTH# #MAXLENGTH# value="#VALUE#" #PLACEHOLDER# #PATTERN# #TEXTCASE# class="#ALIGN# text_field apex-item-text" size="32" data-trim-spaces="#TRIMSPACES#" aria-describedby="#ID#_error">
 `};
           switch (schema.apex.itemtype){
-          case C_APEX_FILEUPLOAD:
-          case C_APEX_IMAGEUPLOAD:
-            l_generated = {
-              items: 1,
-              wrappertype: 'apex-item-wrapper--file',
-              html: `
-<a-file-upload id="#ID#" #REQUIRED# upload-type="#UPLOADTYPE#" display-style="#DISPLAYSTYLE#" accept="#MIMETYPES#" size="30" label="Drop file" description="Select a file or drop one here." max-file-size="#MAXFILESIZE#" filename="#FILENAME#" file-size="#FILESIZE#" mimetype="#MIMETYPE#" show-clear-button="#CLEARBUTTON#" link="#URL#" download-link="true" readonly="#READONLY#">
-  <input id="#ID#_input"/>
-</a-file-upload>
-`};        
-          break;
           case C_APEX_COLOR:
             l_generated = {
               items: 1,                
@@ -2580,6 +2575,27 @@ console.error('propagateShow if: not implemented', schema.if)
         }
     }
     apex.debug.trace("<<jsonRegion.generateForNumeric", l_generated);
+    return(l_generated);
+  };
+
+
+  /*
+   * generate the UI-item for a string property depending on itemtype.
+   * returns {items: 0, wrappertype: "xxx", html: "xxx"}
+  */    
+  function generateForUpload(schema, data, id){
+    let l_generated = {items: 0, wrappertype: null, html: ''};
+    schema.apex = schema.apex||{};
+    apex.debug.trace(">>jsonRegion.generateForUpload", schema, data, id);
+    l_generated = {
+      items: 1,
+      wrappertype: schema.apex.itemtype==C_APEX_IMAGEUPLOAD?'apex-item-wrapper--image-upload':'apex-item-wrapper--file',
+      html: `
+<a-file-upload id="#ID#" #REQUIRED# upload-type="#UPLOADTYPE#" display-style="#DISPLAYSTYLE#" accept="#MIMETYPES#" size="30" label="Drop file" description="Select a file or drop one here." max-file-size="#MAXFILESIZE#" filename="#FILENAME#" file-size="#FILESIZE#" mimetype="#MIMETYPE#" show-clear-button="#CLEARBUTTON#" link="#URL#" download-link="#DOWNLOAD#" readonly="#READONLY#">
+  <input id="#ID#_input"/>
+</a-file-upload>
+`};        
+    apex.debug.trace("<<jsonRegion.generateForUpload", l_generated);
     return(l_generated);
   };
 
@@ -3043,7 +3059,11 @@ console.error('propagateShow if: not implemented', schema.if)
       l_generated = generateForArray(item, data, id);
     break;
     case C_JSON_OBJECT:
-      l_generated = generateForObject(item, data, '', id, startend, newItem);
+      if([C_APEX_FILEUPLOAD, C_APEX_IMAGEUPLOAD].includes(item.apex.itemtype)){ // file/image upload are special objects
+        l_generated = generateForUpload(item, data, id);
+      } else {
+        l_generated = generateForObject(item, data, '', id, startend, newItem);
+      }
     break;
     case C_JSON_STRING:
       l_generated = generateForString(item, data, id);
@@ -3160,6 +3180,7 @@ console.error('propagateShow if: not implemented', schema.if)
                 "UPLOADTYPE":   item.apex.itemtype==C_APEX_FILEUPLOAD?'FILE':'IMAGE',
                 "DISPLAYSTYLE": 'DROPZONE_INLINE',
                 "CLEARBUTTON":  item.isRequired?"false":"true",
+                "DOWNLOAD":     item.apex.download?"true":"false",
                 "MAXFILESIZE":  item.apex.maxFilesize||C_MAX_UPLOADSIZE,
                 "MIMETYPES":    item.apex.mimetypes,
                 "URL":          l_value?URL.createObjectURL(base64ToBlob(l_value.content, l_value.type)):null,
@@ -3182,18 +3203,26 @@ console.error('propagateShow if: not implemented', schema.if)
   function generateForItems(schema, data, id, startend, newItem){
     apex.debug.trace(">>jsonRegion.generateForItems", schema, data, id, startend, newItem);
     let l_generated = {items: 0, wrappertype: null, html: ''};
-    const items = schema.properties ||{};
-    for(let [l_name, l_item] of Object.entries(items)){
-      if(!(''+l_name).startsWith('_')){
-        if(l_item.apex.textBefore|| l_item.apex.newRow) {
-          l_generated.html += generateSeparator(l_item, l_item.apex.textBefore, null, false);
-        }
-        const l_gen = generateForItem(l_item, data[l_name], genItemname(id, l_name), startend, newItem);
+    if([C_APEX_FILEUPLOAD, C_APEX_IMAGEUPLOAD].includes(schema.apex.itemtype)){ // file/image upload are special objects
+      if(schema.apex.textBefore|| schema.apex.newRow) {
+        const l_gen = generateSeparator(schema, schema.apex.textBefore, null, false);
         l_generated.html += l_gen.html;
         l_generated.items += l_gen.items;
       }
+      l_generated.html += generateForItem(schema, data, genItemname(id, l_name), startend, newItem);
+    } else {
+      const items = schema.properties ||{};
+      for(let [l_name, l_item] of Object.entries(items)){
+        if(!(''+l_name).startsWith('_')){
+          if(l_item.apex.textBefore|| l_item.apex.newRow) {
+            l_generated.html += generateSeparator(l_item, l_item.apex.textBefore, null, false);
+          }
+          const l_gen = generateForItem(l_item, data[l_name], genItemname(id, l_name), startend, newItem);
+          l_generated.html += l_gen.html;
+          l_generated.items += l_gen.items;
+        }
+      }
     }
-
     let l_gen = generateForConditional(schema, data, '', id, startend, false, newItem);
     l_generated.html += l_gen.html;
     l_generated.items += l_gen.items;

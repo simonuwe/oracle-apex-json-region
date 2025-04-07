@@ -79,7 +79,9 @@ This works fine as long JSON-data is displayed only and you are hapopy with the 
 In the Page builder go to the page **Generate JSON** (3).
 As already shown above, create a region **JSON_REGION**. At **Attributes** select the JSON-Item **P3_DATA**. Set **Source** to **Static** . 
 
-No start the application and select the **Fixed JSONs** menu. Click on the icon in one of the rows.
+Set the **Session State** **Data Type** to **CLOB**, otherwise the JSON-data could be truncated.
+
+Now start the application and select the **Fixed JSONs** menu. Click on the icon in one of the rows.
 
 ![tutorial-15](tutorial-15.png)
 
