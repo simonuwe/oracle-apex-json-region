@@ -1772,6 +1772,8 @@ console.error('propagateShow if: not implemented', schema.if)
       if(!schema.properties && ![C_APEX_FILEUPLOAD, C_APEX_IMAGEUPLOAD].includes(schema.apex.itemtype)){
         logSchemaError('missing "properties" for "type": "object"');
         schema.properties={}; 
+      } else {
+        schema.readOnly = booleanIfNotSet(schema.readOnly, readonly);
       }
 
       schema.additionalProperties = booleanIfNotSet(schema.additionalProperties, additionalProperties);
@@ -3179,7 +3181,7 @@ console.error('propagateShow if: not implemented', schema.if)
             placeholders: {
                 "UPLOADTYPE":   item.apex.itemtype==C_APEX_FILEUPLOAD?'FILE':'IMAGE',
                 "DISPLAYSTYLE": 'DROPZONE_INLINE',
-                "CLEARBUTTON":  item.isRequired?"false":"true",
+                "CLEARBUTTON":  (item.readOnly || item.isRequired)?"false":"true",
                 "DOWNLOAD":     (l_value && item.apex.download)?"true":"false",
                 "MAXFILESIZE":  item.apex.maxFilesize||C_MAX_UPLOADSIZE,
                 "MIMETYPES":    item.apex.mimetypes,

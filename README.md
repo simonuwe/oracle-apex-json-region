@@ -112,13 +112,10 @@ In Oracle 23ai JSON-collection-views are always readonly, so only SELECT is supp
 
 ## Current status
 - only one schema in **dependentSchemas**
-- no schema composition (**AllOf**, **OneOf**, **AnyOf**)
-- only support of standard APEX-field-validation (APEX's date/date-time Javascript-validation has a Bug)
+- no schema composition (**OneOf**, **AnyOf**)
+- only support of standard APEX-field-validation (APEX's date/date-time Javascript-validation has a Bug, file-/image-upload and required has Bug)
 - If JSON-data is stored in a CLOB-column use check-constraint **IS JSON(STRICT)**
 - Now with PWA support
 - support of arrays (for multiple-choice checkboces)
 - support of arrays (single property and object)
 - support of file-/image-upload
-
-## Next steps
-- full support of arrays

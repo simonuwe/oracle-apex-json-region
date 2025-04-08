@@ -42,6 +42,10 @@ The script
 installs the additional table **JSON_REGION_SCHEMA** and the function **JSON_REGION_GENERATE_ENUM** for JSON-schema references and dynamic JSON-schema.
 These are used when you select for **object_type_name** values which name starts with **test-ref-**.
 
+**Caution:** The Demo works for APEX >=21.2
+With **APEX>=23.2** the **fileupload** **imageupload** is supported. When using this, change in **Page 11 object** the **Session State** **Data Type** to **CLOB**, otherwise **files > 8000 Bytes** return **ORA-40441: JSON syntax error** or similar - truncated JSON.
+In 21.2 it is not possible to specify the datatyp of the session state.
+
 ### Deinstallation of the plugin-support-table
 
 This is automatically deinstalled when deleting the applications  **json-region-demo** including the **supporting object*.

@@ -1,11 +1,13 @@
 # 0.9.7.4
 
 ## Fixed Isses
+
   - #192 "type": "null" and "const": "...." causes a console error output
 
 ## New Features
 
  - #135 APEX-deprecate info: change plugin-callbacks to procedure
+ - #191 Upload of files and store content as base64
 
 # 0.9.7.3a 2024-03-31
 
