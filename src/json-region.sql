@@ -1,7 +1,10 @@
 /*
- * JSON-region-plugin 0.9.7.3
+ * JSON-region-plugin 0.9.7.4
  * (c) Uwe Simon 2023, 2025
  * Apache License Version 2.0
+ *
+ * TODO: Remove conditional compile when min supported version is APEX >=24.2
+ *
 */
 
 /* 
@@ -90,34 +93,70 @@ END readschemafromdictionary;
 /*
  * Called when the plugin is to be rendered
  */
-FUNCTION render_region(p_region              IN apex_plugin.t_region,
-                       p_plugin              IN apex_plugin.t_plugin,
-                       p_is_printer_friendly IN BOOLEAN)
-  RETURN apex_plugin.t_region_render_result IS
+
+FUNCTION render_json_region(
+    p_region              IN apex_plugin.t_region,
+    p_plugin              IN apex_plugin.t_plugin,
+    p_is_printer_friendly IN BOOLEAN)
+  RETURN apex_plugin.t_region_render_result
+IS
   -- plugin attributes
   l_apex_version        apex_release.version_no%TYPE;
+  l_name                p_region.name%TYPE;   -- name of the region
+  l_dataitem            p_region.source%TYPE; -- dataitem with JSON-data P00_....
+  l_source              VARCHAR(32767);       -- source the for JSON-Schema (0: generate, 1: static, others SQL-query)
+  l_schema              VARCHAR(32767);       -- The fixed JSON-schema
+  l_query               VARCHAR(32767);       -- The SQL-query to retrieve the JSON-schema
+  l_colwidth            NUMBER;               -- The column width for the field items in universal theme 1,2,3,4,6,12
+  l_template            VARCHAR(32767);       -- Template used for input items        
+  l_textareawidth       NUMBER;               -- The limit when textarea is used for long tex inputs
+  l_keepattributes      BOOLEAN;              -- keep additional attributes not mentioned in JSON-schema
+  l_additionalschema    VARCHAR(32767);       -- an additional schema merged with the "original" JSON-schema
+  l_headers             BOOLEAN;              -- Show headers when sub-objects are in the JSON-schema
+  l_hide                BOOLEAN;              -- Hide the JSON-field (default is true)
+  l_removenulls         BOOLEAN;              -- Remove attributed from JSON with a NULL-value  
+  l_is_printer_friendly BOOLEAN;              -- printerfriendly output
   l_result              apex_plugin.t_region_render_result;
-  l_name                p_region.name%TYPE         := p_region.name;
-  l_dataitem            p_region.source%TYPE       := UPPER(NVL(p_region.attribute_10, p_region.source));
-  l_source              p_region.attribute_02%TYPE := p_region.attribute_02;                            -- source the for JSON-Schema (0: generate, 1: static, others SQL-query)
-  l_schema              p_region.attribute_03%TYPE := p_region.attribute_03;                            -- The fixed JSON-schema
-  l_query               p_region.attribute_04%TYPE := p_region.attribute_04;                            -- The SQL-query to retrieve the JSON-schema
-  l_colwidth            p_region.attribute_05%TYPE := p_region.attribute_05;                            -- The column width for the field items in universal theme 1,2,3,4,6,12
-  l_template            p_region.attribute_11%TYPE :=  NVL(p_region.attribute_11, 'floating');          -- Template used for input items        
-  l_textareawidth       p_region.attribute_01%TYPE :=  NVL(p_region.attribute_01, 250);                 -- The limit when textarea is used for long tex inputs
-  l_keepattributes      p_region.attribute_06%TYPE :=  NVL(p_region.attribute_06, 'N');                 -- keep additional attributes not mentioned in JSON-schema
-  l_additionalschema    p_region.attribute_14%TYPE := p_region.attribute_14;                            -- an additional schema merged with the "original" JSON-schema
-  l_headers             p_region.attribute_07%TYPE :=  NVL(p_region.attribute_07, 'N');                 -- Show headers when sub-objects are in the JSON-schema
-  l_hide                BOOLEAN                    :=  NVL(p_region.attribute_08, 'Y')='Y';             -- Hide the JSON-field (default is true)
-  l_removenulls         BOOLEAN                    :=  NVL(p_region.attribute_09, 'Y')='Y';             -- Remove attributed from JSON with a NULL-value  
   l_queryitems          VARCHAR2(4000);
   l_delimiter           VARCHAR2(1);
   l_binds               DBMS_SQL.varchar2_table;
 --  l_columun     apex_plugin.t_region_column := p_region.region_columns(0);
   l_readonly    BOOLEAN;
 BEGIN
-  apex_plugin_util.debug_region(p_plugin => p_plugin, p_region => p_region, p_is_printer_friendly =>true);
+$IF wwv_flow_api.c_current>=20241130
+$THEN  -- new API for >= APEX_24.2
+  l_dataitem            := UPPER(p_region.attributes.get_varchar2('attribute_10', p_region.source));
+  l_source              := p_region.attributes.get_varchar2('attribute_02', p_region.attribute_02);
+  l_schema              := p_region.attributes.get_varchar2('attribute_03', p_region.attribute_03);
+  l_query               := p_region.attributes.get_varchar2('attribute_04', p_region.attribute_04);
+  l_colwidth            := p_region.attributes.get_varchar2('attribute_05', p_region.attribute_05);
+  l_template            := p_region.attributes.get_varchar2('attribute_11', 'floating');        
+  l_textareawidth       := p_region.attributes.get_varchar2('attribute_01', 250);
+  l_keepattributes      := p_region.attributes.get_boolean('attribute_06', false);
+  l_additionalschema    := p_region.attributes.get_varchar2('attribute_14', p_region.attribute_14);
+  l_headers             := p_region.attributes.get_boolean('attribute_07', false);
+  l_hide                := p_region.attributes.get_boolean('attribute_08', true);
+  l_removenulls         := p_region.attributes.get_boolean('attribute_09', true);
+  APEX_DEBUG.TRACE('LEN-01: '||NVL(p_region.attribute_01,'NULL')||' '||LENGTH(p_region.attribute_01));
+$ELSE
+  l_dataitem            := UPPER(NVL(p_region.attribute_10, p_region.source));
+  l_source              := p_region.attribute_02;
+  l_schema              := p_region.attribute_03;
+  l_query               := p_region.attribute_04;
+  l_colwidth            := p_region.attribute_05;
+  l_template            := NVL(p_region.attribute_11, 'floating');        
+  l_textareawidth       := NVL(p_region.attribute_01, 250);
+  l_keepattributes      := NVL(p_region.attribute_06, 'N')='Y';
+  l_additionalschema    := p_region.attribute_14;
+  l_headers             := NVL(p_region.attribute_07, 'N')='Y';
+  l_hide                := NVL(p_region.attribute_08, 'Y')='Y';
+  l_removenulls         := NVL(p_region.attribute_09, 'Y')='Y';  
+  l_is_printer_friendly := p_is_printer_friendly;
+$END
   SELECT VERSION_NO INTO l_apex_version FROM APEX_RELEASE;
+  APEX_DEBUG.TRACE('APEX-Version: '||l_apex_version);
+  APEX_DEBUG.TRACE('DB-Version:   '||DBMS_DB_VERSION.VERSION);
+  apex_plugin_util.debug_region(p_plugin => p_plugin, p_region => p_region, p_is_printer_friendly =>l_is_printer_friendly);
   BEGIN
     IF(l_query IS NOT NULL) THEN -- dynamic json-schema from configured query
       l_schema:=readSchema(l_query);  
@@ -149,9 +188,10 @@ BEGIN
   --l_schema    := apex_escape.json(l_schema);
   l_readonly  := APEX_REGION.IS_READ_ONLY;
 
-$if wwv_flow_api.c_current<20231031 $then   -- apex_barcode is only available in APEX >=23.2 (20231031), so conditional compile
+$IF wwv_flow_api.c_current<20241130 
+$THEN   -- must include requireJS when >APEX_24.2
     APEX_JAVASCRIPT.ADD_REQUIREJS();
-$end
+$END
 --  APEX_JAVASCRIPT.ADD_ONLOAD_CODE(
     -- execute the code directly not via add_onload_code. Hack to enable the handlers for text-/number-items
   APEX_JAVASCRIPT.ADD_INLINE_CODE (
@@ -169,8 +209,8 @@ $end
          apex_javascript.add_attribute('colwidth',         l_colwidth) ||
          apex_javascript.add_attribute('readonly',         l_readonly) ||
          apex_javascript.add_attribute('textareawidth',    l_textareawidth) ||
-         apex_javascript.add_attribute('keepAttributes',   l_keepattributes!='N') ||
-         apex_javascript.add_attribute('headers',          l_headers!='N') ||
+         apex_javascript.add_attribute('keepAttributes',   l_keepattributes) ||
+         apex_javascript.add_attribute('headers',          l_headers) ||
          apex_javascript.add_attribute('hide',             l_hide) || 
          apex_javascript.add_attribute('removeNulls',      l_removenulls) || 
          apex_javascript.add_attribute('template',         l_template) || 
@@ -183,52 +223,89 @@ $end
   );                                 
   RETURN l_result;
   --
-END render_region;
+END render_json_region;
+
+
+$IF wwv_flow_api.c_current>=20241130
+$THEN  -- new API for >= APEX_24.2
+PROCEDURE render_json_region (
+    p_plugin IN            apex_plugin.t_plugin,
+    p_region IN            apex_plugin.t_region,
+    p_param  IN            apex_plugin.t_region_render_param,
+    p_result IN OUT NOCOPY apex_plugin.t_region_render_result )
+IS
+BEGIN
+  p_result := render_json_region(p_plugin => p_plugin, p_region => p_region, p_is_printer_friendly => p_param.is_printer_friendly);
+END;
+$END
+
 
 /*
  * The AJAX callback called from inside Javascript in the browser.
  * Must return a JSON
  */
-FUNCTION ajax_region(p_region IN apex_plugin.t_region,
+$IF wwv_flow_api.c_current>=20241130
+$THEN  -- new API for >= APEX_24.2
+PROCEDURE ajax_json_region (
+    p_plugin IN            apex_plugin.t_plugin,
+    p_region IN            apex_plugin.t_region,
+    p_param  IN            apex_plugin.t_region_ajax_param,
+    p_result IN OUT NOCOPY apex_plugin.t_region_ajax_result )
+$ELSE
+FUNCTION ajax_json_region(p_region IN apex_plugin.t_region,
                      p_plugin IN apex_plugin.t_plugin)
-  RETURN apex_plugin.t_region_ajax_result IS
-  l_sqlquery  p_region.attribute_04%TYPE := p_region.attribute_04;  -- the SQLquery entered in page designer is passed in attribute_04;
-  l_refquery  p_region.attribute_12%TYPE := NVL(p_region.attribute_12, p_plugin.attribute_01); -- The query to retreive the schema reference column, If set on region level use it, els from Component level
+  RETURN apex_plugin.t_region_ajax_result 
+$END
+IS
+  l_sqlquery  VARCHAR2(32767);             -- the SQL-query entered in page designer is passed in attribute_04;
+  l_refquery  VARCHAR2(32767);             -- The query to retreive the schema reference column, If set on region level use it, els from Component level
+  l_function  APEX_APPLICATION.g_x04%TYPE; -- function executed by AJAX-callback
+  l_param1    APEX_APPLICATION.g_x05%TYPE; -- 1st parameter for function
   l_result    apex_plugin.t_region_ajax_result;
-  l_function  APEX_APPLICATION.g_x04%TYPE := APEX_APPLICATION.g_x04;
-  l_param1    APEX_APPLICATION.g_x05%TYPE := APEX_APPLICATION.g_x05;
-  l_json      VARCHAR2(32000);
+  l_json      VARCHAR2(32767);
   l_j         APEX_JSON.T_VALUES;
   l_svg       CLOB;
 BEGIN
   apex_plugin_util.debug_region(p_plugin => p_plugin, p_region => p_region);
+$IF wwv_flow_api.c_current>=20241130
+$THEN  -- new API for >= APEX_24.2
+  l_sqlquery  := p_region.attributes.get_varchar2('attribute_04', p_region.attribute_04);
+  l_refquery  := NVL(p_region.attributes.get_varchar2('attribute_12', p_region.attribute_12), p_plugin.attribute_01);  -- region specific attribute_12 or when empty plugin attribute_01
+$ELSE
+  l_sqlquery  := p_region.attribute_04;
+  l_refquery  := NVL(p_region.attribute_12, p_plugin.attribute_01);
+$END
+
+  l_function  := APEX_APPLICATION.g_x04;
+  l_param1    := APEX_APPLICATION.g_x05;
   BEGIN
         -- x01-x03 used by QRCode callback
-    APEX_DEBUG.TRACE('ajax_region pplugin %s', p_plugin.attribute_01);
-    APEX_DEBUG.TRACE('ajax_region source %s', p_region.source);
-    APEX_DEBUG.TRACE('ajax_region items %s', p_region.ajax_items_to_submit);
-    APEX_DEBUG.TRACE('ajax_region g_x01 %s', APEX_APPLICATION.g_x01);
+    APEX_DEBUG.TRACE('ajax_json_region pplugin %s', p_plugin.attribute_01);
+    APEX_DEBUG.TRACE('ajax_json_region source %s', p_region.source);
+    APEX_DEBUG.TRACE('ajax_json_region items %s', p_region.ajax_items_to_submit);
+    APEX_DEBUG.TRACE('ajax_json_region g_x01 %s', APEX_APPLICATION.g_x01);
     IF(APEX_APPLICATION.g_x01 IS NOT NULL AND LENGTH(APEX_APPLICATION.g_x01)>0) THEN  
         -- generate a QR-code  QC-code callback uses x01-x03
-$if wwv_flow_api.c_current>=20231031 $then
-        -- apex_barcode is only available in APEX >=23.2 (20231031), so conditional compile
+$IF wwv_flow_api.c_current>=20231031 
+$THEN
+        -- apex_qrcode is only available in APEX >=23.2 (20231031), so conditional compile
       l_svg := apex_barcode.get_qrcode_svg(p_value => APEX_APPLICATION.g_x01); 
       apex_json.open_object;
       apex_json.write('QR', l_svg);
-$else
+$ELSE
       apex_json.open_object;
       apex_json.write('{}');
-$end
+$END
     ELSE
-      APEX_DEBUG.TRACE('ajax_region g_x04 %s', l_function);
-      APEX_DEBUG.TRACE('ajax_region g_x05 %s', l_param1);
+      APEX_DEBUG.TRACE('ajax_json_region g_x04 %s', l_function);
+      APEX_DEBUG.TRACE('ajax_json_region g_x05 %s', l_param1);
       CASE APEX_APPLICATION.g_x04
         WHEN 'getSubschema' THEN  -- x05 contains the JSON-schema requested schema path
           l_json := generate_schema(l_refquery, l_param1);
           apex_json.parse(l_j , l_json);
           apex_json.write(l_j);
         WHEN 'getSchema' THEN  -- the names of the search items for requested JSON-schema is in pageItems
-          APEX_DEBUG.TRACE('ajax_region others');
+          APEX_DEBUG.TRACE('ajax_json_region others');
           l_json := readschema(l_sqlquery);
           apex_json.parse(l_j , l_json);
           apex_json.write(l_j);
@@ -242,5 +319,9 @@ $end
     apex_json.close_all(); 
     RAISE; 
   END;
+$IF wwv_flow_api.c_current<20241130 
+$THEN   -- old api < APEX_24.2
   RETURN l_result;
-END ajax_region;
+$END
+  --
+END ajax_json_region;

@@ -108,14 +108,14 @@ In Oracle 23ai JSON-collection-views are always readonly, so only SELECT is supp
 - In APEX 22.1 there is a general issue (with plugin and without) with "**Modal Dialog** with template **Drawer**", this causes a jquery-error (looks like a datepicker issue). Without "Drawer" all work fine. 
 - Theme-Style **redwood-light** does not work as expected (show **Required** even for optional items).
 
+**Caution:** In page-designer, set the **Session State** **Data Type** of the JSON-object to **CLOB**, otherwise the data will be truncated to 8000 characters.
+
 ## Current status
 - only one schema in **dependentSchemas**
-- no schema composition (**AllOf**, **OneOf**, **AnyOf**)
-- only support of standard APEX-field-validation (APEX's date/date-time Javascript-validation has a Bug)
+- no schema composition (**OneOf**, **AnyOf**)
+- only support of standard APEX-field-validation (APEX's date/date-time Javascript-validation has a Bug, file-/image-upload and required has Bug)
 - If JSON-data is stored in a CLOB-column use check-constraint **IS JSON(STRICT)**
 - Now with PWA support
 - support of arrays (for multiple-choice checkboces)
 - support of arrays (single property and object)
-
-## Next steps
-- full support of arrays
+- support of file-/image-upload

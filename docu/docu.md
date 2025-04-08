@@ -228,7 +228,12 @@ Currently supported are
     "prop10": {
       "type": "string", 
       "apex": {"itemtype": "qrcode"}
-    }
+    },
+    "prop11": {
+      "type": "object", 
+      "apex": { "itemtype": "fileupload", 
+                "maxFilesize": 128, 
+                "download": true, "mimetypes": "pdf,.png,.jpg,.gif,.csv" }}
   ...
   },
   "required": ["prop1", "pro2", ...],
@@ -315,13 +320,27 @@ Also the unsupported JSON-schema-formats like **ipv4**,**uuid**, **email, .. can
   - **selectone** to support the select dropdown of APEX>=24.1
   - **selectmany** to support the multi select dropdown of APEX>=24.1. Here the option **"asChips"=true** will display the items as chips, otherwise as separated list 
   - **richtext** to support a textarea with a richtext-editor (for APEX >=23.2). Use **collspan the use expand the columns, so that the iconbar of the richtext-editor fits  
-  - **qrcode** will display (the item will be readonly) a **string** as qrcode (for APEX >= 23.2).
+  - **qrcode** will display (the item will be readonly) a **string** as qrcode (for APEX >= 23.2). 
+
+- The itemtypes **fileupload**, **imageupload** are used for uploading files or images and store them as **base64** strings. The **apex**-property **maxFilesize** defines the filesizelimit in KB, **download** enables/disables the download link and **mimetypes** is a comma-separated list of mimetypes (image/png) or file-extensions (.png).
+ are special, because they use a JSON type **object** with properties
+  ```
+  {
+    "name": "filename", 
+    "type": "mimetype", 
+    "size": 123456,
+    "content": "BASE64..."
+  }
+  ```
+  The JSON-property **content** is the base64 coded binary data of the file, and **size** is the filesize in bytes.
+  Due to a limitation in the Browser-API of ```<input type="file">```, the file-/image-upload items can not be **required**.
+  (for APEX >=23.2)
+
 - For type **array**
   - **hasInsert** with values **begin**, **end** (default) or **none** defines where new rows are inserted in the list (**none** no insert permitted).
   - **hasDelete** enables the delete-button for the rows
   - if **readOnly: true**, setting **hasInsert** != none will allow to add new rows without the possibility to delete/change existing rows.
-
-For a better support of questionnaires, the output direction for itemtypes **radio** and **checkbox**  could be specified with **"direction": "horizontal"** (place the radiobutton or checkbox in a line), default is **vertical** (place in a column)
+  For a better support of questionnaires, the output direction for itemtypes **radio** and **checkbox**  could be specified with **"direction": "horizontal"** (place the radiobutton or checkbox in a line), default is **vertical** (place in a column)
 
 #### Advanced JSON-schema properties
 
@@ -351,10 +370,10 @@ The supported Identification types
 | Display Map | --- |
 | Display Only: Format Pain text | {"field1": "type": "...", "readOnly": true} |
 | Hidden | --- |
-| File Upload | --- |
+| File Upload | "field1": {"type": "object", "apex": { "itemtype": "fileupload", "maxFilesize": 128, "download": true, "mimetypes": "pdf,.png,.jpg,.gif,.csv" }} |
 | Geocoded Address | --- |
 | Hidden | --- |
-| Image Upload | --- |
+| Image Upload | "field1": {"type": "object", "apex": { "itemtype": "imageupload", "maxFilesize": 128, "download": true, "mimetypes": ".png,.jpg,.gif" }} |
 | List Manager | --- |
 | Markdown Editor | --- |
 | Number Field | {"field1": {"type": "number"}} |

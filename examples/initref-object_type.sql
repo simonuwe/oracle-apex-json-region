@@ -37,8 +37,7 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
                           },
     "comment":     {"type": "string", "maxLength": 500},
     "lastlogin":   {"type": "string", "format": "date-time", "default": "2023-01-02T12:10:20"},
-    "source":      {"const": "via APEX-a]')
-|| TO_CLOB(q'[pplication"},
+    "source":      {"const": "via APEX-application"},
     "dummy":       {"type": "null"}
   },
   "$defs":{
@@ -748,6 +747,18 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
     }
   }
 }]'));
+
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID, OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('29', 'test-const-1','{
+  "type": "object",
+  "properties": {
+    "string":       {"type": "string"},
+    "string_const": {"const": "const-abc"},
+    "bool_const":   {"const": true},
+    "num_const":    {"const": 123},
+    "null_type":    {"type": "null"}
+  }
+}');
+
 Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('2368','test-countries',TO_CLOB(q'[{
   "properties": {
     "region": {
@@ -1098,7 +1109,8 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
 || TO_CLOB(q'[           "street":  {"type": "string"}
          }
        }
-   }
+   },
+  "apex": {"validate": false}
 }]'));
 Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('16','test-if-2',TO_CLOB(q'[{
   "type": "object",
@@ -1574,7 +1586,8 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
     "object_type": {"$ref": "/enums/object_type", "apex": {"newRow": true, "textBefore": "dynamic enum"}},
     "boolean":     {"$ref": "/defs/boolean", "apex": {"label": "external fixed schema from an other ta]')
 || TO_CLOB(q'[ble"}}
-  }
+  },
+  "apex": {"validate": false}
 }]'));
 Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('2404','test-ref-3','{
   "type": "object",
@@ -1734,6 +1747,20 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
   },
   "apex": {"template": "above"}
 }]'));
+
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('22261','test-upload-1','{
+  "type": "object",
+  "properties": {
+    "file": {
+      "type": "object",  
+      "apex": {"itemtype": "fileupload", "maxFilesize": 128, "download": true, "mimetypes": ".pdf,.png,.jpg,.gif,.csv" }},
+    "image": {
+      "type": "object",  
+      "apex": {"itemtype": "imageupload", "maxFilesize": 128, "download": true, "mimetypes": ".png,.jpg,.gif,.csv" }
+    }
+  }
+}');
+
 Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('25','test-validate-1',TO_CLOB(q'[{
   "type":"object",
   "properties": {
