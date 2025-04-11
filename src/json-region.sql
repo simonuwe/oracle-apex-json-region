@@ -1,5 +1,5 @@
 /*
- * JSON-region-plugin 0.9.7.4
+ * JSON-region-plugin 0.9.7.4a
  * (c) Uwe Simon 2023, 2025
  * Apache License Version 2.0
  *
@@ -225,37 +225,13 @@ $END
   --
 END render_json_region;
 
-
-$IF wwv_flow_api.c_current>=20241130
-$THEN  -- new API for >= APEX_24.2
-PROCEDURE render_json_region (
-    p_plugin IN            apex_plugin.t_plugin,
-    p_region IN            apex_plugin.t_region,
-    p_param  IN            apex_plugin.t_region_render_param,
-    p_result IN OUT NOCOPY apex_plugin.t_region_render_result )
-IS
-BEGIN
-  p_result := render_json_region(p_plugin => p_plugin, p_region => p_region, p_is_printer_friendly => p_param.is_printer_friendly);
-END;
-$END
-
-
 /*
  * The AJAX callback called from inside Javascript in the browser.
  * Must return a JSON
  */
-$IF wwv_flow_api.c_current>=20241130
-$THEN  -- new API for >= APEX_24.2
-PROCEDURE ajax_json_region (
-    p_plugin IN            apex_plugin.t_plugin,
-    p_region IN            apex_plugin.t_region,
-    p_param  IN            apex_plugin.t_region_ajax_param,
-    p_result IN OUT NOCOPY apex_plugin.t_region_ajax_result )
-$ELSE
 FUNCTION ajax_json_region(p_region IN apex_plugin.t_region,
                      p_plugin IN apex_plugin.t_plugin)
   RETURN apex_plugin.t_region_ajax_result 
-$END
 IS
   l_sqlquery  VARCHAR2(32767);             -- the SQL-query entered in page designer is passed in attribute_04;
   l_refquery  VARCHAR2(32767);             -- The query to retreive the schema reference column, If set on region level use it, els from Component level
@@ -319,9 +295,29 @@ $END
     apex_json.close_all(); 
     RAISE; 
   END;
-$IF wwv_flow_api.c_current<20241130 
-$THEN   -- old api < APEX_24.2
+  --
   RETURN l_result;
-$END
   --
 END ajax_json_region;
+
+$IF wwv_flow_api.c_current>=20241130
+$THEN  -- new API for >= APEX_24.2
+PROCEDURE render_json_region (
+    p_plugin IN            apex_plugin.t_plugin,
+    p_region IN            apex_plugin.t_region,
+    p_param  IN            apex_plugin.t_region_render_param,
+    p_result IN OUT NOCOPY apex_plugin.t_region_render_result )
+IS
+BEGIN
+  p_result := render_json_region(p_plugin => p_plugin, p_region => p_region, p_is_printer_friendly => p_param.is_printer_friendly);
+END;
+
+PROCEDURE ajax_json_region (
+    p_plugin IN            apex_plugin.t_plugin,
+    p_region IN            apex_plugin.t_region,
+    p_param  IN            apex_plugin.t_region_ajax_param,
+    p_result IN OUT NOCOPY apex_plugin.t_region_ajax_result ) IS
+BEGIN
+  p_result := ajax_json_region(p_plugin=>p_plugin, p_region=>p_region);
+END;
+$END

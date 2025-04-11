@@ -1,3 +1,9 @@
+# 0.9.7.4a
+
+## Fixed Isses
+
+  - #195 Import pre APEX-24.2 application into APEX 242 with plugin-0.9.7.4 causes PL/SQL-errors at runtime
+
 # 0.9.7.4
 
 ## Fixed Isses

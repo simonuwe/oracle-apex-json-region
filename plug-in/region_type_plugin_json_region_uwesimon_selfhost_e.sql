@@ -31,7 +31,7 @@ prompt APPLICATION 100 - json-region-demo
 -- Application Export:
 --   Application:     100
 --   Name:            json-region-demo
---   Date and Time:   16:23 Tuesday April 8, 2025
+--   Date and Time:   16:51 Friday April 11, 2025
 --   Exported By:     UWE
 --   Flashback:       0
 --   Export Type:     Component Export
@@ -62,7 +62,7 @@ wwv_flow_api.create_plugin(
 ,p_css_file_urls=>'#PLUGIN_FILES#json-region.css'
 ,p_plsql_code=>wwv_flow_string.join(wwv_flow_t_varchar2(
 '/*',
-' * JSON-region-plugin 0.9.7.4',
+' * JSON-region-plugin 0.9.7.4a',
 ' * (c) Uwe Simon 2023, 2025',
 ' * Apache License Version 2.0',
 ' *',
@@ -288,37 +288,13 @@ wwv_flow_api.create_plugin(
 '  --',
 'END render_json_region;',
 '',
-'',
-'$IF wwv_flow_api.c_current>=20241130',
-'$THEN  -- new API for >= APEX_24.2',
-'PROCEDURE render_json_region (',
-'    p_plugin IN            apex_plugin.t_plugin,',
-'    p_region IN            apex_plugin.t_region,',
-'    p_param  IN            apex_plugin.t_region_render_param,',
-'    p_result IN OUT NOCOPY apex_plugin.t_region_render_result )',
-'IS',
-'BEGIN',
-'  p_result := render_json_region(p_plugin => p_plugin, p_region => p_region, p_is_printer_friendly => p_param.is_printer_friendly);',
-'END;',
-'$END',
-'',
-'',
 '/*',
 ' * The AJAX callback called from inside Javascript in the browser.',
 ' * Must return a JSON',
 ' */',
-'$IF wwv_flow_api.c_current>=20241130',
-'$THEN  -- new API for >= APEX_24.2',
-'PROCEDURE ajax_json_region (',
-'    p_plugin IN            apex_plugin.t_plugin,',
-'    p_region IN            apex_plugin.t_region,',
-'    p_param  IN            apex_plugin.t_region_ajax_param,',
-'    p_result IN OUT NOCOPY apex_plugin.t_region_ajax_result )',
-'$ELSE',
 'FUNCTION ajax_json_region(p_region IN apex_plugin.t_region,',
 '                     p_plugin IN apex_plugin.t_plugin)',
 '  RETURN apex_plugin.t_region_ajax_result ',
-'$END',
 'IS',
 '  l_sqlquery  VARCHAR2(32767);             -- the SQL-query entered in page designer is passed in attribute_04;',
 '  l_refquery  VARCHAR2(32767);             -- The query to retreive the schema reference column, If set on region level use it, els from Component level',
@@ -382,20 +358,39 @@ wwv_flow_api.create_plugin(
 '    apex_json.close_all(); ',
 '    RAISE; ',
 '  END;',
-'$IF wwv_flow_api.c_current<20241130 ',
-'$THEN   -- old api < APEX_24.2',
+'  --',
 '  RETURN l_result;',
-'$END',
 '  --',
 'END ajax_json_region;',
-''))
+'',
+'$IF wwv_flow_api.c_current>=20241130',
+'$THEN  -- new API for >= APEX_24.2',
+'PROCEDURE render_json_region (',
+'    p_plugin IN            apex_plugin.t_plugin,',
+'    p_region IN            apex_plugin.t_region,',
+'    p_param  IN            apex_plugin.t_region_render_param,',
+'    p_result IN OUT NOCOPY apex_plugin.t_region_render_result )',
+'IS',
+'BEGIN',
+'  p_result := render_json_region(p_plugin => p_plugin, p_region => p_region, p_is_printer_friendly => p_param.is_printer_friendly);',
+'END;',
+'',
+'PROCEDURE ajax_json_region (',
+'    p_plugin IN            apex_plugin.t_plugin,',
+'    p_region IN            apex_plugin.t_region,',
+'    p_param  IN            apex_plugin.t_region_ajax_param,',
+'    p_result IN OUT NOCOPY apex_plugin.t_region_ajax_result ) IS',
+'BEGIN',
+'  p_result := ajax_json_region(p_plugin=>p_plugin, p_region=>p_region);',
+'END;',
+'$END'))
 ,p_api_version=>2
 ,p_render_function=>'render_json_region'
 ,p_ajax_function=>'ajax_json_region'
 ,p_substitute_attributes=>true
 ,p_subscribe_plugin_settings=>true
 ,p_help_text=>'This plug-in was downloaded from https://github.com/simonuwe/oracle-apex-json-region and backported to APEX 20.2.'
-,p_version_identifier=>'0.9.7.4'
+,p_version_identifier=>'0.9.7.4a'
 ,p_about_url=>'https://github.com/simonuwe/oracle-apex-json-region'
 ,p_files_version=>270
 );
