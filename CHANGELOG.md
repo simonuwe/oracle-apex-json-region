@@ -1,8 +1,20 @@
+# 0.9.5
+
+## Fixed Isses
+
+ - #203 Readonly doesn't work correctly numeric enum/enum with value mapping
+
+## New Features
+
+ - #202 APEX-24.2 new Password Visibility
+
 # 0.9.7.4a
 
 ## Fixed Isses
 
   - #195 Import pre APEX-24.2 application into APEX 242 with plugin-0.9.7.4 causes PL/SQL-errors at runtime
+
+## New Features
 
 # 0.9.7.4
 

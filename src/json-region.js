@@ -1,7 +1,7 @@
 "use strict"
 
 /*
- * JSON-region 0.9.7.4
+ * JSON-region 0.9.7.5
  * Supports Oracle-APEX >=20.2 <=24.2
  * 
  * APEX JSON-region plugin
@@ -2304,6 +2304,21 @@ console.error('propagateShow if: not implemented', schema.if)
     return(l_generated);
   }
 
+  function generateForReadOnlyEnum(schema, data){
+    let l_generated = {items: 1, wrappertype: 'apex-item-wrapper--text-field', html: ''};
+    apex.debug.trace(">>jsonRegion.generateForReadOnlyEnum", schema, data);
+
+    if(typeof schema.apex.enum == 'object' && schema.apex.enum[data]) {
+      l_generated.html = '<span id="#ID#_DISPLAY" #REQUIRED# class="display_only apex-item-display-only" data-escape="true">#MAPPEDVALUE#</span>'
+      l_generated.html = apex.util.applyTemplate(l_generated.html, { placeholders: {"MAPPEDVALUE": schema.apex.enum[data]}});
+    } else {
+      l_generated.html = '<span id="#ID#_DISPLAY" #REQUIRED# class="display_only apex-item-display-only" data-escape="true">#VALUE#</span>'
+    }
+
+    apex.debug.trace("<<jsonRegion.generateForReadOnlyEnum", l_generated);
+    return(l_generated);
+  }
+
   /*
    * generate the UI-item for a string property depending on format, ...
    * returns {items: 0, wrappertype: "xxx", html: "xxx"}
@@ -2336,7 +2351,6 @@ console.error('propagateShow if: not implemented', schema.if)
 </span>
 <input type="hidden" id="#ID#" value="#VALUE#"/>
 `};
-
         }
       break;
       case C_APEX_QRCODE:
@@ -2348,11 +2362,15 @@ console.error('propagateShow if: not implemented', schema.if)
 `};
       break;
       default:
-        l_generated = {
-          items: 1,
-          wrappertype: 'apex-item-wrapper--text-field',
-          html: '<span id="#ID#_DISPLAY" #REQUIRED# class="display_only apex-item-display-only" data-escape="true">#VALUE#</span>'
-        };
+        if(schema.enum) {
+          l_generated = generateForReadOnlyEnum(schema, data);
+        } else {
+          l_generated = {
+            items: 1,
+            wrappertype: 'apex-item-wrapper--text-field',
+            html: '<span id="#ID#_DISPLAY" #REQUIRED# class="display_only apex-item-display-only" data-escape="true">#VALUE#</span>'
+          };
+        }
       break;
       }
     } else {
@@ -2538,7 +2556,11 @@ console.error('propagateShow if: not implemented', schema.if)
     let l_generated = {items: 0, wrappertype: null, html: ''};
     apex.debug.trace(">>jsonRegion.generateForNumeric", schema, data);
     if(Array.isArray(schema.enum)){  // numeric Pulldown
-      l_generated = generateForSelect(schema, data, C_APEX_SELECT, schema.apex);
+      if(schema.readOnly) {
+        l_generated = generateForReadOnlyEnum(schema, data);
+      } else {
+        l_generated = generateForSelect(schema, data, C_APEX_SELECT, schema.apex);
+      }
     } else {
           if(schema.apex.itemtype==C_APEX_PCTGRAPH){
             l_generated = {

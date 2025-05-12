@@ -1758,7 +1758,8 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
       "type": "object",  
       "apex": {"itemtype": "imageupload", "maxFilesize": 128, "download": true, "mimetypes": ".png,.jpg,.gif,.csv" }
     }
-  }
+  },
+  "required": ["file"]
 }');
 
 Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('25','test-validate-1',TO_CLOB(q'[{
