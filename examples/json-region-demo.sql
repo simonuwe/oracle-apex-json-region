@@ -31,7 +31,7 @@ prompt APPLICATION 100 - json-region-demo
 -- Application Export:
 --   Application:     100
 --   Name:            json-region-demo
---   Date and Time:   17:12 Sunday June 29, 2025
+--   Date and Time:   19:34 Sunday June 29, 2025
 --   Exported By:     UWE
 --   Flashback:       0
 --   Export Type:     Application Export
@@ -125,7 +125,7 @@ wwv_flow_api.create_flow(
 ,p_substitution_string_01=>'APP_NAME'
 ,p_substitution_value_01=>'json-region-demo'
 ,p_last_updated_by=>'UWE'
-,p_last_upd_yyyymmddhh24miss=>'20250629171056'
+,p_last_upd_yyyymmddhh24miss=>'20250629191953'
 ,p_file_prefix => nvl(wwv_flow_application_install.get_static_app_file_prefix,'')
 ,p_files_version=>3
 ,p_ui_type_name => null
@@ -20727,7 +20727,7 @@ wwv_flow_api.create_page(
 ,p_page_template_options=>'#DEFAULT#'
 ,p_protection_level=>'C'
 ,p_last_updated_by=>'UWE'
-,p_last_upd_yyyymmddhh24miss=>'20250628185558'
+,p_last_upd_yyyymmddhh24miss=>'20250629191952'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(8419018570100748)
@@ -21352,7 +21352,8 @@ wwv_flow_api.create_page_da_action(
 ,p_action=>'NATIVE_JAVASCRIPT_CODE'
 ,p_attribute_01=>wwv_flow_string.join(wwv_flow_t_varchar2(
 '$("#apex_wait_overlay").remove();',
-'$(".u-Processing").remove()'))
+'$(".u-Processing").remove();',
+'apex.message.showPageSuccess( "JSON-schema is generated");'))
 );
 wwv_flow_api.create_page_process(
  p_id=>wwv_flow_api.id(8424245289100767)

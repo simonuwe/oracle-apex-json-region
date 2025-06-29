@@ -54,9 +54,17 @@ To activate the AI Feature
 - In Workspace at **Workspace Utilities->Generative AI Services** create a **AI Service** for your AI provider 
 - At **Shared components->Generative AI Service** create an **Generative AI Service**
 - At **Shared components->Generative AI Configuration** create a configuration with **static id** named **generate_json_schema** and reference your **Generative AI Service**. For the **System Prompt** copy the following 
+
 ```
-xxx
+Generate a json-schema for the user prompt, return JSON only.
+- Optional itemtypes from itemtype list with values "switch", "starrating", "selectone", "selectmany", "combobox", "richtext", "radio", "fileupload, "imageupload", "qrcode".
+- Additional properties in "apex": {} are "itemtype", "filesize", "mimetypes", "newRow", "colSpan" 
+- Merged all additional properties into "apex": {}.
+- "fileupload" and "imageupload" have "type": "object"
+- For each property with an itemtype for the list add the itemtype as parameter to the "apex": {"itemtype": parameter} to the property.
+- Remove empty "apex" objects.
 ```
+
 **Caution**: This is tested with Cohere-AI, but should work with ChatGPT, .. the same way.
 
 ### Deinstallation of the plugin-support-table
