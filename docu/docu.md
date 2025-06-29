@@ -57,6 +57,13 @@ In addition the keyword **const** for a constant value is accepted.
     "type": "array",
     "items": {"type": "string", "enum": ["val1", "val2", ..]}
   },
+  "arr2": {
+    "type": "array",
+    "items": {
+      "field1": { "type": "string"},
+      "field2": { "type": "number"}
+    }
+  },
   "$defs":{
     "id": { 
       "type": "string", 
@@ -297,7 +304,7 @@ Optional configurations for the UI could be done with the **"apex": {...}**. The
 - **placeholder** the text shown when the inputfield is empty (iggnored for checkboxes, switches and radiobuttons).
 - **align** positions integer/number **left**, **center**, **right** in the input-item.
 - **textcase** for converting strings into **lower** or **upper**
-- **newRow** starts a new row, so the current filed will be the first i this row.
+- **newRow** starts a new row, so the current field will be the first in this row.
 - **textBefore** defines text with is shown in a row above the current field. This can be used for logically grouping properties. This will always start a **newRow** 
 - **lines** defines for long strings the rows used for the textarea.
 - **colSpan** defines the width of the item, values are 1 (small)  to 12 (full width)
@@ -482,7 +489,7 @@ In the configuration of the json column the **Type** must be **text** or **texta
 
 ### Example config
 
-The JSON-CLOB is named **P2_DATA**, the schema ist stored in table **object_type** and can be selected by **object_type_id=:P2_OBJECT_TYPE_ID**
+The JSON-CLOB is named **P2_DATA**, the schema is stored in table **object_type** and can be selected by **object_type_id=:P2_OBJECT_TYPE_ID**
 
 Configuration of the **JSON-data-column**
 
