@@ -1846,7 +1846,7 @@ console.error('propagateShow if: not implemented', schema.if)
         }
       break;
       case C_JSON_STRING:
-        if([C_APEX_QRCODE, C_APEX_IMAGEDISPLAY].includes(schema.apex.itemtype) && schema.contentEncoding == C_JSON_ENCODING_BASE64){
+        if([C_APEX_QRCODE, C_APEX_IMAGEDISPLAY].includes(schema.apex.itemtype)){
           schema.readOnly   = true;  // can not be changed
           schema.isRequired = false; // not required
         };
@@ -1856,6 +1856,7 @@ console.error('propagateShow if: not implemented', schema.if)
             if([C_JSON_IMAGE_GIF, C_JSON_IMAGE_JPG, C_JSON_IMAGE_PNG].includes(schema.contentMediaType)){
               schema.apex.image=schema.contentMediaType;
               schema.apex.itemtype = schema.apex.itemtype==C_APEX_IMAGEUPLOAD?C_APEX_IMAGEUPLOAD:C_APEX_IMAGEDISPLAY;
+              schema.readOnly = schema.apex.itemtype==C_APEX_IMAGEDISPLAY?true:schema.readOnly;
             } else {
               if(![C_APEX_FILEUPLOAD, C_APEX_IMAGEUPLOAD].includes(schema.apex.itemtype)){
                 apex.debug.error('unknown string contentMediaType "%s"', schema.contentMediaType);
