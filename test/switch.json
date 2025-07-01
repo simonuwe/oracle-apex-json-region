@@ -1,0 +1,10 @@
+{
+  "type": "object",
+  "required": ["vendor", "model"],
+  "properties": {
+    "vendor": {"type": "string",  "maxLength": 30},
+    "model":  {"type": "string",  "maxLength": 30},
+    "ports":  {"type": "integer", "minimum": 1},
+    "speed":  {"type": "string",  "enum": ["10MBit", "100MBit", "1GBit", "10GBit", "100GBit"]}
+  }
+}
