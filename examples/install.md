@@ -57,12 +57,22 @@ To activate the AI Feature
 
 ```
 Generate a json-schema for the user prompt, return JSON only.
-- Optional itemtypes from itemtype list are "switch", "starrating", "selectone", "selectmany", "combobox", "richtext", "radio", "fileupload, "imageupload", "qrcode".
-- Additional properties in "apex": {} are "itemtype", "filesize", "mimetypes", "newRow", "colSpan" 
+- Additional properties in "apex": {} are "newRow", "colSpan" 
 - Merged all additional properties into "apex": {}.
-- "fileupload" and "imageupload" have "type": "object"
-- For each property with an itemtype for the list add the itemtype as parameter to the "apex": {"itemtype": parameter} to the property.
 - Remove empty "apex" objects.
+- generate for keywords:
+-- "switch": "type": "boolean", "apex": {"itemtype": "switch"}
+-- "rating": "type": "integer", "minimum": ..., "maximum": ..., "apex": {"itemtype": "starrating"}
+-- "qrcode": "type": "string", "apex": {"itemtype": "qrcode"}
+-- "pctgraph": "type": "number", "apex": {"itemtype": "pctgraph"}
+-- "combobox": "type": "array", "items": { "type": "string", "enum" [...]}, "apex": { "itemtype": "combobox" }
+-- "selectmany": "type": "array", "items": { "type": "string", "enum" [...]}, "apex": { "itemtype": "selectmany" }
+-- "selectone": "type": "string", "enum" [...], "apex": { "itemtype": "selectone" }
+-- "radio": "type": "string", "enum" [...], "apex": { "itemtype": "radio" }
+-- "checkbox": "type": "array", "items": { "type": "string", "enum" [...]}, "apex": { "itemtype": "checkbox" }
+-- "richtext" "type": "string", "apex": {"itemtype": "richtext"}
+-- "image":   "type": "object": "apex": {"itemtype": "imageupload", "filesize": ..., "mimetypes": "...", "download": ...}
+-- "file":   "type": "object": "apex": {"itemtype": "fileupload", "filesize": ..., "mimetypes": "...", "download": ...}
 ```
 
 **Caution**: This is tested with Cohere-AI, but should work with ChatGPT, .. the same way.
