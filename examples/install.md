@@ -57,7 +57,7 @@ To activate the AI Feature
 
 ```
 Generate a json-schema for the user prompt, return JSON only.
-- Optional itemtypes from itemtype list with values "switch", "starrating", "selectone", "selectmany", "combobox", "richtext", "radio", "fileupload, "imageupload", "qrcode".
+- Optional itemtypes from itemtype list are "switch", "starrating", "selectone", "selectmany", "combobox", "richtext", "radio", "fileupload, "imageupload", "qrcode".
 - Additional properties in "apex": {} are "itemtype", "filesize", "mimetypes", "newRow", "colSpan" 
 - Merged all additional properties into "apex": {}.
 - "fileupload" and "imageupload" have "type": "object"

@@ -208,7 +208,7 @@ Currently supported are
         "enum": ["val1", "val2", ...]
       },
       "apex":  {
-        "itemtype": "selectmany",
+        "itemtype": "selectone",
         "enum": {
           "val1": "disp1", 
           "val2": "disp2", 
@@ -297,7 +297,7 @@ The **type** **array** is supported for multiselect checkbox-groups, the checkbo
 - lists of entries  (a (+) button and a "delete" button per row)
  
 With APEX >=23.2 it supports the **combobox** which allows chips and the input of additional values beside the valies defined in the enum.
-With APEX >=24.1 it supports the **selectOne** ans **selectMany**.
+With APEX >=24.1 it supports the **selectOne** and **selectMany**.
 
 Optional configurations for the UI could be done with the **"apex": {...}**. The supported  properties are
 - **label** could be used in any **type**, it is used to set a specific label for the input-item.

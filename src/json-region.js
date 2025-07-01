@@ -125,6 +125,7 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
   const C_APEX_SELECTONE    = 'selectone';
   const C_APEX_SELECTMANY   = 'selectmany';
   const C_APEX_SHUTTLE      = 'shuttle';
+  const C_APEX_POPUPLOV     = 'popuplov';
   const C_APEX_COLOR        = 'color';
   const C_APEX_FILEUPLOAD   = 'fileupload';
   const C_APEX_IMAGEDISPLAY = 'image';
@@ -167,7 +168,7 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
     "apex": {
       "itemtype": [C_APEX_COMBO, C_APEX_CHECKBOX, C_APEX_COLOR, C_APEX_CURRENCY, C_APEX_QRCODE, C_APEX_PASSWORD, 
         C_APEX_PCTGRAPH, C_APEX_STARRATING, C_APEX_RADIO, C_APEX_TEXTAREA, C_APEX_RICHTEXT, 
-        C_APEX_SELECT, C_APEX_SELECTMANY, C_APEX_SELECTONE, C_APEX_SHUTTLE, C_APEX_SWITCH, 
+        C_APEX_SELECT, C_APEX_SELECTMANY, C_APEX_SELECTONE, C_APEX_SHUTTLE, C_APEX_POPUPLOV, C_APEX_SWITCH, 
         C_APEX_FILEUPLOAD, C_APEX_IMAGEDISPLAY, C_APEX_IMAGEUPLOAD],
       "template": [C_APEX_TEMPLATE_LABEL_ABOVE, C_APEX_TEMPLATE_LABEL_FLOATING, C_APEX_TEMPLATE_LABEL_HIDDEN, C_APEX_TEMPLATE_LABEL_LEFT]
     }
@@ -1673,6 +1674,17 @@ console.error('propagateShow if: not implemented', schema.if)
       return;
     }
 
+      // harmonize schema.xxx and schema.apex.xxx, so that further check can be done on schema.xxx
+    schema.apex.readonly  = booleanIfNotSet(schema.apex.readonly, readonly);
+    schema.apex.writeonly = booleanIfNotSet(schema.apex.writeOnly, writeonly);
+    schema.readOnly       = booleanIfNotSet(schema.readOnly, schema.apex.readonly);
+    schema.writeOnly      = booleanIfNotSet(schema.writeOnly, schema.apex.writeonly);
+
+    if(schema.apex.format!=null)  { schema.format = schema.apex.format}
+    if(schema.apex.minimum!=null) { schema.minimum = schema.apex.minimum}
+    if(schema.apex.maximum!=null) { schema.maximum = schema.apex.maximum}
+    if(schema.apex.default!=null) { schema.default = schema.apex.default}
+
      // process Oracle's extendedTypes
         // Oracle's extendedType for >= 23.7
     if(Array.isArray(schema.oneOf) && schema.oneOf.length==2) {
@@ -1702,12 +1714,6 @@ console.error('propagateShow if: not implemented', schema.if)
       { logSchemaError(name, 'invalid type', schema.type)}
     if(schema.apex.itemtype && !validValues.apex.itemtype.includes(schema.apex.itemtype)) { logSchemaError(name, 'invalid itemtype', schema.apex.itemtype)}
     if(schema.apex.template && !validValues.apex.template.includes(schema.apex.template)) { logSchemaError(name, 'invalid template', schema.apex.template)}
-
-      // harmonize
-    if(schema.apex.format!=null)  { schema.format = schema.apex.format}
-    if(schema.apex.minimum!=null) { schema.minimum = schema.apex.minimum}
-    if(schema.apex.maximum!=null) { schema.maximum = schema.apex.maximum}
-    if(schema.apex.default!=null) { schema.default = schema.apex.default}
 
     if(C_JSON_TYPE in schema || 'extendedType' in schema || C_JSON_PROPERTIES in schema || C_JSON_ITEMS in schema){
       schema.name = name;
@@ -1749,8 +1755,6 @@ console.error('propagateShow if: not implemented', schema.if)
       if(!schema.properties && ![C_APEX_FILEUPLOAD, C_APEX_IMAGEUPLOAD].includes(schema.apex.itemtype)){
         logSchemaError('missing "properties" for "type": "object"');
         schema.properties={}; 
-      } else {
-        schema.readOnly = booleanIfNotSet(schema.readOnly, readonly);
       }
 
       schema.additionalProperties = booleanIfNotSet(schema.additionalProperties, additionalProperties);
@@ -1764,7 +1768,6 @@ console.error('propagateShow if: not implemented', schema.if)
         }
       }  
     }
-
 
     // calc minimum/maximum
     if(schema.minimum){
@@ -1828,12 +1831,6 @@ console.error('propagateShow if: not implemented', schema.if)
         apex.debug.error('Schema contains unsupport extendedType %s', schema.extendedType);
       }
     }
-
-    schema.apex.readonly  = booleanIfNotSet(schema.apex.readonly, readonly);
-    schema.apex.writeOnly = booleanIfNotSet(schema.apex.writeOnly, writeonly);
-    schema.readOnly       = booleanIfNotSet(schema.readOnly, schema.apex.readonly);
-    schema.writeOnly      = booleanIfNotSet(schema.writeOnly, writeonly);
-
 
     switch(schema.type){
       case C_JSON_NUMBER:
@@ -2765,7 +2762,7 @@ console.error('propagateShow if: not implemented', schema.if)
         const l_gen = generateForArrayEntry(l_item, data[i], genItemname(id, i), startend, newItem);
         l_generated.html += l_gen.html;
       }
-      l_generated.html += generateArrayMarker(id, id.substring(0, id.length-schema.name.length-1), itemNr);
+      l_generated.html += generateArrayMarker(id, id.substring(0, id.length-(''+schema.name).length-1), itemNr);
       l_generated.isObject = true;
     } else {
       logDataError('must be an array', schema.name);

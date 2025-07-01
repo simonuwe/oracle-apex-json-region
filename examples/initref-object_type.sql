@@ -791,7 +791,7 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT
     }
   }
 }]'), EMPTY_CLOB());
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('22262','test-complex-array',TO_CLOB(q'[{
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('22262','test-complex-array-1',TO_CLOB(q'[{
   "type": "object",
   "properties": {
     "firstname": {"type": "string"},
@@ -811,8 +811,7 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT
         }
       },
       "then": {
-          "]')
-|| TO_CLOB(q'[properties": {
+          "properties": {
             "orders": {
             "type": "array",
             "items": {
@@ -825,20 +824,20 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT
                   "items": {
                     "type": "object",
                     "properties": {
-                      "id": {"]')
-|| TO_CLOB(q'[type": "string"},
+                      "id": {"type": "string"},
                       "name": {"type": "string"},
                       "units": {"type": "integer"},
                       "unitprice": {"type": "number", "apex": {"format": "currency"}}
-                    }
+                    },
+                    "required": ["id", "name", "units", "unitprice"]
                   }
                 },
                 "ordervolume": {"type": "number", "default": 0, "apex": {"format": "currency"}}
-              }
+              }, 
+              "required": ["orderid", "orderdate"]
             }
-        },
-        "businessvolume": {"type": "number", "default": 0, "apex": {"format": "currency", "textB]')
-|| TO_CLOB(q'[efore": "Total Business"}}
+          },
+          "businessvolume": {"type": "number", "default": 0, "apex": {"format": "currency", "textBefore": "Total Business"}}
         }
       }
     },
