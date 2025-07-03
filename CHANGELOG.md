@@ -12,7 +12,6 @@
  - #205 JSON-schema located in a page item
  - #204 newRow missing infront of "simple item" following an array
  - #203 Readonly doesn't work correctly numeric enum/enum with value mapping
- - #201 APEX-24.1: File-/Image-Upload "Required" not checked
  - #200 Log error when "required" contains unknow itemname
  - #198 Region shown with data: File-/Image-upload error, when not changed and item is mandatory
 
