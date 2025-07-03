@@ -9,6 +9,9 @@
 
 ## Installation of the DEMO-application
 
+This demo application works for **APEX>=22.2 only**.
+Older APEX-versions can not handle **CLOB** in session-state, so huge JSON-values are **truncated to VARCHAR2**.
+
 The demo application installs objects depending on the Oracle-DB-Release.
 When  installed in an Oracle23ai database, you will see an additional duality-view **JSON23AI** and an additional table **OBJECT23AI** with a JSON-validate-constraint.
 The demo application will contain additional options for this object in the main-menu too.
