@@ -24,3 +24,10 @@ The table **OBJECT_TYPE** contains in column **OBJECT_SCHEMA** for every objectt
 
 The subdirectory **examples** contains the demo-application to show the possibilities. Go into this directory and install from there.
 
+# APEX >= 24.2 and AI
+
+The demo application supports the generation of JSON-schema via AI.
+
+![object_type with AI](ai-preview.gif)
+
+For activating see file install.md

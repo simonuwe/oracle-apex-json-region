@@ -57,6 +57,13 @@ In addition the keyword **const** for a constant value is accepted.
     "type": "array",
     "items": {"type": "string", "enum": ["val1", "val2", ..]}
   },
+  "arr2": {
+    "type": "array",
+    "items": {
+      "field1": { "type": "string"},
+      "field2": { "type": "number"}
+    }
+  },
   "$defs":{
     "id": { 
       "type": "string", 
@@ -201,7 +208,7 @@ Currently supported are
         "enum": ["val1", "val2", ...]
       },
       "apex":  {
-        "itemtype": "selectmany",
+        "itemtype": "selectone",
         "enum": {
           "val1": "disp1", 
           "val2": "disp2", 
@@ -290,14 +297,14 @@ The **type** **array** is supported for multiselect checkbox-groups, the checkbo
 - lists of entries  (a (+) button and a "delete" button per row)
  
 With APEX >=23.2 it supports the **combobox** which allows chips and the input of additional values beside the valies defined in the enum.
-With APEX >=24.1 it supports the **selectOne** ans **selectMany**.
+With APEX >=24.1 it supports the **selectOne** and **selectMany**.
 
 Optional configurations for the UI could be done with the **"apex": {...}**. The supported  properties are
 - **label** could be used in any **type**, it is used to set a specific label for the input-item.
 - **placeholder** the text shown when the inputfield is empty (iggnored for checkboxes, switches and radiobuttons).
 - **align** positions integer/number **left**, **center**, **right** in the input-item.
 - **textcase** for converting strings into **lower** or **upper**
-- **newRow** starts a new row, so the current filed will be the first i this row.
+- **newRow** starts a new row, so the current field will be the first in this row.
 - **textBefore** defines text with is shown in a row above the current field. This can be used for logically grouping properties. This will always start a **newRow** 
 - **lines** defines for long strings the rows used for the textarea.
 - **colSpan** defines the width of the item, values are 1 (small)  to 12 (full width)
@@ -482,7 +489,7 @@ In the configuration of the json column the **Type** must be **text** or **texta
 
 ### Example config
 
-The JSON-CLOB is named **P2_DATA**, the schema ist stored in table **object_type** and can be selected by **object_type_id=:P2_OBJECT_TYPE_ID**
+The JSON-CLOB is named **P2_DATA**, the schema is stored in table **object_type** and can be selected by **object_type_id=:P2_OBJECT_TYPE_ID**
 
 Configuration of the **JSON-data-column**
 

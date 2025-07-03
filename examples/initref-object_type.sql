@@ -1,6 +1,6 @@
 REM INSERTING into OBJECT_TYPE
 SET DEFINE OFF;
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('4','Full-Example',TO_CLOB(q'[
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('4','Full-Example',TO_CLOB(q'[
 {
   "title": "An example schema with all supported types",
   "type": "object",
@@ -37,7 +37,8 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
                           },
     "comment":     {"type": "string", "maxLength": 500},
     "lastlogin":   {"type": "string", "format": "date-time", "default": "2023-01-02T12:10:20"},
-    "source":      {"const": "via APEX-application"},
+    "source":      {"const": "via APEX-a]')
+|| TO_CLOB(q'[pplication"},
     "dummy":       {"type": "null"}
   },
   "$defs":{
@@ -56,8 +57,8 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
 ]')
 || TO_CLOB(q'[      "cardid": {"type": "string", "pattern": "[0-9]{4}( [0-9]{4}){3}"}
    }
-}]'));
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('2386','generated-enum-1',TO_CLOB(q'[{
+}]'), EMPTY_CLOB());
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('2386','generated-enum-1',TO_CLOB(q'[{
   "type": "object",
   "properties":{
     "sel1": 
@@ -67,8 +68,8 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
 "xxx-1"]')
 || TO_CLOB(q'[ } }}
   }
-}]'));
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('5','Hotel',TO_CLOB(q'[{
+}]'), EMPTY_CLOB());
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('5','Hotel',TO_CLOB(q'[{
   "type": "object",
   "properties": {
      "name":      { "type": "string"},
@@ -130,8 +131,51 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
       "default": "Hotel: #$.name# - #$.country# #$.city#"
     }
   }
-}]'));
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('18','Invoice',TO_CLOB(q'[
+}]'), EMPTY_CLOB());
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('22241','hotel evaluation',TO_CLOB(q'[{
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "rating": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5,
+      "apex": {
+        "itemtype": "starrating"
+      }
+    },
+    "minPrice": {
+      "type": "number"
+    },
+    "maxPrice": {
+      "type": "number"
+    },
+    "features": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["WiFi", "Pool", "Gym", "Spa", "Restaurant", "Parki]')
+|| TO_CLOB(q'[ng"]
+      },
+      "apex": {
+        "itemtype": "selectmany",
+        "colSpan": 6
+      }
+    },
+    "comment": {
+      "type": "string",
+      "apex": {
+        "itemtype": "richtext",
+        "colSpan": 6,
+        "newRow": true
+      }
+    }
+  },
+  "required": ["name", "rating"]
+}]'), EMPTY_CLOB());
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('18','Invoice',TO_CLOB(q'[
 { 
   "type":"object",
   "properties": {
@@ -227,8 +271,8 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
      }
     }
   }
-}]'));
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('6','Person',TO_CLOB(q'[{
+}]'), EMPTY_CLOB());
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('6','Person',TO_CLOB(q'[{
   "type": "object",
   "required": ["lastname", "email"],
   "additionalProperties": false,
@@ -274,8 +318,8 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
        }, 
       "cardid": {"type": "string", "pattern": "[0-9]{4}( [0-9]{4}){3}"}
    }
-}]'));
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('3','Printer','{
+}]'), EMPTY_CLOB());
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('3','Printer','{
   "type": "object",
   "required": ["vendor", "model"],
   "properties": {
@@ -284,8 +328,8 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
     "color": {"type": "boolean"},
     "papersize": {"type": "string", "enum":["A4", "A3", "Letter"]}
    }
-}');
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('1','Server',TO_CLOB(q'[{
+}', EMPTY_CLOB());
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('1','Server',TO_CLOB(q'[{
   "type": "object",
   "required": ["vendor", "model"],
   "properties": {
@@ -306,8 +350,8 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
       "default": "Server: #$.vendor# #$.model#"
     }
   }
-}]'));
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('2','Switch','{
+}]'), EMPTY_CLOB());
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('2','Switch','{
   "type": "object",
   "required": ["vendor", "model"],
   "properties": {
@@ -316,8 +360,8 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
     "ports":  {"type": "integer", "minimum": 1},
     "speed":  {"type": "string",  "enum": ["10MBit", "100MBit", "1GBit", "10GBit", "100GBit"]}
   }
-}');
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('2241','test-allOf-1',TO_CLOB(q'[{
+}', EMPTY_CLOB());
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('2241','test-allOf-1',TO_CLOB(q'[{
   "type": "object",
   "properties": {
     "sel1": {"type": "string", "enum": ["val1-1", "val1-2", "val1-3"]}
@@ -344,8 +388,8 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
       }
     }
   ]
-}]'));
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('2222','test-allOf-2',TO_CLOB(q'[{
+}]'), EMPTY_CLOB());
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('2222','test-allOf-2',TO_CLOB(q'[{
   "type": "object",
   "properties": {
     "sel1": {"type": "string", "enum": ["val1-1", "val1-2", "val1-3"]}
@@ -376,8 +420,8 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
           }
     }
   ]
-}]'));
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('2281','test-allOf-3',TO_CLOB(q'[{
+}]'), EMPTY_CLOB());
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('2281','test-allOf-3',TO_CLOB(q'[{
   "type": "object",
   "properties": {
     "sel1": {"type": "string", "enum": ["val1-1", "val1-2", "val1-3"]}
@@ -403,8 +447,8 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
     }
   ],
   "apex": {"label": "dependent select list"}
-}]'));
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('2346','test-allOf-4',TO_CLOB(q'[{
+}]'), EMPTY_CLOB());
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('2346','test-allOf-4',TO_CLOB(q'[{
   "type": "object",
   "properties": {
     "sel1": {"type": "string", "enum": ["val1-1", "val1-2", "val1-3"]}
@@ -426,8 +470,8 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
     }
   }],
   "apex": {"label": "dependent select lists (up to 3 levels)"}
-}]'));
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('2363','test-allOf-5',TO_CLOB(q'[{
+}]'), EMPTY_CLOB());
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('2363','test-allOf-5',TO_CLOB(q'[{
   "type": "object",
   "properties": {
     "sel1": {"type": "string", "enum": ["val1-1", "val1-2", "val1-3"]}
@@ -455,8 +499,8 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
       }]
     }
   }]
-}]'));
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('7','test-array-1',TO_CLOB(q'[{
+}]'), EMPTY_CLOB());
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('7','test-array-1',TO_CLOB(q'[{
   "type": "object",
   "required": ["shuttle"],
   "properties": {
@@ -495,8 +539,8 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
                "apex": {"itemtype": "shuttle", "newRow": true, "colSpan": 7}
     }
   }
-}]'));
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('8','test-array-2',TO_CLOB(q'[{
+}]'), EMPTY_CLOB());
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('8','test-array-2',TO_CLOB(q'[{
   "type": "object",
   "properties": {
     "lastname":  {"type": "string", "maxLength": 30},
@@ -522,8 +566,8 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
     }
   }
 }
-]'));
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('9','test-array-3','{ 
+]'), EMPTY_CLOB());
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('9','test-array-3','{ 
   "type":"object",
   "properties": {
     "name": {"type": "string"},
@@ -534,8 +578,8 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
       }
     }
   }
-}');
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('301','test-array-4',TO_CLOB(q'[{
+}', EMPTY_CLOB());
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('301','test-array-4',TO_CLOB(q'[{
   "type": "object",
   "properties": {
     "lastname":  {"type": "string", "maxLength": 30},
@@ -562,8 +606,8 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
     }
   },
   "apex": {"validate": false}
-}]'));
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('2261','test-array-5','{
+}]'), EMPTY_CLOB());
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('2261','test-array-5','{
   "title": "Toplevel type: array, a todolist",
   "type": "array",
   "items": {
@@ -575,8 +619,8 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
     }
   },
   "apex": {"label": "Todos"}
-}');
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('2367','test-assettype-1',TO_CLOB(q'[{
+}', EMPTY_CLOB());
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('2367','test-assettype-1',TO_CLOB(q'[{
   "properties": {
     "asset_type": {
       "type": "string",
@@ -722,8 +766,8 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
       }
     }
   ]
-}]'));
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('10','test-boolean-1',TO_CLOB(q'[{
+}]'), EMPTY_CLOB());
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('10','test-boolean-1',TO_CLOB(q'[{
   "type": "object",
   "required": ["checkbox", "bool_switch", "bool_radio", "bool_radio_hor", "select"],
   "properties": {
@@ -746,20 +790,62 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
                 "apex": {"itemtype": "select"}
     }
   }
-}]'));
-
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID, OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('29', 'test-const-1','{
+}]'), EMPTY_CLOB());
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('22262','test-complex-array-1',TO_CLOB(q'[{
   "type": "object",
   "properties": {
-    "string":       {"type": "string"},
-    "string_const": {"const": "const-abc"},
-    "bool_const":   {"const": true},
-    "num_const":    {"const": 123},
-    "null_type":    {"type": "null"}
-  }
-}');
-
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('2368','test-countries',TO_CLOB(q'[{
+    "firstname": {"type": "string"},
+    "lastname":  {"type": "string"},
+    "emails":    {
+      "type": "array",
+      "items": {"type": "string", "apex": {"format": "email"}}
+    },
+    "business": { 
+      "type": "object",
+      "properties": {
+        "showorders": {"type": "boolean", "apex": {"itemtype": "switch"}}
+      },
+      "if": {
+        "properties": {
+          "showorders": { "const": true }
+        }
+      },
+      "then": {
+          "properties": {
+            "orders": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "orderid": {"type": "string", "apex": {"textBefore": "Order"}},
+                "orderdate": {"type": "string", "format": "date"},
+                "orderitems": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {"type": "string"},
+                      "name": {"type": "string"},
+                      "units": {"type": "integer"},
+                      "unitprice": {"type": "number", "apex": {"format": "currency"}}
+                    },
+                    "required": ["id", "name", "units", "unitprice"]
+                  }
+                },
+                "ordervolume": {"type": "number", "default": 0, "apex": {"format": "currency"}}
+              }, 
+              "required": ["orderid", "orderdate"]
+            }
+          },
+          "businessvolume": {"type": "number", "default": 0, "apex": {"format": "currency", "textBefore": "Total Business"}}
+        }
+      }
+    },
+    "vip": {"type": "boolean", "apex": {"itemtype": "switch"}}
+  },
+  "required": ["lastname"]
+}]'), EMPTY_CLOB());
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('2368','test-countries',TO_CLOB(q'[{
   "properties": {
     "region": {
       "type": "string",
@@ -875,8 +961,8 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
     }
   ]
 }
-]'));
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('28','test-css-1','{
+]'), EMPTY_CLOB());
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('28','test-css-1','{
   "type":"object",
   "apex": {"css": "class-object"},
   "properties":{
@@ -889,8 +975,8 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
       "apex": { "css": "class-firstname" }
     }
   }
-}');
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('11','test-default-1',TO_CLOB(q'[{
+}', EMPTY_CLOB());
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('11','test-default-1',TO_CLOB(q'[{
   "type": "object",
   "properties": {
     "string": {"type": "string", "default": "string"},
@@ -929,8 +1015,8 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
       "apex": {"itemtype": "richtext", "colSpan":12}
     }
   }
-}]'));
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('12','test-dependent-1',TO_CLOB(q'[{
+}]'), EMPTY_CLOB());
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('12','test-dependent-1',TO_CLOB(q'[{
   "type": "object",
   "required": ["lastname"],
   "dependentRequired":{
@@ -965,8 +1051,8 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
       }
     }
   }
-}]'));
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('13','test-enum-1',TO_CLOB(q'[{
+}]'), EMPTY_CLOB());
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('13','test-enum-1',TO_CLOB(q'[{
   "type": "object",
   "properties": {
     "select": { "type": "string", "enum": ["val1", "val2", "val3"]},
@@ -1002,8 +1088,8 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
       "apex": {"itemtype": "combobox"}
     }
   }
-}]'));
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('321','test-extended-1','{
+}]'), EMPTY_CLOB());
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('321','test-extended-1','{
   "type": "object",
   "properties": {
     "date": {"extendedType": "date", "format": "date", "apex": {"default": "now"}},
@@ -1011,8 +1097,8 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
     "extended": {"extendedType": "date", "apex": {"default": "now"}}
   },
   "apex": {"validate": false}
-}');
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('14','test-format-1',TO_CLOB(q'[{
+}', EMPTY_CLOB());
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('14','test-format-1',TO_CLOB(q'[{
   "type": "object",
   "required": ["date", "date_time", "time", "email", "uri"],
   "properties": {
@@ -1068,8 +1154,8 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
                       "apex":      {"format":    "uuid", "colSpan": 6}
                     }
   }
-}]'));
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('15','test-if-1',TO_CLOB(q'[{
+}]'), EMPTY_CLOB());
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('15','test-if-1',TO_CLOB(q'[{
   "type": "object",
   "required": ["lastname"],
   "additionalProperties": false,
@@ -1109,10 +1195,9 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
 || TO_CLOB(q'[           "street":  {"type": "string"}
          }
        }
-   },
-  "apex": {"validate": false}
-}]'));
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('16','test-if-2',TO_CLOB(q'[{
+   }
+}]'), EMPTY_CLOB());
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('16','test-if-2',TO_CLOB(q'[{
   "type": "object",
   "required": ["lastname"],
   "additionalProperties": true,
@@ -1163,8 +1248,8 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
        }
    },
   "apex": {"validate": false}
-}]'));
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('2310','test-if-3',TO_CLOB(q'[{
+}]'), EMPTY_CLOB());
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('2310','test-if-3',TO_CLOB(q'[{
   "type": "object",
   "required": ["lastname"],
   "additionalProperties": true,
@@ -1197,8 +1282,8 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
       }
     }
   }
-}]'));
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('2325','test-if-4','{
+}]'), EMPTY_CLOB());
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('2325','test-if-4','{
   "type": "object",
   "properties": {
     "sel1": {"type": "string", "enum": ["val1-then", "val1-2", "val1-3"]}
@@ -1214,8 +1299,8 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
       "sel2": {"type": "string", "enum": ["val2else-1", "val2else-2",  "val2else-3"]}
     }
   }
-}');
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('17','test-image-1','{
+}', EMPTY_CLOB());
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('17','test-image-1','{
   "type": "object",
   "required": [],
   "properties": {
@@ -1233,15 +1318,15 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
       "apex": {"itemtype": "qrcode"}
     }
   }
-}');
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('241','test-invalidkeys-1','{
+}', EMPTY_CLOB());
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('241','test-invalidkeys-1','{
   "type":"object",
   "properties": {
     "key_ok": {"type": "string"},
     "key not ok": {"type": "string"}
   } 
-}');
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('2282','test-layout-1',TO_CLOB(q'[{
+}', EMPTY_CLOB());
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('2282','test-layout-1',TO_CLOB(q'[{
   "type": "object",
   "properties": {
     "field1_label": {"type": "string", "apex": {"label": "Field Label"}},
@@ -1260,8 +1345,8 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
     }
   }
 }
-]'));
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('19','test-numeric-1',TO_CLOB(q'[{
+]'), EMPTY_CLOB());
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('19','test-numeric-1',TO_CLOB(q'[{
   "type": "object",
   "required": ["int", "number"],
   "properties": {
@@ -1289,8 +1374,8 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
       "apex": {"itemtype": "starrating"}
     }
   }
-}]'));
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('20','test-object-1',TO_CLOB(q'[{
+}]'), EMPTY_CLOB());
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('20','test-object-1',TO_CLOB(q'[{
   "type": "object",
   "required": ["lastname"],
   "properties": {
@@ -1315,8 +1400,8 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
        }, 
       "cardid": {"type": "string", "pattern": "[0-9]{4}( [0-9]{4}){3}"}
    }
-}]'));
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('26','test-placeholder-1',TO_CLOB(q'[{ 
+}]'), EMPTY_CLOB());
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('26','test-placeholder-1',TO_CLOB(q'[{ 
   "type":"object",
   "properties": {
     "string":    {"type": "string", "apex": {"placeholder": "string input"}},
@@ -1347,8 +1432,8 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
       }
     }
   } 
-}]'));
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('21','test-poll-1',TO_CLOB(q'[{
+}]'), EMPTY_CLOB());
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('21','test-poll-1',TO_CLOB(q'[{
   "type": "object",
   "additionalProperties": false,
   "required": ["rating"],
@@ -1392,15 +1477,15 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
       }
     }
   }
-}]'));
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('22','test-properties-1','{
+}]'), EMPTY_CLOB());
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('22','test-properties-1','{
   "type": "object",
   "additionalProperties": true,
   "properties":{
     "input": {"type": "string"}
   }
-}');
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('23','test-readonly-1',TO_CLOB(q'[{
+}', EMPTY_CLOB());
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('23','test-readonly-1',TO_CLOB(q'[{
   "type": "object",
   "required": ["input"],
   "properties": {
@@ -1502,8 +1587,8 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
     }
   },
   "apex": {"validate": false}
-}]'));
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('261','test-ref-1',TO_CLOB(q'[{ "type":"object",
+}]'), EMPTY_CLOB());
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('261','test-ref-1',TO_CLOB(q'[{ "type":"object",
   "properties": {
     "boolean":   {"$ref": "#/$defs/boolean"},
     "string":    {"$ref": "#/$defs/string"},
@@ -1574,8 +1659,8 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
       "maximum": 99.99
     }
   }
-}]'));
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('2383','test-ref-2',TO_CLOB(q'[{
+}]'), EMPTY_CLOB());
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('2383','test-ref-2',TO_CLOB(q'[{
   "type": "object",
   "required": ["select"],
   "properties": {
@@ -1586,10 +1671,9 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
     "object_type": {"$ref": "/enums/object_type", "apex": {"newRow": true, "textBefore": "dynamic enum"}},
     "boolean":     {"$ref": "/defs/boolean", "apex": {"label": "external fixed schema from an other ta]')
 || TO_CLOB(q'[ble"}}
-  },
-  "apex": {"validate": false}
-}]'));
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('2404','test-ref-3','{
+  }
+}]'), EMPTY_CLOB());
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('2404','test-ref-3','{
   "type": "object",
   "allOf":[
     {"$ref": "/enums/hierarchie"},
@@ -1599,8 +1683,8 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
       }
     }
   ] 
-}');
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('281','test-select-1',TO_CLOB(q'[{
+}', EMPTY_CLOB());
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('281','test-select-1',TO_CLOB(q'[{
   "type": "object",
   "properties": {
     "simple": {
@@ -1667,8 +1751,8 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
       }
     }
   }
-}]'));
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('24','test-string-1',TO_CLOB(q'[{
+}]'), EMPTY_CLOB());
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('24','test-string-1',TO_CLOB(q'[{
   "type": "object",
   "required": ["string", "radio", "long_string", "editor_string", "password"],
   "properties": {
@@ -1706,8 +1790,8 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
       "list1":   "yyyyyyyyyyyyyyyyy"
     }
   }
-}]'));
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('27','test-template-1',TO_CLOB(q'[{
+}]'), EMPTY_CLOB());
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('27','test-template-1',TO_CLOB(q'[{
   "type": "object",
   "required": ["floating_req", "above_req", "left_req", "hidden_req"],
   "properties": {
@@ -1746,10 +1830,10 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
     }
   },
   "apex": {"template": "above"}
-}]'));
-
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('22261','test-upload-1','{
+}]'), EMPTY_CLOB());
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('22261','test-upload-1','{
   "type": "object",
+  "readOnly": false,
   "properties": {
     "file": {
       "type": "object",  
@@ -1758,10 +1842,10 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
       "type": "object",  
       "apex": {"itemtype": "imageupload", "maxFilesize": 128, "download": true, "mimetypes": ".png,.jpg,.gif,.csv" }
     }
-  }
-}');
-
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values ('25','test-validate-1',TO_CLOB(q'[{
+  },
+  "required": ["file"]
+}', EMPTY_CLOB());
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('25','test-validate-1',TO_CLOB(q'[{
   "type":"object",
   "properties": {
     "boolean": {
@@ -1810,10 +1894,10 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
       "type": "object",
       "required": ["date", "datetime", "time"],
       "properties": {
-        "date":     { "type": "string", "format": "date",      "apex": {"minimum": "2024-01-01T00:00:00", "maximum": "now"}},
+        "date":     {"type": "string", "format": "date",      "apex": {"minimum": "2024-01-01T:00:00:00", "maximum": "now"}},
         "dat]')
-|| TO_CLOB(q'[etime": { "type": "string", "format": "date-time", "apex": {"minimum": "NOW", "maximum": "2026-12-31T23:59:00"}},
-        "time":     { "type": "string", "format": "time",      "apex": {"minimum": "09:00", "maximum": "16:59" }}
+|| TO_CLOB(q'[etime": {"type": "string", "format": "date-time", "apex": {"minimum": "NOW", "maximum": "2024-12-31T23:59:00"}},
+        "time":     { "type": "string", "format": "time",     "apex": {"minimum": "09:00", "maximum": "16:59" }}
       }
     },
     "array": {
@@ -1845,6 +1929,14 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) values (
 ]')
 || TO_CLOB(q'[    }
   }
-}]'));
+}]'), EMPTY_CLOB());
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('22221','xx','{
+  "type": "object",
+  "properties": {
+    "txt": {"type": "string"},
+    "int": {"type": "integer"}
+   },
+  "required": ["txt"]
+}', EMPTY_CLOB());
 
 COMMIT;

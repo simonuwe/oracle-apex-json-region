@@ -104,6 +104,7 @@ IS
   l_apex_version        apex_release.version_no%TYPE;
   l_name                p_region.name%TYPE;   -- name of the region
   l_dataitem            p_region.source%TYPE; -- dataitem with JSON-data P00_....
+  l_schemaitem          p_region.attribute_15%TYPE;
   l_source              VARCHAR(32767);       -- source the for JSON-Schema (0: generate, 1: static, others SQL-query)
   l_schema              VARCHAR(32767);       -- The fixed JSON-schema
   l_query               VARCHAR(32767);       -- The SQL-query to retrieve the JSON-schema
@@ -126,6 +127,7 @@ BEGIN
 $IF wwv_flow_api.c_current>=20241130
 $THEN  -- new API for >= APEX_24.2
   l_dataitem            := UPPER(p_region.attributes.get_varchar2('attribute_10', p_region.source));
+  l_schemaitem          := p_region.attributes.get_varchar2('attribute_15', p_region.attribute_15);
   l_source              := p_region.attributes.get_varchar2('attribute_02', p_region.attribute_02);
   l_schema              := p_region.attributes.get_varchar2('attribute_03', p_region.attribute_03);
   l_query               := p_region.attributes.get_varchar2('attribute_04', p_region.attribute_04);
@@ -140,6 +142,7 @@ $THEN  -- new API for >= APEX_24.2
   APEX_DEBUG.TRACE('LEN-01: '||NVL(p_region.attribute_01,'NULL')||' '||LENGTH(p_region.attribute_01));
 $ELSE
   l_dataitem            := UPPER(NVL(p_region.attribute_10, p_region.source));
+  l_schemaitem          := p_region.attribute_15;
   l_source              := p_region.attribute_02;
   l_schema              := p_region.attribute_03;
   l_query               := p_region.attribute_04;
@@ -158,25 +161,26 @@ $END
   APEX_DEBUG.TRACE('DB-Version:   '||DBMS_DB_VERSION.VERSION);
   apex_plugin_util.debug_region(p_plugin => p_plugin, p_region => p_region, p_is_printer_friendly =>l_is_printer_friendly);
   BEGIN
-    IF(l_query IS NOT NULL) THEN -- dynamic json-schema from configured query
-      l_schema:=readSchema(l_query);  
-    -- Build a list of queryitems required for AJAX-callback
-      l_binds := wwv_flow_utilities.get_binds(l_query);
-      FOR i IN 1 .. l_binds.count
-      LOOP
-        l_queryitems := l_queryitems||l_delimiter||'#'||substr(l_binds(i),2);
-        l_delimiter:=',';
-      END LOOP;
-    END IF;
-
-    IF(l_source='1') THEN  -- Static source
+    CASE l_source
+    WHEN '1'  THEN -- JSON-schema in static source
       IF(l_schema IS NULL OR LENGTH(l_schema)=0) THEN
         l_schema:=readschemafromdictionary(l_dataitem);
         IF(l_schema IS NULL OR LENGTH(l_schema)=0) THEN
         l_schema:= NULL;
         END IF;
       END IF;
-    END IF;
+    ELSE
+      IF(l_query IS NOT NULL) THEN -- dynamic json-schema from configured query
+        l_schema:=readSchema(l_query);  
+      -- Build a list of queryitems required for AJAX-callback
+        l_binds := wwv_flow_utilities.get_binds(l_query);
+        FOR i IN 1 .. l_binds.count
+        LOOP
+          l_queryitems := l_queryitems||l_delimiter||'#'||substr(l_binds(i),2);
+          l_delimiter:=',';
+        END LOOP;
+      END IF;
+    END CASE;
 
     EXCEPTION WHEN NO_DATA_FOUND THEN
       l_schema:=NULL;
@@ -205,6 +209,7 @@ $END
          apex_javascript.add_attribute('generateSchema',   (l_source = '0'))||                                
          apex_javascript.add_attribute('queryitems',       l_queryitems) ||
          apex_javascript.add_attribute('dataitem',         l_dataitem) ||
+         apex_javascript.add_attribute('schemaitem',       l_schemaitem) ||
          apex_javascript.add_attribute('name',             l_name) ||
          apex_javascript.add_attribute('colwidth',         l_colwidth) ||
          apex_javascript.add_attribute('readonly',         l_readonly) ||

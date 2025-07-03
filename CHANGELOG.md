@@ -1,8 +1,31 @@
+# 0.9.7.5
+
+## Fixed Isses
+
+ - #213 demo application: JSON CLOBs truncated
+ - #212 "readonly": true broken in some cases with 0.9.7.4
+ - #210 DependentSchemas anf if/then/else: optional textBefore is always shown
+ - #209 complex cascading object, array, object, ... display order not correct
+ - #208 "apex": {"format": "currency"} €,00 instead of €0,00
+ - #207 "default": 0, "default": 0.0 and "default": false don't work
+ - #206 Add AI-Prompt into example-application
+ - #205 JSON-schema located in a page item
+ - #204 newRow missing infront of "simple item" following an array
+ - #203 Readonly doesn't work correctly numeric enum/enum with value mapping
+ - #200 Log error when "required" contains unknow itemname
+ - #198 Region shown with data: File-/Image-upload error, when not changed and item is mandatory
+
+## New Features
+
+ - #202 APEX-24.2 new Password Visibility
+
 # 0.9.7.4a
 
 ## Fixed Isses
 
   - #195 Import pre APEX-24.2 application into APEX 242 with plugin-0.9.7.4 causes PL/SQL-errors at runtime
+
+## New Features
 
 # 0.9.7.4
 

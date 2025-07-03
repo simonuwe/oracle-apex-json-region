@@ -9,6 +9,9 @@
 
 ## Installation of the DEMO-application
 
+This demo application works for **APEX>=22.2 only**.
+Older APEX-versions can not handle **CLOB** in session-state, so huge JSON-values are **truncated to VARCHAR2**.
+
 The demo application installs objects depending on the Oracle-DB-Release.
 When  installed in an Oracle23ai database, you will see an additional duality-view **JSON23AI** and an additional table **OBJECT23AI** with a JSON-validate-constraint.
 The demo application will contain additional options for this object in the main-menu too.
@@ -45,6 +48,37 @@ These are used when you select for **object_type_name** values which name starts
 **Caution:** The Demo works for APEX >=21.2
 With **APEX>=23.2** the **fileupload** **imageupload** is supported. When using this, change in **Page 11 object** the **Session State** **Data Type** to **CLOB**, otherwise **files > 8000 Bytes** return **ORA-40441: JSON syntax error** or similar - truncated JSON.
 In 21.2 it is not possible to specify the datatyp of the session state.
+
+# APEX >= 24.2 and AI
+
+To activate the AI Feature
+- Oracle DB 23 ai and APEX >=24.2
+- Enable AI in the APEX-instance for your workspace **AI Services** set **AI Enabled**
+- In Workspace at **Workspace Utilities->Generative AI Services** create a **AI Service** for your AI provider 
+- At **Shared components->Generative AI Service** create an **Generative AI Service**
+- At **Shared components->Generative AI Configuration** create a configuration with **static id** named **generate_json_schema** and reference your **Generative AI Service**. For the **System Prompt** copy the following 
+
+```
+Generate a json-schema for the user prompt, return JSON only.
+- Additional properties in "apex": {} are "newRow", "colSpan" 
+- Merged all additional properties into "apex": {}.
+- Remove empty "apex" objects.
+- generate for keywords:
+-- "switch": "type": "boolean", "apex": {"itemtype": "switch"}
+-- "rating": "type": "integer", "minimum": ..., "maximum": ..., "apex": {"itemtype": "starrating"}
+-- "qrcode": "type": "string", "apex": {"itemtype": "qrcode"}
+-- "pctgraph": "type": "number", "apex": {"itemtype": "pctgraph"}
+-- "combobox": "type": "array", "items": { "type": "string", "enum" [...]}, "apex": { "itemtype": "combobox" }
+-- "selectmany": "type": "array", "items": { "type": "string", "enum" [...]}, "apex": { "itemtype": "selectmany" }
+-- "selectone": "type": "string", "enum" [...], "apex": { "itemtype": "selectone" }
+-- "radio": "type": "string", "enum" [...], "apex": { "itemtype": "radio" }
+-- "checkbox": "type": "array", "items": { "type": "string", "enum" [...]}, "apex": { "itemtype": "checkbox" }
+-- "richtext" "type": "string", "apex": {"itemtype": "richtext"}
+-- "image":   "type": "object": "apex": {"itemtype": "imageupload", "filesize": ..., "mimetypes": "...", "download": ...}
+-- "file":   "type": "object": "apex": {"itemtype": "fileupload", "filesize": ..., "mimetypes": "...", "download": ...}
+```
+
+**Caution**: This is tested with Cohere-AI, but should work with ChatGPT, .. the same way.
 
 ### Deinstallation of the plugin-support-table
 

@@ -1,0 +1,8 @@
+  "dependentSchemas": {
+    "uplink_ports": {
+      "type": "object",
+      "properties": {
+        "uplink_specs": {"$ref": "#/defs/port_specs"}
+      }
+    }
+  },
