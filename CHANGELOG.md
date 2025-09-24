@@ -1,3 +1,12 @@
+# 0.9.8
+
+## Fixed Isses
+  - #218 enum with numbers: value and displayvalue swapped
+
+
+## New Features
+  - #219 APEX:-24.2: Variable-substitution does not work for static-schema
+
 # 0.9.7.5
 
 ## Fixed Isses

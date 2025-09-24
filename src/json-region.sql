@@ -1,5 +1,5 @@
 /*
- * JSON-region-plugin 0.9.7.4a
+ * JSON-region-plugin 0.9.7.6
  * (c) Uwe Simon 2023, 2025
  * Apache License Version 2.0
  *
@@ -126,16 +126,16 @@ IS
 BEGIN
 $IF wwv_flow_api.c_current>=20241130
 $THEN  -- new API for >= APEX_24.2
-  l_dataitem            := UPPER(p_region.attributes.get_varchar2('attribute_10', p_region.source));
-  l_schemaitem          := p_region.attributes.get_varchar2('attribute_15', p_region.attribute_15);
-  l_source              := p_region.attributes.get_varchar2('attribute_02', p_region.attribute_02);
-  l_schema              := p_region.attributes.get_varchar2('attribute_03', p_region.attribute_03);
-  l_query               := p_region.attributes.get_varchar2('attribute_04', p_region.attribute_04);
-  l_colwidth            := p_region.attributes.get_varchar2('attribute_05', p_region.attribute_05);
+  l_dataitem            := UPPER(p_region.attributes.get_varchar2('attribute_10', p_default_value=>p_region.source));
+  l_schemaitem          := p_region.attributes.get_varchar2('attribute_15', p_default_value=>p_region.attribute_15);
+  l_source              := p_region.attributes.get_varchar2('attribute_02', p_default_value=>p_region.attribute_02);
+  l_schema              := p_region.attributes.get_varchar2('attribute_03', p_default_value=>p_region.attribute_03, p_do_substitutions=>TRUE, p_substitutions_escape_mode=>apex_session_state.c_escape_mode_raw);
+  l_query               := p_region.attributes.get_varchar2('attribute_04', p_default_value=>p_region.attribute_04, p_do_substitutions=>TRUE, p_substitutions_escape_mode=>apex_session_state.c_escape_mode_raw);
+  l_colwidth            := p_region.attributes.get_varchar2('attribute_05', p_default_value=>p_region.attribute_05);
   l_template            := p_region.attributes.get_varchar2('attribute_11', 'floating');        
   l_textareawidth       := p_region.attributes.get_varchar2('attribute_01', 250);
   l_keepattributes      := p_region.attributes.get_boolean('attribute_06', false);
-  l_additionalschema    := p_region.attributes.get_varchar2('attribute_14', p_region.attribute_14);
+  l_additionalschema    := p_region.attributes.get_varchar2('attribute_14', p_default_value=>p_region.attribute_14, p_do_substitutions=>TRUE, p_substitutions_escape_mode=>apex_session_state.c_escape_mode_raw);
   l_headers             := p_region.attributes.get_boolean('attribute_07', false);
   l_hide                := p_region.attributes.get_boolean('attribute_08', true);
   l_removenulls         := p_region.attributes.get_boolean('attribute_09', true);

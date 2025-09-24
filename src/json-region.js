@@ -1,7 +1,7 @@
 "use strict"
 
 /*
- * JSON-region 0.9.7.5
+ * JSON-region 0.9.7.6
  * Supports Oracle-APEX >=20.2 <=24.2
  * 
  * APEX JSON-region plugin
@@ -121,7 +121,6 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
   const C_APEX_HORIZONTAL   = 'horizontal';
   const C_APEX_VERTICAL     = 'vertical';
   const C_APEX_PCTGRAPH     = 'pctgraph';
-  const C_APEX_LABEL        = 'label';
   const C_APEX_SELECTONE    = 'selectone';
   const C_APEX_SELECTMANY   = 'selectmany';
   const C_APEX_SHUTTLE      = 'shuttle';
@@ -131,7 +130,6 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
   const C_APEX_IMAGEDISPLAY = 'image';
   const C_APEX_IMAGEUPLOAD  = 'imageupload';
 
-  const C_APEX_ALIGN        = 'align';
   const C_APEX_LEFT         = 'left';
   const C_APEX_CENTER       = 'center';
   const C_APEX_RIGHT        = 'right';
@@ -145,6 +143,31 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
   const C_APEX_TEMPLATE_LABEL_LEFT     = 'left';
   const C_APEX_TEMPLATE_LABEL_ABOVE    = 'above';
   const C_APEX_TEMPLATE_LABEL_FLOATING = 'floating';
+
+  const C_APEX_ALIGN        = 'align';
+  const C_APEX_COLORMODE    = 'colormode';
+  const C_APEX_COLSPAN      = 'colSpan';
+  const C_APEX_CSS          = 'css';
+  const C_APEX_DEFAULT      = 'default';
+  const C_APEX_DOWNLOAD     = 'download';
+  const C_APEX_ENUM         = 'enum';
+  const C_APEX_FORMAT       = 'format';
+  const C_APEX_HASINSERT    = 'hasInsert';
+  const C_APEX_ITEMTYPE     = 'itemtype';
+  const C_APEX_LABEL        = 'label';
+  const C_APEX_LINES        = 'lines';
+  const C_APEX_MAXFILESIZE  = 'maxFilesize';
+  const C_APEX_MAXIMUM      = 'maximum';
+  const C_APEX_MIMETYPES    = 'mimetypes';
+  const C_APEX_MINIMUM      = 'minimum';
+  const C_APEX_NEWROW       = 'newRow';
+  const C_APEX_PLACEHOLDER  = 'placeholder';
+  const C_APEX_QUICKPICKS   = 'quickpicks';
+  const C_APEX_READONLY     = 'readonly';
+  const C_APEX_WRITEONLY    = 'writeonly';
+  const C_APEX_TEXTBEFORE   = 'textBefore';
+  const C_APEX_TEXTCASE     = 'textcase';
+
 
   const C_AJAX_GETSCHEMA    = 'getSchema';
   const C_AJAX_GETSUBSCHEMA = 'getSubschema';
@@ -170,6 +193,10 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
         C_APEX_PCTGRAPH, C_APEX_STARRATING, C_APEX_RADIO, C_APEX_TEXTAREA, C_APEX_RICHTEXT, 
         C_APEX_SELECT, C_APEX_SELECTMANY, C_APEX_SELECTONE, C_APEX_SHUTTLE, C_APEX_POPUPLOV, C_APEX_SWITCH, 
         C_APEX_FILEUPLOAD, C_APEX_IMAGEDISPLAY, C_APEX_IMAGEUPLOAD],
+      "properties":  [C_APEX_ALIGN, C_APEX_COLORMODE, C_APEX_COLSPAN, C_APEX_CSS, C_APEX_DEFAULT, C_APEX_DOWNLOAD, 
+                      C_APEX_ENUM, C_APEX_FORMAT, C_APEX_HASINSERT, C_APEX_ITEMTYPE, C_APEX_LABEL,
+                      C_APEX_LINES, C_APEX_MAXFILESIZE, C_APEX_MAXIMUM, C_APEX_MIMETYPES, C_APEX_MINIMUM,
+                   C_APEX_NEWROW, C_APEX_PLACEHOLDER, C_APEX_QUICKPICKS, C_APEX_READONLY, C_APEX_WRITEONLY, C_APEX_TEXTBEFORE, C_APEX_TEXTCASE],
       "template": [C_APEX_TEMPLATE_LABEL_ABOVE, C_APEX_TEMPLATE_LABEL_FLOATING, C_APEX_TEMPLATE_LABEL_HIDDEN, C_APEX_TEMPLATE_LABEL_LEFT]
     }
   }
@@ -691,17 +718,12 @@ console.error('propagateShow if: not implemented', schema.if)
     schema.readOnly = readOnly;
 
     if(schema.type==C_JSON_OBJECT){
-      for(let [l_name, l_schema] of Object.entries(schema.properties)){
+      for(let [l_name, l_schema] of Object.entries(schema.properties||{})){
         propagateReadOnly(l_schema, readOnly);
       }
     }
 
     if(schema.type==C_JSON_ARRAY){
-/*
-      for(let [l_name, l_schema] of Object.entries(schema.items)){
-        propagateReadOnly(l_schema, readOnly);
-      }
-*/
       propagateReadOnly(schema.items, readOnly);
     }
 
@@ -801,7 +823,7 @@ console.error('propagateShow if: not implemented', schema.if)
   */
   function jsonValue2Item(schema, value, newItem){
     let l_value = value;
-    apex.debug.trace(">>jsonRegion.jsonValue2Item", schema);
+    apex.debug.trace(">>jsonRegion.jsonValue2Item", schema, value);
     if(newItem && typeof schema.default != 'undefined' && schema.default!=null) {
       // When a default is configured, use it for when a new item is in use
       value = getConstant(schema.format, schema.default, true);
@@ -898,7 +920,7 @@ console.error('propagateShow if: not implemented', schema.if)
           break;
           case C_JSON_INTEGER:
           case C_JSON_NUMBER:
-           l_value = apex.locale.formatNumber(value, schema.apex && schema.apex.format ||null);
+           l_value = apex.locale.formatNumber(value, schema.apex.format ||null);
           break;
         }
       } catch(e){
@@ -906,6 +928,18 @@ console.error('propagateShow if: not implemented', schema.if)
       }
     }  
     apex.debug.trace("<<jsonRegion.jsonValue2Item", l_value);
+    return(l_value);
+  }
+
+  /*
+   *
+  */ 
+  function jsonValue2Display(schema, value, newItem){
+    let l_value = value;
+    apex.debug.trace(">>jsonRegion.jsonValue2Display", schema, value);
+    l_value = (schema.apex.enum && schema.apex.enum[l_value])?schema.apex.enum[l_value]:l_value;
+    l_value = jsonValue2Item(schema, l_value);
+    apex.debug.trace("<<jsonRegion.jsonValue2Display", l_value);
     return(l_value);
   }
 
@@ -1196,7 +1230,6 @@ console.error('propagateShow if: not implemented', schema.if)
         apex.item.create(dataitem, {});
         $('#' + dataitem).on("change", function(event){ 
           const l_file = this.files[0];
-          console.log("FileUpload: ", l_file);
           if(l_file){
             var reader = new FileReader();      
             reader.onload = function(event){
@@ -1664,7 +1697,7 @@ console.error('propagateShow if: not implemented', schema.if)
   function propagateProperties(schema, level, readonly, writeonly, additionalProperties, conditional, name, prefix){ 
     schema = schema || {};
     schema.apex = schema.apex||{};
-    schema.apex.conditional = conditional;
+    // schema.apex.conditional = conditional;
     let l_allProperties = null;
     apex.debug.trace(">>jsonRegion.propagateProperties", level, schema, readonly, writeonly, additionalProperties, conditional, name, prefix);
       
@@ -1709,11 +1742,20 @@ console.error('propagateShow if: not implemented', schema.if)
     }
 
       // check for valid values
+    Object.keys(schema.apex).every(l_entry => {if(!validValues.apex.properties.includes(l_entry)) { logSchemaError(name, 'invalid apex property', l_entry); return false;} else {return true;} });
     if(schema.extendedType && !validValues.extendedType.includes(schema.extendedType))    { logSchemaError(name, 'invalid extendedtype', schema.extendedType)}
-    if(!C_JSON_CONST in schema && !conditional && !schema.extendedType && name && !name.startsWith('_') && !validValues.type.includes(schema.type)) 
-      { logSchemaError(name, 'invalid type', schema.type)}
-    if(schema.apex.itemtype && !validValues.apex.itemtype.includes(schema.apex.itemtype)) { logSchemaError(name, 'invalid itemtype', schema.apex.itemtype)}
-    if(schema.apex.template && !validValues.apex.template.includes(schema.apex.template)) { logSchemaError(name, 'invalid template', schema.apex.template)}
+    if(!C_JSON_CONST in schema && !conditional && !schema.extendedType && name && !name.startsWith('_') && !validValues.type.includes(schema.type)) {
+      logSchemaError(name, 'invalid type', schema.type);
+      schema.type = C_JSON_STRING;   // reset type to to string
+    }
+    if(schema.apex.itemtype && !validValues.apex.itemtype.includes(schema.apex.itemtype)) { 
+      logSchemaError(name, 'invalid itemtype', schema.apex.itemtype);
+      delete schema.apex.itemtype;
+    }
+    if(schema.apex.template && !validValues.apex.template.includes(schema.apex.template)) { 
+      logSchemaError(name, 'invalid template', schema.apex.template);
+      delete schema.apex.template;
+    }
 
     if(C_JSON_TYPE in schema || 'extendedType' in schema || C_JSON_PROPERTIES in schema || C_JSON_ITEMS in schema){
       schema.name = name;
@@ -1998,7 +2040,7 @@ console.error('propagateShow if: not implemented', schema.if)
   <div>#DISPLAYVALUE#</div>
 `,                                                 {
                                                     placeholders: {
-                                                      "DISPLAYVALUE": ['boolean', 'number'].includes(typeof schema.apex.enum[l_option])?jsonValue2Item(schema, schema.apex.enum[l_option]):(schema.apex.enum[l_option]||l_option)
+                                                      "DISPLAYVALUE": jsonValue2Display(schema, l_option, newItem)
                                                    }
                                                 });
       }
@@ -2039,7 +2081,7 @@ console.error('propagateShow if: not implemented', schema.if)
 `,                                                 {
                                                     placeholders: {
                                                       "OPTION": apex.util.escapeHTML(''+l_option),
-                                                      "DISPLAYVALUE": ['boolean', 'number'].includes(typeof schema.apex.enum[l_option])?jsonValue2Item(schema, schema.apex.enum[l_option]):(schema.apex.enum[l_option]||l_option)
+                                                      "DISPLAYVALUE": jsonValue2Display(schema, l_option, newItem)
                                                    }
                                                 });
       }
@@ -2180,7 +2222,7 @@ console.error('propagateShow if: not implemented', schema.if)
 `,                                                 {
                                                     placeholders: {
                                                       "VALUE":        apex.util.escapeHTML(''+l_value),
-                                                      "DISPLAYVALUE": ['boolean', 'number'].includes(typeof schema.apex.enum[l_value])?jsonValue2Item(schema, schema.apex.enum[l_value]):(schema.apex.enum[l_value]||l_value)
+                                                      "DISPLAYVALUE": jsonValue2Display(schema, l_value, newItem)
                                                    }
                                                 });
     }
@@ -2217,8 +2259,8 @@ console.error('propagateShow if: not implemented', schema.if)
 `,
                                                 {
                                                     placeholders: {
-                                                      "VALUE":        jsonValue2Item(schema, l_value),
-                                                      "DISPLAYVALUE": ['boolean', 'number'].includes(typeof schema.apex.enum[l_value])?jsonValue2Item(schema, schema.apex.enum[l_value]):(schema.apex.enum[l_value]||l_value)
+                                                      "VALUE":        apex.util.escapeHTML(''+l_value),
+                                                      "DISPLAYVALUE": jsonValue2Display(schema, l_value, newItem),
                                                    }
                                                 });
       }
@@ -2252,8 +2294,8 @@ console.error('propagateShow if: not implemented', schema.if)
                                                     placeholders: {
                                                       "DIR":          (schemaApex.direction==C_APEX_HORIZONTAL)?'style="float: left"':"",
                                                       "TYPE":         itemtype,
-                                                      "VALUE":        jsonValue2Item(schema, l_value),
-                                                      "DISPLAYVALUE": ['boolean', 'number'].includes(typeof schema.apex.enum[l_value])?jsonValue2Item(schema, schema.apex.enum[l_value]):(schema.apex.enum[l_value]||l_value),
+                                                      "VALUE":        apex.util.escapeHTML(''+l_value),            
+                                                      "DISPLAYVALUE": jsonValue2Display(schema, l_value, newItem), 
                                                       "NR":           l_nr++
                                                    }
                                                 });
@@ -3041,7 +3083,42 @@ console.error('propagateShow if: not implemented', schema.if)
     return l_ret;
   }
 
-
+  /*
+   * generates a quickpick, when configured in "apex": {"quickpicks": {"a": "A", "b": "B", ...}}
+  */
+  function generateQuickpicks(schema){
+    let l_quickpicks = '';
+    apex.debug.trace(">>jsonRegion.generateQuickpicks", schema);
+    if(pOptions.apex_version >= C_APEX_VERSION_2402){
+      if(schema.apex[C_APEX_QUICKPICKS]){
+        if([C_JSON_STRING, C_JSON_NUMBER, C_JSON_INTEGER].includes(schema.type)){
+          l_quickpicks = `
+<span role="group" aria-label="Quick Picks for #LABEL#" class="apex-quick-picks">
+`;
+          let l_delimiter = '';
+          for(const [l_display, l_value] of Object.entries(schema.apex[C_APEX_QUICKPICKS])){
+            l_quickpicks += apex.util.applyTemplate(`#DELIMITER#
+  <a href="#action$a-set-value?itemName=#ID#&amp;value=#VALUE#&amp;displayValue=#DISPLAYVALUE#" aria-roledescription="action link" aria-controls="#ID#">#DISPLAYVALUE#</a>`, 
+              { placeholders: {  
+                  "VALUE": apex.util.escapeHTML(''+l_value), 
+                  "DISPLAYVALUE": jsonValue2Display(schema, l_value, newItem),
+                  "DELIMITER": l_delimiter
+                }
+              });
+            l_delimiter = ', ';
+          }
+          l_quickpicks += `
+</span>`;
+        } else {
+          apex.debug.error('quickpicks not supported for', schema.name, 'with type', schema.type)  
+        }
+      }
+    }
+        // HACK: Theme 42 moves quickpicks to parent, when page is shown, but quickpicks must be below class="t-Form-inputContainer"
+    l_quickpicks = '<div>' + l_quickpicks + '</div>';
+    apex.debug.trace("<<jsonRegion.generateQuickpicks", l_quickpicks);
+    return l_quickpicks;
+  }
   /*
    * generate UI for a simple item of types string, int, number, bool 
    * returns {items:0, wrappertype: "xxx", html: "xxx"}
@@ -3120,6 +3197,7 @@ console.error('propagateShow if: not implemented', schema.if)
 
       const l_value = jsonValue2Item(item, data, newItem)||'';
       const l_template = genTemplate(pOptions.template, pOptions.colwidth, item);
+      const l_quickpick = generateQuickpicks(item);
         // console.log(data, schema)
       l_generated = {
           items:       l_generated.items,
@@ -3134,10 +3212,10 @@ console.error('propagateShow if: not implemented', schema.if)
       <div class="t-Form-inputContainer #INPUTTEMPLATE#">
         #REQUIREDMARKER#
         <div class="t-Form-itemWrapper">
-` + l_generated.html + 
+` + l_generated.html +  
 ` 
         </div>
-` + l_error  + `
+` + l_quickpick + l_error  + `
       </div>
     </div>
   </div>
