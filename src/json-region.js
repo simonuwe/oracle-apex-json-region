@@ -1718,6 +1718,9 @@ console.error('propagateShow if: not implemented', schema.if)
     if(schema.apex.maximum!=null) { schema.maximum = schema.apex.maximum}
     if(schema.apex.default!=null) { schema.default = schema.apex.default}
 
+    if(!schema.apex.label && schema.title) {schema.apex.label = schema.title}
+    if(!schema.apex.placeholder && schema.description) {schema.apex.placeholder = schema.description}
+
      // process Oracle's extendedTypes
         // Oracle's extendedType for >= 23.7
     if(Array.isArray(schema.oneOf) && schema.oneOf.length==2) {
@@ -3810,7 +3813,8 @@ console.error('propagateShow if: not implemented', schema.if)
         if(pOptions.schemaitem){  // get current JSON-schema
           try {
             apex.debug.trace('Refresh JSON-schema from', pOptions.schemaitem);
-            pOptions.schema = JSON.parse($v(pOptions.schemaitem));
+            let l_schema = $v(pOptions.schemaitem);
+            pOptions.schema = JSON.parse(l_schema.length?l_schema:null);
             doRefresh();
             apex.debug.trace('new schema', pOptions.schema);
           } catch(err){

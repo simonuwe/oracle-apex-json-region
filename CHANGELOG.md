@@ -2,10 +2,11 @@
 
 ## Fixed Isses
  - #218 enum with numbers: value and displayvalue swapped
-
+ - #221 Empty JSON-schema causes javascript-error in JSON.parse
 
 ## New Features
  - #219 APEX:-24.2: Variable-substitution does not work for static-schema
+ - #220 Support JSON-schema properties "title", "description"
 
 # 0.9.7.5
 
