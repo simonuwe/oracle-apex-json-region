@@ -1,7 +1,7 @@
 "use strict"
 
 /*
- * JSON-region 0.9.7.6
+ * JSON-region 0.9.7.8
  * Supports Oracle-APEX >=20.2 <=24.2
  * 
  * APEX JSON-region plugin

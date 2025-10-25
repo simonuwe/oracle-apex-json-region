@@ -21,7 +21,7 @@
     "oracle" : {
       "versions" :  ["19.0.0", "23.0.0"],
       "apex" : {
-        "versions" :       [ "20.02", "21.01", "21.02", "22.01", "22.02", "23.01", "23.02", "24.01", "24.02"],
+        "versions" :       ["21.02", "22.01", "22.02", "23.01", "23.02", "24.01", "24.02"],
         "plugin" : {
           "internalName" : "JSON_REGION.UWESIMON.SELFHOST.EU",
           "type" :         "region",
