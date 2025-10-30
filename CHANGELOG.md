@@ -1,4 +1,4 @@
-# 0.9.7.6
+# 0.9.8
 
 ## Fixed Isses
  - #218 enum with numbers: value and displayvalue swapped
