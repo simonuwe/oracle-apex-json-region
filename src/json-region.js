@@ -836,8 +836,9 @@ console.error('propagateShow if: not implemented', schema.if)
 
     if(value || value==false || value==0 || value==0.0){
       l_value = value;
-      try {    
-        switch(schema.type){
+      try {   
+        let l_type = schema.apex.enum?typeof value:schema.type;  // when enum use datatype of enum value, else schema datatype 
+        switch(l_type){
           case C_JSON_INTEGER:
           case C_JSON_NUMBER:
             if(![C_APEX_STARRATING, C_APEX_PCTGRAPH].includes(schema.apex.itemtype)){

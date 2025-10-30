@@ -18,7 +18,7 @@ The demo application will contain additional options for this object in the main
 
 ### Import the demo application
 
-Import the application from file **json-region-demo.sql**, do'nt forget to install the supporting objects.
+Import the application from file **json-region-demo.sql** (for APEX<24.2) or **json-region-demo-242.sql** (with optional AI support), don't forget to install the supporting objects.
 
 ### Upgrade application to your APEX-version
 
@@ -56,29 +56,10 @@ To activate the AI Feature
 - Enable AI in the APEX-instance for your workspace **AI Services** set **AI Enabled**
 - In Workspace at **Workspace Utilities->Generative AI Services** create a **AI Service** for your AI provider 
 - At **Shared components->Generative AI Service** create an **Generative AI Service**
-- At **Shared components->Generative AI Configuration** create a configuration with **static id** named **generate_json_schema** and reference your **Generative AI Service**. For the **System Prompt** copy the following 
+- At **Shared components->Generative AI Configuration** create a configuration with **static id** named **generate_...** and reference your **Generative AI Service**. 
 
-```
-Generate a json-schema for the user prompt, return JSON only.
-- Additional properties in "apex": {} are "newRow", "colSpan" 
-- Merged all additional properties into "apex": {}.
-- Remove empty "apex" objects.
-- generate for keywords:
--- "switch": "type": "boolean", "apex": {"itemtype": "switch"}
--- "rating": "type": "integer", "minimum": ..., "maximum": ..., "apex": {"itemtype": "starrating"}
--- "qrcode": "type": "string", "apex": {"itemtype": "qrcode"}
--- "pctgraph": "type": "number", "apex": {"itemtype": "pctgraph"}
--- "combobox": "type": "array", "items": { "type": "string", "enum" [...]}, "apex": { "itemtype": "combobox" }
--- "selectmany": "type": "array", "items": { "type": "string", "enum" [...]}, "apex": { "itemtype": "selectmany" }
--- "selectone": "type": "string", "enum" [...], "apex": { "itemtype": "selectone" }
--- "radio": "type": "string", "enum" [...], "apex": { "itemtype": "radio" }
--- "checkbox": "type": "array", "items": { "type": "string", "enum" [...]}, "apex": { "itemtype": "checkbox" }
--- "richtext" "type": "string", "apex": {"itemtype": "richtext"}
--- "image":   "type": "object": "apex": {"itemtype": "imageupload", "filesize": ..., "mimetypes": "...", "download": ...}
--- "file":   "type": "object": "apex": {"itemtype": "fileupload", "filesize": ..., "mimetypes": "...", "download": ...}
-```
+At **Application->Edit Application Definition->Substitutions** set the **Substitution Value** for String **AI_PROVIDER** to your **Generative AI Configuration**
 
-**Caution**: This is tested with Cohere-AI, but should work with ChatGPT, .. the same way.
 
 ### Deinstallation of the plugin-support-table
 
@@ -89,7 +70,4 @@ The script
   create_json_region_schema.sql
 ```
 whill drop the additional objects for JSON-schema references and dynamic JSON-schema.
-
-### Deinstall the demo application
-
 When deleting the demo application don't forget to delete the supporting objects too.
