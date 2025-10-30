@@ -1,0 +1,390 @@
+
+<style type="text/css">
+.overview { border-collapse:collapse; }
+.overview th { background-color:#eee;}
+.overview td, .overview th { padding:5px;border:1px solid #000; }
+</style>
+
+<h2>General JSON-schema</h2>
+The definitions can be found at <a href="https://json-schema.org/understanding-json-schema/reference" target="_blank">JSON-Schema</a>.<br>
+In brief a JSON-schema is an object or an array of one or more properties or a simple property. 
+<br><br>
+Object:<pre>{
+  "type": "object",
+  "properties": {
+    "property1": {...},
+    "property2": {...}
+  }
+}</pre>
+Array:
+<pre>{
+  "type": "array",
+  "items": {
+    "property1": {...},
+    "property2": {...}
+  }
+}</pre>
+Property with types "boolean", "integer", "number" or "string":
+<pre>{
+  "type": "string"
+}</pre>
+<h2>Extensions to JSON-schema</h2>
+
+For every "type" a default APEX-itemtype is used. To support additional APEX-itemtypes and some formatting the JSON-schema is extended by a new object 
+<pre>
+"apex":{
+...    
+}
+</pre>
+
+So an JSON-property/item for a boolean displayed as a "switch" and starting in a new row looks like
+<pre>
+"property1": {
+  "type": "boolean",
+  "apex": {
+    "itemtype" "switch",
+    "newRow": true
+  }
+}
+</pre>
+By default the "boolean" is displayed as a checkbox.
+
+<h3>Overview of generic configurations</h3>
+Some configurations in the "apex"-property are valid for all available values for the "type" property.
+<br>
+
+<table class="overview">
+  <thead>
+    <th>Function</th>
+    <th>Comment</th>
+    <th>Property</th>
+  </thead>
+  <tbody>
+  <tr>
+    <td>Start a new Row before item</td>
+    <td>Default: false</td>
+    <td><pre>
+{
+  "apex": {"newRow": true}
+}
+</pre></td>
+  </tr>
+  <tr>
+    <td>width of an item</td>
+    <td>
+      Default in JSON_Region-configuration colwidth (4)<br>
+      Values: 1-12
+    </td>
+    <td><pre>
+{
+  "apex": {"colSpan": 6}
+}
+</pre></td>
+  </tr>
+  <tr>
+    <td>Template</td>
+    <td>
+      The label-template for an item.<br>
+      Values are <br>
+      <b>"hidden"</b> - no Label shown <br>
+      <b>"floating"</b> - default, floating Label and required marker<br>
+      <b>"above"</b> - Label above input item<br>
+      <b>"left"</b> - Label left of input item 
+    </td>
+    <td><pre>
+{
+  "apex": {"template": "floating"}
+}
+</pre></td>
+  </tr>
+  <tr>
+    <td>Align</td>
+    <td>
+      Alignment of the item <b>"left"</b>, <b>"center"</b>, <b>"right"</b>
+    </td>
+    <td><pre>
+{
+  "apex": {"align": "right"}
+}
+</pre></td>
+  </tr>
+  <tr>
+    <td>Placeholder</td>
+    <td>
+      Placeholder shown as long as "string", "number" or "integer" item is empty
+    </td>
+    <td><pre>
+{
+  "apex": {"placeholder": "shown when empty"}
+}
+</pre></td>
+  </tr>
+  <tr>
+    <td>Quickpicks</td>
+    <td>
+      Quickpicks could be shown for "string", "number" or "integer" items.
+      They are configured as a mapping of "Value" to "Display string"
+    </td>
+    <td><pre>
+{
+  "apex": {"quickpicks": {"value1": "display1", "value2:, "display2", ...}}
+}
+</pre></td>
+  </tr>
+  </tbody>
+</table>
+
+<h3>Mapping for enum</h3>
+For an enum item, an optional mapping "stored value" to "display values" can be configured.
+<pre>{
+  "type": "number",
+  "enum": [1,2,3],
+  "apex": {
+    "enum": {1, "one", 2, "two", 3, "three"}
+  }
+}</pre>
+<br>
+
+<h3>Overview of all supported APEX-itemtypes</h3>
+For itemtypes marked as a default, the "apex": {...} is not required.
+<br>
+
+<table class="overview">
+  <thead>
+    <th>APEX-itemtype</th>
+    <th>Default</th>
+    <th>Comment</th>
+    <th>JSON-schema</th>
+  </thead>
+  <tbody>
+  <tr>
+    <td>Checkbox</td>
+    <td>For boolean</td>
+    <td/>
+    <td><pre>
+{
+  "type": "boolean",
+  "apex": {"itemtype": "checkbox"}
+}
+</pre></td>
+  </tr>
+  <tr>
+    <td>Radio</td>
+    <td/>
+    <td>2 Radiobuttons with Yes/No</td>
+    <td><pre>
+{
+  "type": "boolean",
+  "apex": {"itemtype": "radio"}
+}
+</pre></td>
+  </tr>
+  <tr>
+    <td>Switch</td>
+    <td/>
+    <td/>
+    <td><pre>
+{
+  "type": "boolean",
+  "apex": {"itemtype": "switch"}
+}
+</pre></td>
+    </tr>
+    <tr><td>Starrating</td>
+    <td/>
+    <td>Starrating with "minimum" to "maximum" stars</td>
+    <td><pre>
+{
+  "type": "integer",
+  "minimum": 1,
+  "maximum": 5,
+  "apex": {"itemtype": "starrating"}
+}
+</pre></td>
+    </tr>
+    <tr><td>Textarea</td>
+    <td>Use a multiline textarea for long strings.</td>
+    <td>The optional "lines" defines the default height of the editor</td>
+    </td>
+    <td><pre>
+{
+  "type": "string",
+  "apex": {
+    "itemtype": "textarea",
+    "lines": 4
+  }
+}
+</pre></td>
+    </tr>
+    <tr><td>Richtext</td>
+    <td/>
+    <td>Uses the richtext-editor for long strings. The optional "lines" defines the default height of the editor</td>
+    <td><pre>
+{
+  "type": "string",
+  "apex": {
+    "itemtype": "richtext",
+    "lines": 4
+  }
+}
+</pre></td>
+    </tr>
+    <tr><td>Select</td>
+    <td>For simple enums</td>
+    <td>types <br>"string", "number", "integer"</td>
+    <td><pre>
+{
+  "type": "string",
+  "enum": ["val1", "val2", "val3"],
+  "apex": {"itemtype": "select"}
+}
+</pre></td>
+    </tr>
+    <tr><td>Radio</td>
+    <td/>
+    <td>A Radiobutton for each enum value</td>
+    <td><pre>
+{
+  "type": "string",
+  "enum": ["val1", "val2", "val3"],
+  "apex": {"itemtype": "radio"}
+}
+</pre></td>
+    </tr>
+    <tr><td>Checkbox group</td>
+    <td/>
+    <td>Selection of multiple predefined values</td>
+    <td><pre>
+{
+  "type": "array",
+  "items": {
+    "enum": ["val1", "val2", "val3"]
+  }
+  "apex": {"itemtype": "checkbox"}
+}
+</pre></td>
+    </tr>
+    <tr><td>Selectone</td>
+    <td/>
+    <td/>
+    <td><pre>
+{
+  "type": "string",
+  "enum": ["val1", "val2", "val3"],
+  "apex": {"itemtype": "selectone"}
+}
+</pre></td>
+    </tr>
+    <tr><td>Selectmany</td>
+    <td/>
+    <td>Selection of multiple predefined values, shown as chips together with a count</td>>
+    <td><pre>
+{
+  "type": "array",
+  "items": {
+    "enum": ["val1", "val2", "val3"]
+  }
+  "apex": {"itemtype": "selectmany"}
+}
+</pre></td>
+    </tr>
+    <tr><td>Combobox</td>
+    <td/>
+    <td>Selection of multiple values, shown as chips</td>>
+    <td><pre>
+{
+  "type": "array",
+  "items": {
+    "enum": ["val1", "val2", "val3"]
+  }
+  "apex": {"itemtype": "combobox"}
+}
+</pre></td>
+    </tr>
+    <tr><td>Shuttle</td>
+    <td/>
+    <td>Selection of multiple predefined values</td>
+    <td><pre>
+{
+  "type": "array",
+  "items": {
+    "enum": ["val1", "val2", "val3"]
+  }
+  "apex": {"itemtype": "shuttle"}
+}
+</pre></td>
+    </tr>
+    <tr><td>Password</td>
+    <td/>
+    <td>Show string as a password item. </td>
+    <td><pre>
+{
+  "type": "string",
+  "apex": {"itemtype": "password"}
+}
+</pre></td>
+    </tr>
+    <tr><td>Color</td>
+    <td/>
+    <td>Use a color-picker to select a color stored as #000000.</td>
+    <td><pre>
+{
+  "type": "string",
+  "apex": {"itemtype": "color"}
+}
+</pre></td>
+    </tr>
+    <tr><td>QR-Code</td>
+    <td/>
+    <td>Displays a string as a QR-code.</td>
+    <td><pre>
+{
+  "type": "string",
+  "apex": {"itemtype": "qrcode"}
+}
+</pre></td>
+    </tr>
+    <tr><td>File-/Imageupload</td>
+    <td/>
+    <td>
+      Upload of files.<br>
+      "mimetypes" is a comma-separated list of mimetypes or file-extensions.<br>
+      "maxFilesize" is the maxlimal allowed size of a file in KB.<br>
+      "download":true creates a download-link. 
+      The file is stored as an object 
+      <pre>{
+  "name": "filename",
+  "size": 55,
+  "type": "mimetype of file"
+  "content": "base64 encoded filecontent"
+}</pre> 
+    </td>
+    <td><pre>
+{
+  "type": "object",
+  "apex": {
+    "itemtype": "fileupload",
+    "mimetypes" "*.pdf,text/csv",
+    "maxFilesize": 100,
+    "download": true
+  }
+}
+</pre></td>
+    </tr>
+    <tr><td>Imageupload</td>
+    <td/>
+    <td>Same as <b>"Fileupload"</b>, but will only allow image formats and will display a preview of the image.</td>
+    <td><pre>
+{
+  "type": "object",
+  "apex": {
+    "itemtype": "imageupload",
+    "mimetypes" "*.jpg,image/png",
+    "maxFilesize": 100,
+    "download": true
+  }
+}
+</pre></td>
+    </tr>
+  </tbody>
+</table>

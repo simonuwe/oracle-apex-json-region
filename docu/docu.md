@@ -633,6 +633,9 @@ The configuration table mus have 3 columns
 The logic behind this is when a **schema** is found to a given **path** use this.
 When there is a **sqlquery** this will be used to to select the JSON-schema. Here you can provide a function which generates the JSON-schema too (like in **/enums/objecttype**).
 
+### Variable substitions
+
+In the plugin-configuration the attributes SQL
 
 ### Extending with Javascript/JQuery
 
@@ -721,7 +724,7 @@ WHERE c.table_name='TAB' AND column_name='JSON_DATA'
 
 This retrievs the JSON-schema for column **TAB.JSON_DATA** from the data dictionary, as long as the constraint-text is less than 4000 char long (the full text isin a LONG-column, which is not easy to process). So changing this VALIDATE setting will automatically adopt the layout of the json-region in your APEX-UI.
 
-#### JSON-Duality-views
+#### JSON-Duality-Views
 
 The JSON returned from a JSON-duality view contains the Oracle-specific property "_metadata", which is be ignored and not displayed by the plugin.
 

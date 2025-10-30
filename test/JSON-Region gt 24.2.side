@@ -2849,7 +2849,7 @@
       "command": "select",
       "target": "id=P11_DATA_num_sel",
       "targets": [],
-      "value": "label=0.5"
+      "value": "label=0,5"
     }, {
       "id": "fae57cd0-9fc4-46fc-af3b-668352c71293",
       "comment": "",
@@ -7979,7 +7979,7 @@
     }, {
       "id": "fc7bdc42-6b40-4ebe-b37e-1b8d8702666b",
       "comment": "",
-      "command": "waitForElementEditable",
+      "command": "waitForElementPresent",
       "target": "id=page_success_id",
       "targets": [],
       "value": "2000"
@@ -11492,7 +11492,7 @@
       "id": "548af6cc-d5f2-409b-9f19-5689b97c9e94",
       "comment": "",
       "command": "waitForElementPresent",
-      "target": "id=page_success_id",
+      "target": "id=APEX_ERROR_MESSAGE",
       "targets": [],
       "value": "2000"
     }, {
