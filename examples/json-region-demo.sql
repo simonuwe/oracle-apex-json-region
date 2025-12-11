@@ -31,7 +31,7 @@ prompt APPLICATION 100 - json-region-demo
 -- Application Export:
 --   Application:     100
 --   Name:            json-region-demo
---   Date and Time:   17:41 Thursday December 11, 2025
+--   Date and Time:   19:25 Thursday December 11, 2025
 --   Exported By:     UWE
 --   Flashback:       0
 --   Export Type:     Application Export
@@ -125,7 +125,7 @@ wwv_flow_api.create_flow(
 ,p_substitution_string_01=>'APP_NAME'
 ,p_substitution_value_01=>'json-region-demo'
 ,p_last_updated_by=>'UWE'
-,p_last_upd_yyyymmddhh24miss=>'20251211173629'
+,p_last_upd_yyyymmddhh24miss=>'20251211192507'
 ,p_file_prefix => nvl(wwv_flow_application_install.get_static_app_file_prefix,'')
 ,p_files_version=>3
 ,p_ui_type_name => null
@@ -25317,7 +25317,7 @@ wwv_flow_api.append_to_install_script(
 '   },',
 '  "required": ["txt"]',
 '}'', EMPTY_CLOB());',
-'Insert into UWE.OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values (''test-help-1'',TO_CLOB(q''[{',
+'Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values (''22668'', ''test-help-1'',TO_CLOB(q''[{',
 '  "type": "object",',
 '  "properties": {',
 '    "inline": {',

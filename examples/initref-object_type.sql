@@ -1938,7 +1938,7 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT
    },
   "required": ["txt"]
 }', EMPTY_CLOB());
-Insert into UWE.OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('test-help-1',TO_CLOB(q'[{
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('22668', 'test-help-1',TO_CLOB(q'[{
   "type": "object",
   "properties": {
     "inline": {
