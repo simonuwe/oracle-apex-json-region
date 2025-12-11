@@ -1,5 +1,5 @@
 /*
- * JSON-region-plugin 0.9.7.6
+ * JSON-region-plugin 0.9.8-1
  * (c) Uwe Simon 2023, 2025
  * Apache License Version 2.0
  *
@@ -117,6 +117,7 @@ IS
   l_hide                BOOLEAN;              -- Hide the JSON-field (default is true)
   l_removenulls         BOOLEAN;              -- Remove attributed from JSON with a NULL-value  
   l_is_printer_friendly BOOLEAN;              -- printerfriendly output
+  l_showhelp            BOOLEAN;              -- show help for items
   l_result              apex_plugin.t_region_render_result;
   l_queryitems          VARCHAR2(4000);
   l_delimiter           VARCHAR2(1);
@@ -139,6 +140,7 @@ $THEN  -- new API for >= APEX_24.2
   l_headers             := p_region.attributes.get_boolean('attribute_07', false);
   l_hide                := p_region.attributes.get_boolean('attribute_08', true);
   l_removenulls         := p_region.attributes.get_boolean('attribute_09', true);
+  l_showhelp            := p_region.attributes.get_boolean('attribute_16', false);
   APEX_DEBUG.TRACE('LEN-01: '||NVL(p_region.attribute_01,'NULL')||' '||LENGTH(p_region.attribute_01));
 $ELSE
   l_dataitem            := UPPER(NVL(p_region.attribute_10, p_region.source));
@@ -154,6 +156,7 @@ $ELSE
   l_headers             := NVL(p_region.attribute_07, 'N')='Y';
   l_hide                := NVL(p_region.attribute_08, 'Y')='Y';
   l_removenulls         := NVL(p_region.attribute_09, 'Y')='Y';  
+  l_showhelp            := NVL(p_region.attribute_16, 'N')='Y';  
   l_is_printer_friendly := p_is_printer_friendly;
 $END
   SELECT VERSION_NO INTO l_apex_version FROM APEX_RELEASE;
@@ -213,6 +216,7 @@ $END
          apex_javascript.add_attribute('name',             l_name) ||
          apex_javascript.add_attribute('colwidth',         l_colwidth) ||
          apex_javascript.add_attribute('readonly',         l_readonly) ||
+         apex_javascript.add_attribute('showhelp',         l_showhelp) ||
          apex_javascript.add_attribute('textareawidth',    l_textareawidth) ||
          apex_javascript.add_attribute('keepAttributes',   l_keepattributes) ||
          apex_javascript.add_attribute('headers',          l_headers) ||

@@ -1,7 +1,7 @@
 "use strict"
 
 /*
- * JSON-region 0.9.7.8
+ * JSON-region 0.9.8.1
  * Supports Oracle-APEX >=20.2 <=24.2
  * 
  * APEX JSON-region plugin
@@ -129,6 +129,10 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
   const C_APEX_FILEUPLOAD   = 'fileupload';
   const C_APEX_IMAGEDISPLAY = 'image';
   const C_APEX_IMAGEUPLOAD  = 'imageupload';
+  const C_APEX_UPLOAD       = 'upload';
+
+  const C_APEX_HELP         = 'help';
+  const C_APEX_INLINEHELP   = 'inlinehelp';
 
   const C_APEX_LEFT         = 'left';
   const C_APEX_CENTER       = 'center';
@@ -161,13 +165,17 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
   const C_APEX_MIMETYPES    = 'mimetypes';
   const C_APEX_MINIMUM      = 'minimum';
   const C_APEX_NEWROW       = 'newRow';
+  const C_APEX_NEWCOLUMN    = 'newColumn';
+  const C_APEX_NEXTNEWCOLUMN= 'nextNewColumn';
   const C_APEX_PLACEHOLDER  = 'placeholder';
   const C_APEX_QUICKPICKS   = 'quickpicks';
   const C_APEX_READONLY     = 'readonly';
   const C_APEX_WRITEONLY    = 'writeonly';
   const C_APEX_TEXTBEFORE   = 'textBefore';
   const C_APEX_TEXTCASE     = 'textcase';
-
+  const C_APEX_DIRECTION    = 'direction';
+  const C_APEX_SHOWPASSWORD = 'showPassword';
+  const C_APEX_DISPLAY      = 'display';
 
   const C_AJAX_GETSCHEMA    = 'getSchema';
   const C_AJAX_GETSUBSCHEMA = 'getSubschema';
@@ -195,8 +203,9 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
         C_APEX_FILEUPLOAD, C_APEX_IMAGEDISPLAY, C_APEX_IMAGEUPLOAD],
       "properties":  [C_APEX_ALIGN, C_APEX_COLORMODE, C_APEX_COLSPAN, C_APEX_CSS, C_APEX_DEFAULT, C_APEX_DOWNLOAD, 
                       C_APEX_ENUM, C_APEX_FORMAT, C_APEX_HASINSERT, C_APEX_ITEMTYPE, C_APEX_LABEL,
+                      C_APEX_DIRECTION, C_APEX_SHOWPASSWORD, C_APEX_DISPLAY, C_APEX_HELP, C_APEX_INLINEHELP,
                       C_APEX_LINES, C_APEX_MAXFILESIZE, C_APEX_MAXIMUM, C_APEX_MIMETYPES, C_APEX_MINIMUM,
-                   C_APEX_NEWROW, C_APEX_PLACEHOLDER, C_APEX_QUICKPICKS, C_APEX_READONLY, C_APEX_WRITEONLY, C_APEX_TEXTBEFORE, C_APEX_TEXTCASE],
+                      C_APEX_NEXTNEWCOLUMN, C_APEX_NEWCOLUMN, C_APEX_NEWROW, C_APEX_PLACEHOLDER, C_APEX_QUICKPICKS, C_APEX_READONLY, C_APEX_WRITEONLY, C_APEX_TEXTBEFORE, C_APEX_TEXTCASE],
       "template": [C_APEX_TEMPLATE_LABEL_ABOVE, C_APEX_TEMPLATE_LABEL_FLOATING, C_APEX_TEMPLATE_LABEL_HIDDEN, C_APEX_TEMPLATE_LABEL_LEFT]
     }
   }
@@ -209,6 +218,7 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
 // console.error(JSON.stringify(pOptions));
   let gData = null;  // holds the JSON-data as an object hierarchie
   let gDateFormat = apex.locale.getDateFormat?apex.locale.getDateFormat():null;
+  let gHelpMessages = {};
 
   pOptions.nls_date_format = pOptions.nls_date_format.toLowerCase().replace(/rr/g,'yy');
   if(!gDateFormat) {
@@ -325,7 +335,7 @@ function base64ToBlob(base64, type) {
     /*
      * Check whether the richtext-editor is initialized
     */
-    if(pOptions.apex_version < C_APEX_VERSION_2402 && itemtypes.itemtype.richtext) {
+    if(pOptions.apex_version < C_APEX_VERSION_2402 && itemtypes[C_APEX_ITEMTYPE].richtext) {
       let editorElement = $('#' + pRegionId + ' a-rich-text-editor');;
       apex.debug.trace ('wait for richtext-editor initializing ...');
       while(editorElement && editorElement.length && !editorElement[0].getEditor()){  // wait until editor is created
@@ -340,7 +350,7 @@ function base64ToBlob(base64, type) {
    * Wait until the richtext-editor >= APEX24.2 is initialized
    */
   async function richtextOrtlHack(itemtypes){
-    if(pOptions.apex_version>= C_APEX_VERSION_2402 && itemtypes.itemtype.richtext){
+    if(pOptions.apex_version>= C_APEX_VERSION_2402 && itemtypes[C_APEX_ITEMTYPE].richtext){
       let editorElement = $('#' + pRegionId + ' .ck-content');
       apex.debug.trace ('wait for richtext-editor initializing ...');
       while(!editorElement.length){  // wait until editor is created
@@ -588,7 +598,7 @@ function base64ToBlob(base64, type) {
     case C_JSON_ARRAY:
       itemtypes = getItemtypes(schema.items, itemtypes);
       if(schema.apex){
-        itemtypes.itemtype[schema.apex.itemtype] = true;
+        itemtypes[C_APEX_ITEMTYPE][schema.apex[C_APEX_ITEMTYPE]] = true;
       }
     break;
     default:
@@ -599,7 +609,7 @@ function base64ToBlob(base64, type) {
     }
 
     if(schema.apex){
-      itemtypes.itemtype[schema.apex.itemtype] = true;
+      itemtypes[C_APEX_ITEMTYPE][schema.apex[C_APEX_ITEMTYPE]] = true;
     }
 
     apex.debug.trace("<<jsonRegion.getItemtypes", itemtypes);
@@ -715,7 +725,7 @@ console.error('propagateShow if: not implemented', schema.if)
   */
   function propagateReadOnly(schema, readOnly){
     apex.debug.trace(">>jsonRegion.propagateReadOnly", schema, readOnly);
-    schema.readOnly = readOnly;
+    schema[C_APEX_READONLY] = readOnly;
 
     if(schema.type==C_JSON_OBJECT){
       for(let [l_name, l_schema] of Object.entries(schema.properties||{})){
@@ -829,7 +839,7 @@ console.error('propagateShow if: not implemented', schema.if)
       value = getConstant(schema.format, schema.default, true);
     }
 
-    if(schema.writeOnly){   // do not show the current value when it is a writeOnly UI-item
+    if(schema[C_APEX_WRITEONLY]){   // do not show the current value when it is a writeOnly UI-item
       value = null;
       l_value =  null;
     }
@@ -841,7 +851,7 @@ console.error('propagateShow if: not implemented', schema.if)
         switch(l_type){
           case C_JSON_INTEGER:
           case C_JSON_NUMBER:
-            if(![C_APEX_STARRATING, C_APEX_PCTGRAPH].includes(schema.apex.itemtype)){
+            if(![C_APEX_STARRATING, C_APEX_PCTGRAPH].includes(schema.apex[C_APEX_ITEMTYPE])){
               if(schema.apex.format){
                 l_value = apex.locale.formatNumber(l_value, schema.apex.format);
               } else {
@@ -903,8 +913,8 @@ console.error('propagateShow if: not implemented', schema.if)
                 l_value = value.substring(0,5);
               break;
               default:
-                if(schema.readOnly){
-                  switch(schema.apex.itemtype){
+                if(schema[C_APEX_READONLY]){
+                  switch(schema.apex[C_APEX_ITEMTYPE]){
                   case C_APEX_TEXTAREA:
                     l_value= l_value?l_value.replaceAll('<', '&lt;').replaceAll('\n', '<br/>'):'';
                   break;
@@ -980,6 +990,7 @@ console.error('propagateShow if: not implemented', schema.if)
     }
     attachObject(genItemname(dataitem, l_newId), null, schema.items, false, {}, true, schema.items, dataitem);
     apex.item.attach($('#' + pRegionId));
+    attachPopupHelp('#' + pRegionId);
     addArrayDeleteEvent();
     apexHacks();
     apex.debug.trace("<<jsonRegion.addArrayRow");
@@ -996,9 +1007,9 @@ console.error('propagateShow if: not implemented', schema.if)
     schema.apex = schema.apex || {};
     let item = schema.items||{};
     if(Array.isArray(item.enum)){  //[C_JSON_STRING, C_JSON_INTEGER, C_JSON_NUMBER].includes(item.type)){
-      if(schema.apex.itemtype==C_APEX_SELECTMANY){
+      if(schema.apex[C_APEX_ITEMTYPE]==C_APEX_SELECTMANY){
         apex.item.create(dataitem, {item_type: 'selectmany'});
-      } else if(schema.apex.itemtype==C_APEX_SHUTTLE){
+      } else if(schema.apex[C_APEX_ITEMTYPE]==C_APEX_SHUTTLE){
         apex.widget.shuttle('#' + dataitem, {});
       } else {
         apex.widget.checkboxAndRadio('#'+ dataitem, C_APEX_CHECKBOX);
@@ -1066,48 +1077,47 @@ console.error('propagateShow if: not implemented', schema.if)
         logSchemaError('missing "type" at', dataitem);
       }
     break;
-    case C_JSON_OBJECT:
-      if([C_APEX_FILEUPLOAD, C_APEX_IMAGEUPLOAD].includes(schema.apex.itemtype)){ // for file/image upload store data in jquery-object
-        if(pOptions.apex_version>=C_APEX_VERSION_2302){
-          $('#' + dataitem).data(C_DATA_DOWNLOAD, l_value);
-          if(l_value){
-            $('#' + dataitem + ' .a-FileDrop-download').attr(C_DATA_DOWNLOAD, l_value.name); //APEX HACK, force download of file
-          }
+    case C_APEX_UPLOAD:
+      if(pOptions.apex_version>=C_APEX_VERSION_2302){
+        $('#' + dataitem).data(C_DATA_DOWNLOAD, l_value);
+        if(l_value){
+          $('#' + dataitem + ' .a-FileDrop-download').attr(C_DATA_DOWNLOAD, l_value.name); //APEX HACK, force download of file
         }
-      } else {      
-        if(typeof schema.properties == 'object'){
-          data = data ||{};
-          for(let [l_name, l_schema] of Object.entries(schema.properties)){
-            if(!(''+l_name).startsWith('_')){   // ignore properties having names starting with "_"
-              setObjectValues(genItemname(dataitem, l_name), dataitem, l_schema, schema.readOnly, data[l_name]);
-            }
+      }
+    break;
+    case C_JSON_OBJECT:
+      if(typeof schema.properties == 'object'){
+        data = data ||{};
+        for(let [l_name, l_schema] of Object.entries(schema.properties)){
+          if(!(''+l_name).startsWith('_')){   // ignore properties having names starting with "_"
+            setObjectValues(genItemname(dataitem, l_name), dataitem, l_schema, schema[C_APEX_READONLY], data[l_name]);
           }
         }
       }
     break;
     case C_JSON_ARRAY:   
-      setArrayValues(dataitem, dataitem, schema, schema.readOnly, data);
+      setArrayValues(dataitem, dataitem, schema, schema[C_APEX_READONLY], data);
     break;
     case C_JSON_CONST: // a const value
     case C_JSON_NULL:  // empty object do nothing
     break;
     case C_JSON_BOOLEAN:
       apex.item(dataitem).setValue(l_value=='Y'?'Y':'N');
-      if(schema.readOnly) {
+      if(schema[C_APEX_READONLY]) {
         apex.item(dataitem).disable(); 
       }
     break;
     default:
-      if(schema.readOnly){
-        if([C_APEX_STARRATING].includes(schema.apex.itemtype)) {
+      if(schema[C_APEX_READONLY]){
+        if([C_APEX_STARRATING].includes(schema.apex[C_APEX_ITEMTYPE])) {
           apex.item(dataitem).disable();
         }
 
-        if(!apex.widget.pctGraph && [C_APEX_PCTGRAPH].includes(schema.apex.itemtype)){
+        if(!apex.widget.pctGraph && [C_APEX_PCTGRAPH].includes(schema.apex[C_APEX_ITEMTYPE])){
           $('#' + dataitem).html(apex.item(dataitem).displayValueFor(l_value));
         }
         
-        if([C_APEX_RICHTEXT].includes(schema.apex.itemtype)){
+        if([C_APEX_RICHTEXT].includes(schema.apex[C_APEX_ITEMTYPE])){
           l_value = window.marked.parse( l_value||'', {
                               gfm: true,
                               breaks: true,
@@ -1120,10 +1130,10 @@ console.error('propagateShow if: not implemented', schema.if)
         }
       }
 
-      if(!schema.readOnly || [C_APEX_QRCODE].includes(schema.apex.itemtype)){
+      if(!schema[C_APEX_READONLY] || [C_APEX_QRCODE].includes(schema.apex[C_APEX_ITEMTYPE])){
         if(pOptions.apex_version>=C_APEX_VERSION_2202 || ( 
              ![C_JSON_FORMAT_DATETIME, C_JSON_FORMAT_DATE].includes(schema.format) &&
-             ![C_APEX_STARRATING].includes(schema.apex.itemtype)
+             ![C_APEX_STARRATING].includes(schema.apex[C_APEX_ITEMTYPE])
            )
         ){  // hack for old jet-data-picker, starrating
           apex.item(dataitem).setValue(l_value||'');
@@ -1137,7 +1147,7 @@ console.error('propagateShow if: not implemented', schema.if)
       for(const l_schema of schema.allOf){
         const l_obj = {...l_schema};
         l_obj.type = C_JSON_OBJECT;
-        setObjectValues(genItemname(dataitem, nr++), dataitem, l_obj, schema.readOnly, data);
+        setObjectValues(genItemname(dataitem, nr++), dataitem, l_obj, schema[C_APEX_READONLY], data);
       }
     }
 
@@ -1146,7 +1156,7 @@ console.error('propagateShow if: not implemented', schema.if)
       for(const l_schema of schema.anyOf){
         const l_obj = {...l_schema};
         l_obj.type = C_JSON_OBJECT;
-        setObjectValues(genItemname(dataitem, nr++), dataitem, l_obj, schema.readOnly, data);
+        setObjectValues(genItemname(dataitem, nr++), dataitem, l_obj, schema[C_APEX_READONLY], data);
       }
     }
 
@@ -1155,17 +1165,17 @@ console.error('propagateShow if: not implemented', schema.if)
       for(const l_schema of schema.oneOf){
         const l_obj = {...l_schema};
         l_obj.type = C_JSON_OBJECT;
-        setObjectValues(genItemname(dataitem , nr++), dataitem, l_obj, schema.readOnly, data);
+        setObjectValues(genItemname(dataitem , nr++), dataitem, l_obj, schema[C_APEX_READONLY], data);
       }
     }
 
     if(schema.if){
       if(schema.then) {  // conditional schema then
-        setObjectValues(genItemname(dataitem, 0), dataitem, createTempObject(C_JSON_OBJECT, schema.then), schema.readOnly, data);
+        setObjectValues(genItemname(dataitem, 0), dataitem, createTempObject(C_JSON_OBJECT, schema.then), schema[C_APEX_READONLY], data);
       }
 
       if(schema.else) { // conditional schema else
-        setObjectValues(genItemname(dataitem, 1), dataitem, createTempObject(C_JSON_OBJECT, schema.else), schema.readOnly, data);
+        setObjectValues(genItemname(dataitem, 1), dataitem, createTempObject(C_JSON_OBJECT, schema.else), schema[C_APEX_READONLY], data);
       }
     }
 
@@ -1226,49 +1236,48 @@ console.error('propagateShow if: not implemented', schema.if)
         logSchemaError('missing "type" at', dataitem);
       }
     break;
-    case C_JSON_OBJECT:
-      if([C_APEX_FILEUPLOAD, C_APEX_IMAGEUPLOAD].includes(schema.apex.itemtype)){  // handling for file-/image-upload object
-        apex.item.create(dataitem, {});
-        $('#' + dataitem).on("change", function(event){ 
-          const l_file = this.files[0];
-          if(l_file){
-            var reader = new FileReader();      
-            reader.onload = function(event){
-              var contents = event.target.result;     
-              const l_data =arrayBufferToBase64(event.target.result);
-                // store file info in JQuery-object
-              $('#' + dataitem).data(C_DATA_DOWNLOAD, {name: l_file.name, size: l_file.size, type: l_file.type, content: l_data});
-              console.log('File: ', l_file);              
-            };      
-            reader.onerror = function(event){
-              console.error("File could not be read! Code " + event.target.error.code);
-            }
-          } else {  // no files, so empty data in JQuery object 
-            $('#' + dataitem).data(C_DATA_DOWNLOAD, null);
-          };  
-          if(l_file && l_file.size <= (schema.apex.maxFilesize||C_MAX_UPLOADSIZE) * 1024){    
-              reader.readAsArrayBuffer(l_file);        
+    case C_APEX_UPLOAD:
+      apex.item.create(dataitem, {});
+      $('#' + dataitem).on("change", function(event){ 
+        const l_file = this.files[0];
+        if(l_file){
+          var reader = new FileReader();      
+          reader.onload = function(event){
+            var contents = event.target.result;     
+            const l_data =arrayBufferToBase64(event.target.result);
+              // store file info in JQuery-object
+            $('#' + dataitem).data(C_DATA_DOWNLOAD, {name: l_file.name, size: l_file.size, type: l_file.type, content: l_data});
+            console.log('File: ', l_file);              
+          };      
+          reader.onerror = function(event){
+            console.error("File could not be read! Code " + event.target.error.code);
           }
-        });
-      } else {
-        if(typeof schema.properties == 'object'){
-          data = data ||{};
-          for(let [l_name, l_schema] of Object.entries(schema.properties)){
-            if(!(''+l_name).startsWith('_')){   // ignore properties having names starting with "_"
-              const l_item = genItemname(dataitem, l_name)
-              attachObject(l_item, dataitem, l_schema, schema.readOnly, data[l_name], newItem, l_schema, l_item);
-            }
+        } else {  // no files, so empty data in JQuery object 
+          $('#' + dataitem).data(C_DATA_DOWNLOAD, null);
+        };  
+        if(l_file && l_file.size <= (schema.apex.maxFilesize||C_MAX_UPLOADSIZE) * 1024){    
+          reader.readAsArrayBuffer(l_file);        
+        }
+      });
+    break;
+    case C_JSON_OBJECT:
+      if(typeof schema.properties == 'object'){
+        data = data ||{};
+        for(let [l_name, l_schema] of Object.entries(schema.properties)){
+          if(!(''+l_name).startsWith('_')){   // ignore properties having names starting with "_"
+            const l_item = genItemname(dataitem, l_name)
+            attachObject(l_item, dataitem, l_schema, schema[C_APEX_READONLY], data[l_name], newItem, l_schema, l_item);
           }
         }
       }
     break;
     case C_JSON_ARRAY:   
-      attachArray(dataitem, dataitem, schema, schema.readOnly, data, newItem);
+      attachArray(dataitem, dataitem, schema, schema[C_APEX_READONLY], data, newItem);
     break;
     case 'null':  // empty object do nothing
     break;
     case C_JSON_STRING:
-      if(!schema.readOnly){
+      if(!schema[C_APEX_READONLY]){
         switch (schema.format){
         case C_JSON_FORMAT_DATE:
         case C_JSON_FORMAT_DATETIME:
@@ -1293,7 +1302,7 @@ console.error('propagateShow if: not implemented', schema.if)
         break;  
         }
 
-        switch (schema.apex.itemtype){
+        switch (schema.apex[C_APEX_ITEMTYPE]){
         case C_APEX_RADIO:
           apex.widget.checkboxAndRadio('#'+ dataitem, C_APEX_RADIO);
         break;
@@ -1309,7 +1318,7 @@ console.error('propagateShow if: not implemented', schema.if)
                 maxHeight:        360,
                 displayValueMode: "plain-text",
                 editorOptions:    {language: apex.locale.getLanguage()},
-                label:            generateLabel(schema.name, schema),
+                label:            schema.apex[C_APEX_LABEL],
                 toolbar:          "intermediate",
                 toolbarStyle:     "overflow"
             });
@@ -1324,7 +1333,7 @@ console.error('propagateShow if: not implemented', schema.if)
       }
     break;
     case C_JSON_BOOLEAN:
-      switch(schema.apex.itemtype){
+      switch(schema.apex[C_APEX_ITEMTYPE]){
       case C_APEX_SWITCH:
         apex.widget.yesNo(dataitem, 'SWITCH_CB'); 
       break;
@@ -1339,13 +1348,13 @@ console.error('propagateShow if: not implemented', schema.if)
       break;
       }
 
-      if(schema.readOnly) {
+      if(schema[C_APEX_READONLY]) {
         apex.item(dataitem).disable(); 
       }
     break;
     case C_JSON_NUMBER:
     case C_JSON_INTEGER:
-      switch(schema.apex.itemtype){
+      switch(schema.apex[C_APEX_ITEMTYPE]){
       case C_APEX_PCTGRAPH:
         if(apex.widget.pctGraph) {
           apex.widget.pctGraph(dataitem);
@@ -1357,7 +1366,7 @@ console.error('propagateShow if: not implemented', schema.if)
         apex.widget.starRating(dataitem, {showClearButton: false, numStars: schema.maximum}); 
       break;
       default:       
-        if(!schema.readOnly){
+        if(!schema[C_APEX_READONLY]){
           apex.item.create(dataitem, {});
         }
       break;
@@ -1374,7 +1383,7 @@ console.error('propagateShow if: not implemented', schema.if)
       apex.debug.trace('attach allOf', schema.allOf);
       let nr = 0;
       for(let l_schema of schema.allOf){
-        attachObject(genItemname(dataitem, nr++), dataitem, l_schema, schema.readOnly, data, newItem, schema, dataitem);
+        attachObject(genItemname(dataitem, nr++), dataitem, l_schema, schema[C_APEX_READONLY], data, newItem, schema, dataitem);
       }
     }
 
@@ -1385,7 +1394,7 @@ console.error('propagateShow if: not implemented', schema.if)
       apex.debug.trace('attach then', schema.then);
         let properties = schema.then.properties||{};
         const l_item = genItemname(dataitem, 0)
-        attachObject(l_item, null, createTempObject(C_JSON_OBJECT, schema.then), schema.readOnly, data, newItem, schema.then, l_item);
+        attachObject(l_item, null, createTempObject(C_JSON_OBJECT, schema.then), schema[C_APEX_READONLY], data, newItem, schema.then, l_item);
         for(const [l_name, l_item] of Object.entries(properties)){
           propagateShow(genItemname(dataitem, l_name), l_item, l_eval===true);
         }
@@ -1394,7 +1403,7 @@ console.error('propagateShow if: not implemented', schema.if)
       if(schema.else) { // conditional schema else
         let properties = schema.else.properties||{};
         const l_item = genItemname(dataitem, 1);
-        attachObject(l_item, null, createTempObject(C_JSON_OBJECT, schema.else), schema.readOnly, data, newItem, schema.else, l_item);
+        attachObject(l_item, null, createTempObject(C_JSON_OBJECT, schema.else), schema[C_APEX_READONLY], data, newItem, schema.else, l_item);
         for(const [l_name, l_item] of Object.entries(properties)){
           propagateShow(genItemname(dataitem, l_name), l_item, l_eval===false);
         }
@@ -1470,7 +1479,7 @@ console.error('propagateShow if: not implemented', schema.if)
     apex.debug.trace(">>jsonRegion.getObjectValues", dataitem, name, schema, curJson, oldJson);
     let l_json = {};
     schema.apex = schema.apex||{};
-    if(![C_JSON_ARRAY, C_JSON_OBJECT].includes(schema.type) && schema.readOnly){ // when simple attribute and readonly no data could be read, keep the old data
+    if(![C_JSON_ARRAY, C_JSON_OBJECT].includes(schema.type) && schema[C_APEX_READONLY]){ // when simple attribute and readonly no data could be read, keep the old data
       l_json = oldJson;
     } else {
       l_json = schema.additionalProperties?oldJson:{};  // when there are additionalProperties, keep there values
@@ -1478,21 +1487,20 @@ console.error('propagateShow if: not implemented', schema.if)
         l_json = {...curJson, ...l_json};
       }
       switch(schema.type){
+      case C_APEX_UPLOAD:
+          l_json = $('#' + dataitem).data(C_DATA_DOWNLOAD);
+      break;
       case C_JSON_OBJECT:
         oldJson = oldJson||{};
-        if([C_APEX_IMAGEUPLOAD, C_APEX_FILEUPLOAD].includes(schema.apex.itemtype)){  // Fileupload has store data in jquery object
-          l_json = $('#' + dataitem).data(C_DATA_DOWNLOAD);
-        } else {
-          if(schema.properties){
-            for(let [l_name, l_schema] of Object.entries(schema.properties)){
-              const l_itemname = genItemname(dataitem, l_name);
-              let l_propertyname = l_name;
-              if(!C_JSON_CONST in l_schema && l_schema.type!=C_JSON_NULL && !(''+l_name).startsWith('_')){
+        if(schema.properties){
+          for(let [l_name, l_schema] of Object.entries(schema.properties)){
+            const l_itemname = genItemname(dataitem, l_name);
+            let l_propertyname = l_name;
+            if(!C_JSON_CONST in l_schema && l_schema.type!=C_JSON_NULL && !(''+l_name).startsWith('_')){
                 // no const, no type null and name does not start with _, there is a UI-item
-                l_propertyname = $('#' + l_itemname + '_CONTAINER').attr('json-property');
-              }
-              l_json[l_propertyname]=getObjectValues(l_itemname, l_name, l_schema, null, oldJson[l_name]);
+              l_propertyname = $('#' + l_itemname + '_CONTAINER').attr('json-property');
             }
+            l_json[l_propertyname]=getObjectValues(l_itemname, l_name, l_schema, null, oldJson[l_name]);
           }
         }
       break;
@@ -1517,7 +1525,7 @@ console.error('propagateShow if: not implemented', schema.if)
               l_json.push(l_data);
             }
           }
-          if(schema.readOnly) {  // array is readOnly
+          if(schema[C_APEX_READONLY]) {  // array is readOnly
             if(schema.apex.hasInsert == C_APEX_BEGiN) {  // inserts at the begin, so array = new + old
               l_json = l_json.concat(oldJson);
             } else { // inserts at the end, so array = old + new
@@ -1614,7 +1622,7 @@ console.error('propagateShow if: not implemented', schema.if)
   function generateLabel(name, schema){
     let l_label='';
     if(schema.apex && C_APEX_LABEL in schema.apex){
-      l_label = schema.apex.label||'';
+      l_label = schema.apex[C_APEX_LABEL]||'';
     } else {  
       // for default label replace -_ by a blank and set first char of each word in uppercase
       name = name ||'';
@@ -1695,7 +1703,7 @@ console.error('propagateShow if: not implemented', schema.if)
    * Set missing properties to reasonable values to avoid errors in later stages
    * Returns the hierarchie with all keys combining if/then/else/allOf/oneOf/anyOf
   */
-  function propagateProperties(schema, level, readonly, writeonly, additionalProperties, conditional, name, prefix){ 
+  function propagateProperties(schema, level, readonly, writeonly, additionalProperties, conditional, name, prefix, nextNewColumn){ 
     schema = schema || {};
     schema.apex = schema.apex||{};
     // schema.apex.conditional = conditional;
@@ -1709,19 +1717,28 @@ console.error('propagateShow if: not implemented', schema.if)
     }
 
       // harmonize schema.xxx and schema.apex.xxx, so that further check can be done on schema.xxx
-    schema.apex.readonly  = booleanIfNotSet(schema.apex.readonly, readonly);
-    schema.apex.writeonly = booleanIfNotSet(schema.apex.writeOnly, writeonly);
-    schema.readOnly       = booleanIfNotSet(schema.readOnly, schema.apex.readonly);
-    schema.writeOnly      = booleanIfNotSet(schema.writeOnly, schema.apex.writeonly);
+    schema.apex[C_APEX_READONLY]  ??= readonly;
+    schema.apex[C_APEX_WRITEONLY] ??= writeonly;
+    schema[C_APEX_READONLY]       ??= schema.apex[C_APEX_READONLY];
+    schema[C_APEX_WRITEONLY]      ??= schema.apex[C_APEX_WRITEONLY];
 
     if(schema.apex.format!=null)  { schema.format = schema.apex.format}
     if(schema.apex.minimum!=null) { schema.minimum = schema.apex.minimum}
     if(schema.apex.maximum!=null) { schema.maximum = schema.apex.maximum}
     if(schema.apex.default!=null) { schema.default = schema.apex.default}
 
-    if(!schema.apex.label && schema.title) {schema.apex.label = schema.title}
+    if(!schema.apex[C_APEX_LABEL] && schema.title) {schema.apex[C_APEX_LABEL] = schema.title}
     if(!schema.apex.placeholder && schema.description) {schema.apex.placeholder = schema.description}
 
+
+    schema.apex[C_APEX_NEWROW]        ??= false;
+    schema.apex[C_APEX_NEWCOLUMN]     ??= true;
+    schema.apex[C_APEX_NEXTNEWCOLUMN] = nextNewColumn;
+
+    if(schema.apex[C_APEX_NEWROW]){    // new row always new column
+      schema.apex[C_APEX_NEWCOLUMN] = true;
+    }
+    
      // process Oracle's extendedTypes
         // Oracle's extendedType for >= 23.7
     if(Array.isArray(schema.oneOf) && schema.oneOf.length==2) {
@@ -1747,14 +1764,15 @@ console.error('propagateShow if: not implemented', schema.if)
 
       // check for valid values
     Object.keys(schema.apex).every(l_entry => {if(!validValues.apex.properties.includes(l_entry)) { logSchemaError(name, 'invalid apex property', l_entry); return false;} else {return true;} });
+
     if(schema.extendedType && !validValues.extendedType.includes(schema.extendedType))    { logSchemaError(name, 'invalid extendedtype', schema.extendedType)}
     if(!C_JSON_CONST in schema && !conditional && !schema.extendedType && name && !name.startsWith('_') && !validValues.type.includes(schema.type)) {
       logSchemaError(name, 'invalid type', schema.type);
       schema.type = C_JSON_STRING;   // reset type to to string
     }
-    if(schema.apex.itemtype && !validValues.apex.itemtype.includes(schema.apex.itemtype)) { 
-      logSchemaError(name, 'invalid itemtype', schema.apex.itemtype);
-      delete schema.apex.itemtype;
+    if(schema.apex[C_APEX_ITEMTYPE] && !validValues.apex[C_APEX_ITEMTYPE].includes(schema.apex[C_APEX_ITEMTYPE])) { 
+      logSchemaError(name, 'invalid itemtype', schema.apex[C_APEX_ITEMTYPE]);
+      delete schema.apex[C_APEX_ITEMTYPE];
     }
     if(schema.apex.template && !validValues.apex.template.includes(schema.apex.template)) { 
       logSchemaError(name, 'invalid template', schema.apex.template);
@@ -1763,6 +1781,10 @@ console.error('propagateShow if: not implemented', schema.if)
 
     if(C_JSON_TYPE in schema || 'extendedType' in schema || C_JSON_PROPERTIES in schema || C_JSON_ITEMS in schema){
       schema.name = name;
+    }
+
+    if([C_APEX_FILEUPLOAD, C_APEX_IMAGEUPLOAD].includes(schema.apex[C_APEX_ITEMTYPE])){
+      schema.type = C_APEX_UPLOAD;
     }
 
     if(schema.dependentSchemas){ // convert dependent schemas to IF/ELSE, required property to dependentRequired
@@ -1798,7 +1820,7 @@ console.error('propagateShow if: not implemented', schema.if)
 
         // propagate the dependentRequired directly to the properties 
     if(schema.type==C_JSON_OBJECT){ 
-      if(!schema.properties && ![C_APEX_FILEUPLOAD, C_APEX_IMAGEUPLOAD].includes(schema.apex.itemtype)){
+      if(!schema.properties){
         logSchemaError('missing "properties" for "type": "object"');
         schema.properties={}; 
       }
@@ -1884,13 +1906,13 @@ console.error('propagateShow if: not implemented', schema.if)
       break;
       case C_JSON_INTEGER:
         schema.apex.format = (schema.apex.format==C_APEX_CURRENCY)?'FML999G999G999G999G990':(schema.apex.format||'99999999999999999999990');
-        if(schema.apex.itemtype==C_APEX_PCTGRAPH){
-          schema.readOnly = true;
+        if(schema.apex[C_APEX_ITEMTYPE]==C_APEX_PCTGRAPH){
+          schema[C_APEX_READONLY] = true;
         }
       break;
       case C_JSON_STRING:
-        if([C_APEX_QRCODE, C_APEX_IMAGEDISPLAY].includes(schema.apex.itemtype)){
-          schema.readOnly   = true;  // can not be changed
+        if([C_APEX_QRCODE, C_APEX_IMAGEDISPLAY].includes(schema.apex[C_APEX_ITEMTYPE])){
+          schema[C_APEX_READONLY]   = true;  // can not be changed
           schema.isRequired = false; // not required
         };
 
@@ -1898,10 +1920,10 @@ console.error('propagateShow if: not implemented', schema.if)
           if(schema.contentEncoding== C_JSON_ENCODING_BASE64){
             if([C_JSON_IMAGE_GIF, C_JSON_IMAGE_JPG, C_JSON_IMAGE_PNG].includes(schema.contentMediaType)){
               schema.apex.image=schema.contentMediaType;
-              schema.apex.itemtype = schema.apex.itemtype==C_APEX_IMAGEUPLOAD?C_APEX_IMAGEUPLOAD:C_APEX_IMAGEDISPLAY;
-              schema.readOnly = schema.apex.itemtype==C_APEX_IMAGEDISPLAY?true:schema.readOnly;
+              schema.apex[C_APEX_ITEMTYPE] = schema.apex[C_APEX_ITEMTYPE]==C_APEX_IMAGEUPLOAD?C_APEX_IMAGEUPLOAD:C_APEX_IMAGEDISPLAY;
+              schema[C_APEX_READONLY] = schema.apex[C_APEX_ITEMTYPE]==C_APEX_IMAGEDISPLAY?true:schema[C_APEX_READONLY];
             } else {
-              if(![C_APEX_FILEUPLOAD, C_APEX_IMAGEUPLOAD].includes(schema.apex.itemtype)){
+              if(schema.type != C_APEX_UPLOAD){
                 apex.debug.error('unknown string contentMediaType "%s"', schema.contentMediaType);
               // default is JPG
                 schema.contentMediaType = C_JSON_IMAGE_JPG;
@@ -1924,8 +1946,8 @@ console.error('propagateShow if: not implemented', schema.if)
              schema.apex.format = gTimeFormat;
            break;
            default:
-             if(schema.maxLength && schema.maxLength>pOptions.textareawidth && schema.apex.itemtype !=C_APEX_RICHTEXT){
-               schema.apex.itemtype=C_APEX_TEXTAREA;  
+             if(schema.maxLength && schema.maxLength>pOptions.textareawidth && schema.apex[C_APEX_ITEMTYPE] !=C_APEX_RICHTEXT){
+               schema.apex[C_APEX_ITEMTYPE]=C_APEX_TEXTAREA;  
              }
            break;   
           }
@@ -1935,43 +1957,43 @@ console.error('propagateShow if: not implemented', schema.if)
 
         // set apex.formats
     if(pOptions.apex_version <C_APEX_VERSION_2302){ // check for new itemtype
-      if([C_APEX_IMAGEUPLOAD, C_APEX_FILEUPLOAD].includes(schema.apex.itemtype)){
-        logSchemaError('itemtype not supported in APEX-version', schema.apex.itemtype, pOptions.apex_version);
-        delete schema.apex.itemtype;
+      if(schema.type == C_APEX_UPLOAD){
+        logSchemaError('itemtype not supported in APEX-version', schema.apex[C_APEX_ITEMTYPE], pOptions.apex_version);
+        delete schema.apex[C_APEX_ITEMTYPE];
       }
     }
 
         // set apex.formats
     if(pOptions.apex_version <C_APEX_VERSION_2301){ // check for new itemtype in old releases, remove them and log error
-      if([C_APEX_COLOR].includes(schema.apex.itemtype)){
-        logSchemaError('itemtype not supported in APEX-version', schema.apex.itemtype, pOptions.apex_version);
-        delete schema.apex.itemtype;
+      if([C_APEX_COLOR].includes(schema.apex[C_APEX_ITEMTYPE])){
+        logSchemaError('itemtype not supported in APEX-version', schema.apex[C_APEX_ITEMTYPE], pOptions.apex_version);
+        delete schema.apex[C_APEX_ITEMTYPE];
       }
     }
 
         // set apex.formats
     if(pOptions.apex_version <C_APEX_VERSION_2401){ // check for new itemtype in old releases, remove them and log error
-      if([C_APEX_SELECTONE, C_APEX_SELECTMANY, C_APEX_SHUTTLE].includes(schema.apex.itemtype)){
-        logSchemaError('itemtype not supported in APEX-version', schema.apex.itemtype, pOptions.apex_version);
-        delete schema.apex.itemtype;
+      if([C_APEX_SELECTONE, C_APEX_SELECTMANY, C_APEX_SHUTTLE].includes(schema.apex[C_APEX_ITEMTYPE])){
+        logSchemaError('itemtype not supported in APEX-version', schema.apex[C_APEX_ITEMTYPE], pOptions.apex_version);
+        delete schema.apex[C_APEX_ITEMTYPE];
       }
     }
 
         // set apex.formats
     if(pOptions.apex_version <C_APEX_VERSION_2302){ // check for new itemtype in old releases, remove them and log error
-      if([C_APEX_QRCODE, C_APEX_RICHTEXT, C_APEX_COMBO, ].includes(schema.apex.itemtype)){
-        logSchemaError('itemtype not supported in APEX-version', schema.apex.itemtype, pOptions.apex_version);
-        if(schema.apex.itemtype == C_APEX_RICHTEXT){  // use textarea
-          schema.apex.itemtype = C_APEX_TEXTAREA;
+      if([C_APEX_QRCODE, C_APEX_RICHTEXT, C_APEX_COMBO, ].includes(schema.apex[C_APEX_ITEMTYPE])){
+        logSchemaError('itemtype not supported in APEX-version', schema.apex[C_APEX_ITEMTYPE], pOptions.apex_version);
+        if(schema.apex[C_APEX_ITEMTYPE] == C_APEX_RICHTEXT){  // use textarea
+          schema.apex[C_APEX_ITEMTYPE] = C_APEX_TEXTAREA;
         } else {
-          delete schema.apex.itemtype;
+          delete schema.apex[C_APEX_ITEMTYPE];
         }
       }
     }
 
       // default für "enum"
     if(schema.enum){
-      schema.apex.itemtype = schema.apex.itemtype|| C_APEX_SELECT;
+      schema.apex[C_APEX_ITEMTYPE] = schema.apex[C_APEX_ITEMTYPE]|| C_APEX_SELECT;
     }    
       
         // propagate required to each properties
@@ -1989,37 +2011,53 @@ console.error('propagateShow if: not implemented', schema.if)
         // this is an object, process the properties
     if(typeof schema.properties == 'object'){
       l_allProperties = l_allProperties||{};
-      for(let [l_name, l_schema] of Object.entries(schema.properties)){
-        l_allProperties[l_name] = propagateProperties(l_schema, level, schema.readOnly, schema.writeOnly, schema.additionalProperties, false, l_name, schema.id);
+      const l_keys = Object.keys(schema.properties);
+      for(const [i, l_name] of l_keys.entries()){
+        const l_schema = schema.properties[l_name]; 
+        let l_nextNewColumn = true;
+        if(i>= l_keys.length-1) {
+          l_nextNewColumn = true; // last property, close column in any case
+        } else {
+          l_nextNewColumn = (schema.properties[l_keys[i+1]].apex||[])[C_APEX_NEWCOLUMN]??true;  // next property is in new Column
+        }
+        l_allProperties[l_name] = propagateProperties(l_schema, level, schema[C_APEX_READONLY], schema[C_APEX_WRITEONLY], schema.additionalProperties, false, l_name, schema.id, l_nextNewColumn);
       }
     }
 
     if(schema.items){  // this is an array, process the items
       schema.items.additionalProperties = booleanIfNotSet(schema.items.additionalProperties, additionalProperties);
-      l_allProperties = propagateProperties(schema.items, level, schema.readOnly, schema.writeOnly, schema.additionalProperties, false, schema.name, schema.id);
+      l_allProperties = propagateProperties(schema.items, level, schema[C_APEX_READONLY], schema[C_APEX_WRITEONLY], schema.additionalProperties, false, schema.name, schema.id, true);
     }
 
     if(Array.isArray(schema.allOf)){
       let l_name = name;
       let nr     = 0;
       for(let l_schema of schema.allOf){
-        const l_props = propagateProperties(l_schema, level, schema.readOnly, schema.writeOnly, schema.additionalProperties, true, l_name, genItemname(prefix, nr++));
+        const l_props = propagateProperties(l_schema, level, schema[C_APEX_READONLY], schema[C_APEX_WRITEONLY], schema.additionalProperties, true, l_name, genItemname(prefix, nr++), true);
         l_allProperties = {...l_allProperties, ...l_props}
       }
     }
 
     if(schema.then){
-      const l_props = propagateProperties(createTempObject(C_JSON_OBJECT, schema.then), level, schema.readOnly, schema.writeOnly, schema.additionalProperties, true, 'then', schema.id);
+      const l_props = propagateProperties(createTempObject(C_JSON_OBJECT, schema.then), level, schema[C_APEX_READONLY], schema[C_APEX_WRITEONLY], schema.additionalProperties, true, 'then', schema.id, true);
       l_allProperties = {...l_allProperties, ...l_props}
     }
 
     if(schema.else){
-      const l_props = propagateProperties(createTempObject(C_JSON_OBJECT, schema.else), level, schema.readOnly, schema.writeOnly, schema.additionalProperties, true, 'else', schema.id);
+      const l_props = propagateProperties(createTempObject(C_JSON_OBJECT, schema.else), level, schema[C_APEX_READONLY], schema[C_APEX_WRITEONLY], schema.additionalProperties, true, 'else', schema.id, true);
       l_allProperties = {...l_allProperties, ...l_props}
     }
 
     // no properties found here, so use the schema.type
     l_allProperties = l_allProperties||schema.type;
+
+    schema.apex[C_APEX_LABEL] = generateLabel(schema.name, schema);
+    
+    // remove double helps
+    if(schema.apex[C_APEX_INLINEHELP] && schema.apex[C_APEX_HELP]) {
+      schema.apex[C_APEX_HELP] = null;
+      logSchemaError('only one of inlinehelp and help is supported', schema.name);
+    }
 
     apex.debug.trace("<<jsonRegion.propagateProperties", level, l_allProperties);
     return(l_allProperties)
@@ -2034,7 +2072,7 @@ console.error('propagateShow if: not implemented', schema.if)
     let l_values = (data||[]).join(C_VALUESEPARATOR);
     schema.apex.enum=[];
     apex.debug.trace(">>jsonRegion.generateForShuttle", schema, data, itemtype, schemaApex);
-    if(schema.readOnly){
+    if(schema[C_APEX_READONLY]){
       let l_html = `
 <span class="display_only apex-item-display-only">
 `;
@@ -2349,8 +2387,8 @@ console.error('propagateShow if: not implemented', schema.if)
     schema.apex = schema.apex||{};
     schema.apex.enum = schema.apex.enum||{};
     apex.debug.trace(">>jsonRegion.generateForString", schema, data);
-    if(schema.readOnly){
-      switch(schema.apex.itemtype){
+    if(schema[C_APEX_READONLY]){
+      switch(schema.apex[C_APEX_ITEMTYPE]){
       case C_APEX_IMAGEDISPLAY:
         if(schema.format==C_JSON_FORMAT_URI){  //use url for the image
           l_generated = {
@@ -2396,16 +2434,16 @@ console.error('propagateShow if: not implemented', schema.if)
       }
     } else {
       if(Array.isArray(schema.enum)){
-        switch(schema.apex.itemtype){
+        switch(schema.apex[C_APEX_ITEMTYPE]){
         case C_APEX_SELECTONE:
           l_generated = generateForSelectOneMany(schema, data, C_APEX_SELECTONE, schema.apex);
         break;
         case C_APEX_SELECT:
         case C_APEX_RADIO:
-          l_generated = generateForSelect(schema, data, schema.apex.itemtype, schema.apex);
+          l_generated = generateForSelect(schema, data, schema.apex[C_APEX_ITEMTYPE], schema.apex);
         break;
         default:
-          logSchemaError('enum not supported for', schema.apex.itemtype);  
+          logSchemaError('enum not supported for', schema.apex[C_APEX_ITEMTYPE]);  
         }
       } else {
         switch(schema.format){
@@ -2514,7 +2552,7 @@ console.error('propagateShow if: not implemented', schema.if)
            html: `
 <input type="text" id="#ID#" name="#ID#" #REQUIRED# #MINLENGTH# #MAXLENGTH# value="#VALUE#" #PLACEHOLDER# #PATTERN# #TEXTCASE# class="#ALIGN# text_field apex-item-text" size="32" data-trim-spaces="#TRIMSPACES#" aria-describedby="#ID#_error">
 `};
-          switch (schema.apex.itemtype){
+          switch (schema.apex[C_APEX_ITEMTYPE]){
           case C_APEX_COLOR:
             l_generated = {
               items: 1,                
@@ -2524,13 +2562,23 @@ console.error('propagateShow if: not implemented', schema.if)
 `};
           break;
           case C_APEX_PASSWORD:
-            l_generated = {
-              items: 1,                
-              wrappertype: 'apex-item-wrapper--password',
-              html: `
-<input type="password" name="#ID#"" size="30" #PATTERN# #REQUIRED# #MINLENGTH# #MAXLENGTH# autocomplete="password" value="#VALUE#" id="#ID#" class="password apex-item-text">
-`};
-          break;    
+            if(pOptions.apex_version <C_APEX_VERSION_2402) {
+              l_generated = {
+                items: 1,                
+                wrappertype: 'apex-item-wrapper--password',
+                html: `
+<input type="password" name="#ID#" size="30" #PLACEHOLDER# #PATTERN# #REQUIRED# #MINLENGTH# #MAXLENGTH# value="#VALUE#" id="#ID#" class="password apex-item-text apex-item-has-icon">
+`}
+            } else {
+              l_generated = {
+                items: 1,                
+                wrappertype: 'apex-item-wrapper--password',
+                html: `
+<div class="apex-item-group apex-item-group--password">
+  <input type="password" name="#ID#" size="30" #PLACEHOLDER# #PATTERN# #REQUIRED# #MINLENGTH# #MAXLENGTH# value="#VALUE#" id="#ID#" class="#PASSWORDVISIBILITY# password apex-item-text apex-item-password apex-item-has-icon" data-enter-submit="false">
+</div>
+`}
+            }          break;    
           case C_APEX_RICHTEXT:
             if(pOptions.apex_version >=C_APEX_VERSION_2402) {
               l_generated = {
@@ -2577,20 +2625,20 @@ console.error('propagateShow if: not implemented', schema.if)
     let l_generated = {items: 0, wrappertype: null, html: ''};
     apex.debug.trace(">>jsonRegion.generateForNumeric", schema, data);
     if(Array.isArray(schema.enum)){  // numeric Pulldown
-      if(schema.readOnly) {
+      if(schema[C_APEX_READONLY]) {
         l_generated = generateForReadOnlyEnum(schema, data);
       } else {
         l_generated = generateForSelect(schema, data, C_APEX_SELECT, schema.apex);
       }
     } else {
-          if(schema.apex.itemtype==C_APEX_PCTGRAPH){
+          if(schema.apex[C_APEX_ITEMTYPE]==C_APEX_PCTGRAPH){
             l_generated = {
               items: 1,
               wrappertype: 'apex-item-wrapper--pct-graph',
               html:`
 <div class="apex-item-pct-graph" id="#ID#" data-show-value="true"">#VALUE#</div>
 `};
-          } else if(schema.apex.itemtype==C_APEX_STARRATING){
+          } else if(schema.apex[C_APEX_ITEMTYPE]==C_APEX_STARRATING){
               l_generated = {
                 items: 1,
                 wrappertype: 'apex-item-wrapper--star-rating',
@@ -2604,7 +2652,7 @@ console.error('propagateShow if: not implemented', schema.if)
 </div>
 `};
           } else {
-            if(schema.readOnly){
+            if(schema[C_APEX_READONLY]){
               l_generated = {
                 items: 1,
                 wrappertype: 'apex-item-wrapper--text-field',
@@ -2634,7 +2682,7 @@ console.error('propagateShow if: not implemented', schema.if)
     apex.debug.trace(">>jsonRegion.generateForUpload", schema, data, id);
     l_generated = {
       items: 1,
-      wrappertype: schema.apex.itemtype==C_APEX_IMAGEUPLOAD?'apex-item-wrapper--image-upload':'apex-item-wrapper--file',
+      wrappertype: schema.apex[C_APEX_ITEMTYPE]==C_APEX_IMAGEUPLOAD?'apex-item-wrapper--image-upload':'apex-item-wrapper--file',
       html: `
 <a-file-upload id="#ID#" #REQUIRED# upload-type="#UPLOADTYPE#" display-style="#DISPLAYSTYLE#" accept="#MIMETYPES#" size="30" label="Drop file" description="Select a file or drop one here." max-file-size="#MAXFILESIZE#" filename="#FILENAME#" file-size="#FILESIZE#" mimetype="#MIMETYPE#" show-clear-button="#CLEARBUTTON#" link="#URL#" download-link="#DOWNLOAD#" readonly="#READONLY#">
   <input id="#ID#_input"/>
@@ -2652,7 +2700,7 @@ console.error('propagateShow if: not implemented', schema.if)
     let l_generated = {items: 0, wrappertype: null, html: ''};
     schema.apex = schema.apex||{};
     apex.debug.trace(">>jsonRegion.generateForBoolean", schema, data);
-    switch(schema.apex.itemtype){
+    switch(schema.apex[C_APEX_ITEMTYPE]){
     case C_APEX_SWITCH:
       l_generated = {
         items: 1,
@@ -2671,7 +2719,7 @@ console.error('propagateShow if: not implemented', schema.if)
       let l_gen = generateForString({type: "string", isRequired: schema.isRequired, enum: ["N", "Y"], id: schema.id, name: schema.name, apex: l_apex}, data);
       l_generated = {
         items: 1,
-        wrappertype: (schema.apex.itemtype==C_APEX_SELECT)?'apex-item-wrapper--single-checkbox':'apex-item-wrapper--radiogroup',
+        wrappertype: (schema.apex[C_APEX_ITEMTYPE]==C_APEX_SELECT)?'apex-item-wrapper--single-checkbox':'apex-item-wrapper--radiogroup',
         html: l_gen.html
       };
     break;
@@ -2703,7 +2751,7 @@ console.error('propagateShow if: not implemented', schema.if)
     } else {
       l_generated = generateForItem(schema, data, id, startend, newItem, 0, false);
     }
-    if(!schema.readOnly && !schema.writeOnly){
+    if(!schema[C_APEX_READONLY] && !schema[C_APEX_WRITEONLY]){
       l_generated.html += generateArrayDeleteButton(id);
     }
 
@@ -2732,15 +2780,15 @@ console.error('propagateShow if: not implemented', schema.if)
   function generateForMultipleSelect(item, data){
     let l_generated = {items: 0, wrappertype: null, html: ''};
     apex.debug.trace(">>jsonRegion.generateForMultipleSelect", item, data);
-    switch(item.apex.itemtype){
+    switch(item.apex[C_APEX_ITEMTYPE]){
       case C_APEX_SHUTTLE:
-        l_generated = generateForShuttle(item.items, data, item.apex.itemtype, item.apex);
+        l_generated = generateForShuttle(item.items, data, item.apex[C_APEX_ITEMTYPE], item.apex);
       break;
       case C_APEX_COMBO:
-        l_generated = generateForCombo(item.items, data, item.apex.itemtype, item.apex);
+        l_generated = generateForCombo(item.items, data, item.apex[C_APEX_ITEMTYPE], item.apex);
       break;  
       case C_APEX_SELECTMANY:
-        l_generated = generateForSelectOneMany(item.items, data, item.apex.itemtype, item.apex);
+        l_generated = generateForSelectOneMany(item.items, data, item.apex[C_APEX_ITEMTYPE], item.apex);
       break;  
       default:
         l_generated =  generateForSelect(item.items, data, C_APEX_CHECKBOX, item.apex);
@@ -2801,7 +2849,7 @@ console.error('propagateShow if: not implemented', schema.if)
     let item = schema.items||{};
     data = data || [];
     if(Array.isArray(data)){
-      l_generated.html = generateArraySeparator(schema, generateLabel(schema.name, schema), id);
+      l_generated.html = generateArraySeparator(schema, schema.apex[C_APEX_LABEL], id);
       for(const  i in data) {
         let l_item = {...item};
         l_item.name = i;
@@ -2934,6 +2982,11 @@ console.error('propagateShow if: not implemented', schema.if)
   <div class="t-Region-header">
     <div class="t-Region-headerItems t-Region-headerItems--title">
       <h2 class="t-Region-title" data-apex-heading="">#LABEL#</h2>
+        {if HELP/}
+          <button class="t-Form-helpButton js-itemHelp" data-itemhelp="#ITEMID#" helpId="#ID#" title="View help text for #LABEL#." aria-label="View help text for #LABEL#." tabindex="-1" type="button">
+            <span class="a-Icon icon-help" aria-hidden="true"></span>
+          </button>
+        {endif/}
     </div>
   </div>
 </div>
@@ -2956,11 +3009,12 @@ console.error('propagateShow if: not implemented', schema.if)
     l_html = apex.util.applyTemplate(l_html, 
                                       { 
                                         placeholders: {
-                                          "LABEL": label,
-                                          "ID":    id,
-                                          "DIVID": id?'id="'+id+'_CONTAINER_0"':'',
+                                          "LABEL":        label,
+                                          "ID":           id,
+                                          "DIVID":        id?'id="'+id+'_CONTAINER_0"':'',
                                           "JSONPROPERTY": schema.name,
-                                          "CSS":   (schema.type==C_JSON_OBJECT)?(schema.apex.css||''):''
+                                          "CSS":          (schema.type==C_JSON_OBJECT)?(schema.apex.css||''):'',
+                                          "HELP":         pOptions.showhelp?schema.apex[C_APEX_HELP]||'':''
                                         }
                                       });
 
@@ -2984,11 +3038,16 @@ console.error('propagateShow if: not implemented', schema.if)
     <div class="t-Region-headerItems t-Region-headerItems--title">
       <h2 class="t-Region-title" id="#ID#_heading" data-apex-heading="">#LABEL#</h2>
     </div>
+  {if HELP/}
+    <button class="t-Form-helpButton js-itemHelp" data-itemhelp="#ITEMID#" helpId="#ID#" title="View help text for #LABEL#." aria-label="View help text for #LABEL#." tabindex="-1" type="button">
+       <span class="a-Icon icon-help" aria-hidden="true"></span>
+    </button>
+  {endif/}
  `;
       if(schema.apex.hasInsert != 'none'){  // 
         l_html += `
     <div class="t-Region-headerItems t-Region-headerItems--buttons">
-      <button id="#ID#_CREATE" type="button" class="t-Button t-Button--noLabel t-Button--icon js-ignoreChange lto33153869848604592_0" title="Create" aria-label="Create">
+      <button id="#ID#_CREATE" type="button" class="t-Button t-Button--noLabel t-Button--icon js-ignoreChange lto#ITEMID#_0" title="Create" aria-label="Create">
         <span class="a-Icon icon-ig-add-row" aria-hidden="true"></span>
       </button>
     </div>
@@ -3010,7 +3069,8 @@ console.error('propagateShow if: not implemented', schema.if)
                                         placeholders: {
                                           "LABEL":        label,
                                           "ID":           id,
-                                          "JSONPROPERTY": schema.name
+                                          "JSONPROPERTY": schema.name,
+                                          "HELP":         pOptions.showhelp?schema.apex[C_APEX_HELP]||'':''
                                         }
                                       });
     apex.debug.trace("<<jsonRegion.generateArraySeparator"); 
@@ -3028,7 +3088,7 @@ console.error('propagateShow if: not implemented', schema.if)
     apex.debug.trace(">>jsonRegion.generateArrayDeleteButton", dataitem); 
     let l_html = `
 <div class="t-Region-headerItems t-Region-headerItems--buttons">
-  <button id="#ID#_DELETE" type="button" class="json_region_del_row t-Button t-Button--noLabel t-Button--icon js-ignoreChange lto33153869848604592_0" title="Delete" aria-label="Delete">
+  <button id="#ID#_DELETE" type="button" class="json_region_del_row t-Button t-Button--noLabel t-Button--icon js-ignoreChange lto#ITEMID#_0" title="Delete" aria-label="Delete">
     <span class="a-Icon icon-ig-delete" aria-hidden="true"></span>
   </button>
 </div>
@@ -3040,7 +3100,7 @@ console.error('propagateShow if: not implemented', schema.if)
   }
 
   /*
-   * generate for a taemplate the classes for stackled, floating, rel-col, hidden
+   * generate for a taemplate the classes for stacked, floating, rel-col, hidden
    * Returns :{container: 'aaa', label: 'bbb', input: 'ccc'}
    * The classes for the item container, for label and input
   */
@@ -3123,6 +3183,7 @@ console.error('propagateShow if: not implemented', schema.if)
     apex.debug.trace("<<jsonRegion.generateQuickpicks", l_quickpicks);
     return l_quickpicks;
   }
+
   /*
    * generate UI for a simple item of types string, int, number, bool 
    * returns {items:0, wrappertype: "xxx", html: "xxx"}
@@ -3150,12 +3211,11 @@ console.error('propagateShow if: not implemented', schema.if)
         l_generated = generateForArray(item, data, id, null, true, itemNr);
       }
     break;
+    case C_APEX_UPLOAD:
+      l_generated = generateForUpload(item, data, id);
+    break;
     case C_JSON_OBJECT:
-      if([C_APEX_FILEUPLOAD, C_APEX_IMAGEUPLOAD].includes(item.apex.itemtype)){ // file/image upload are special objects
-        l_generated = generateForUpload(item, data, id);
-      } else {
-        l_generated = generateForObject(item, data, '', id, startend, newItem);
-      }
+      l_generated = generateForObject(item, data, '', id, startend, newItem);
     break;
     case C_JSON_STRING:
       l_generated = generateForString(item, data, id);
@@ -3177,8 +3237,12 @@ console.error('propagateShow if: not implemented', schema.if)
     break;    
     }
 
+        // store helpmessage for item
+    if(item.apex[C_APEX_INLINEHELP]|| item.apex[C_APEX_HELP]){
+      gHelpMessages[id] = {title: item.apex[C_APEX_LABEL], helpText: item.apex[C_APEX_INLINEHELP]|| item.apex[C_APEX_HELP]}
+    }
+
     if(l_generated.wrappertype){ // input items is generated
-      let label = generateLabel(item.name, item);
       let l_error = '';
       if(pOptions.apex_version>=C_APEX_VERSION_2102) { 
         l_error = `
@@ -3208,75 +3272,96 @@ console.error('propagateShow if: not implemented', schema.if)
           wrappertype: l_generated.wrappertype,
           html:        apex.util.applyTemplate(
 `
+{if NEWCOLUMN/}
   <div class="col col-#COLWIDTH# apex-col-auto #COLSTARTEND#">
-    <div id="#ID#_CONTAINER" class="t-Form-fieldContainer #FIELDTEMPLATE# #ISREQUIRED# #CSS# i_112918109_0 apex-item-wrapper #WRAPPERTYPE#" json-property="#JSONPROPERTY#">
+{endif/}
+    <div id="#ID#_CONTAINER" class="t-Form-fieldContainer #FIELDTEMPLATE# #ISREQUIRED# #CSS# lto#ITEMID#_0 apex-item-wrapper #WRAPPERTYPE#" json-property="#JSONPROPERTY#">
       <div class="t-Form-labelContainer #LABELTEMPLATE#">
         <label for="#ID#" id="#ID#_LABEL" class="t-Form-label #LABELHIDDEN#">#TOPLABEL#</label>
       </div>
       <div class="t-Form-inputContainer #INPUTTEMPLATE#">
-        #REQUIREDMARKER#
+        {if REQUIRED/}
+          <div class="t-Form-itemRequired-marker" aria-hidden="true"></div>
+        {endif/}
         <div class="t-Form-itemWrapper">
 ` + l_generated.html +  
 ` 
         </div>
 ` + l_quickpick + l_error  + `
+        {if INLINEHELP/}
+          <span id="#ID#_inline_help">#INLINEHELP#</span>
+        {endif/}
+        {if HELP/}
+          <button class="t-Form-helpButton js-itemHelp" data-itemhelp="#ITEMID#" helpId="#ID#" title="View help text for #LABEL#." aria-label="View help text for #LABEL#." tabindex="-1" type="button">
+            <span class="a-Icon icon-help" aria-hidden="true"></span>
+          </button>
+        {endif/}
       </div>
     </div>
+{if NEXTNEWCOLUMN/}
   </div>
+{endif/}
 `,
-                                    { placeholders: {"WRAPPERTYPE":   l_generated.wrappertype,
-                                                     "COLWIDTH":      (item.apex.colSpan?item.apex.colSpan:pOptions.colwidth),
-                                                     "ROWS":          (item.apex.lines?item.apex.lines:5),
-                                                     "COLS":          30,
-                                                     "COLSTARTEND":   startend<0?'col-start':(startend>0?'col-end':''),
-                                                     "ID":            id, 
-                                                     "NAME":          id,
-                                                     "LABEL":         label,
-                                                     "TEXTCASE":      item.apex.textcase?'data-text-case="' + (''+ item.apex.textcase).toUpperCase() +'"':'',
-                                                     "FIELDTEMPLATE": l_template.container,
-                                                     "LABELTEMPLATE": l_template.label,
-                                                     "LABELHIDDEN":   l_template.hidden,
-                                                     "INPUTTEMPLATE": l_template.input,
-                                                     "CSS":           item.apex.css||'',
-                                                     "ALIGN":         cAlign[item.apex.align]||'',
-                                                     "READONLY":      item.readOnly?"true":"false",
-                                                     "TRIMSPACES":    'BOTH',
-                                                     "AJAXIDENTIFIER": pAjaxIdentifier,
-                                                     "DATATEMPLATE": pOptions.datatemplateET,
-                                                     "PLACEHOLDER":  item.apex.placeholder?'placeholder="'+item.apex.placeholder+'"':'',
-                                                     "FORMAT":       item.apex.format||'',
-                                                     "EXAMPLE":      ([C_JSON_FORMAT_DATE, C_JSON_FORMAT_DATETIME, C_JSON_FORMAT_TIME].includes(item.format)?jsonValue2Item(item, new Date().toISOString(), newItem):''), 
-                                                     "MINLENGTH":    item.minLength?'minlength=' + item.minLength:'',
-                                                     "MAXLENGTH":    item.maxLength?'maxlength=' + item.maxLength:'',
-                                                     "TOPLABEL":     (item.type== C_JSON_BOOLEAN && !([C_APEX_SELECT, C_APEX_RADIO, C_APEX_SWITCH].includes(item.apex.itemtype)))?"":label,
-                                                     "CHECKED":      item.type== C_JSON_BOOLEAN && (l_value=='Y')?"checked":"",
-                                                     "BOOLVALUE":    l_value=='Y'?'Y':'N',
-                                                     "PATTERN":      item.pattern?'pattern="'+item.pattern+'"':"",  
-                                                     "REQUIRED":     item.isRequired?'required=""':"",
-                                                     "ISREQUIRED":   item.isRequired?'is-required':"",
-                                                     "REQUIREDMARKER": item.isRequired?'<div class="t-Form-itemRequired-marker" aria-hidden="true"></div>':'',
-                                                     "MIN":          ("minimum" in item)?([C_JSON_FORMAT_DATE, C_JSON_FORMAT_DATETIME, C_JSON_FORMAT_TIME].includes(item.format)?'min':'data-min')+'="'+item.minimum+'"':"",
-                                                     "MAX":          ("maximum" in item)?([C_JSON_FORMAT_DATE, C_JSON_FORMAT_DATETIME, C_JSON_FORMAT_TIME].includes(item.format)?'max':'data-max')+ '="'+item.maximum+'"':"",
-                                                     "VALUE":        l_value,
-                                                     "QUOTEVALUE":   (item.type== C_JSON_STRING)?apex.util.escapeHTML(''+l_value):l_value,
-                                                     "COLORMODE":    item.apex.colormode||'HEX',
-                                                     "IMAGE":        item.apex.image||"",
-                                                     "JSONPROPERTY": item.name
-                                                    }
+                                    { placeholders: {
+                                      "APEXVERSION":   pOptions.apex_version,
+                                      "WRAPPERTYPE":   l_generated.wrappertype,
+                                      "NEWCOLUMN":     item.apex[C_APEX_NEWCOLUMN]?"TRUE":"",
+                                      "NEXTNEWCOLUMN": item.apex[C_APEX_NEXTNEWCOLUMN]?"TRUE":"", 
+                                      "COLWIDTH":      (item.apex.colSpan?item.apex.colSpan:pOptions.colwidth),
+                                      "ROWS":          (item.apex.lines?item.apex.lines:5),
+                                      "COLS":          30,
+                                      "COLSTARTEND":   startend<0?'col-start':(startend>0?'col-end':''),
+                                      "ID":            id, 
+                                      "ITEMID":        0,
+                                      "NAME":          id,
+                                      "LABEL":         item.apex[C_APEX_LABEL],
+                                      "TEXTCASE":      item.apex.textcase?'data-text-case="' + (''+ item.apex.textcase).toUpperCase() +'"':'',
+                                      "FIELDTEMPLATE": l_template.container,
+                                      "LABELTEMPLATE": l_template.label,
+                                      "LABELHIDDEN":   l_template.hidden,
+                                      "INPUTTEMPLATE": l_template.input,
+                                      "CSS":           item.apex.css||'',
+                                      "ALIGN":         cAlign[item.apex.align]||'',
+                                      "READONLY":      item[C_APEX_READONLY]?"true":"false",
+                                      "TRIMSPACES":    'BOTH',
+                                      "AJAXIDENTIFIER": pAjaxIdentifier,
+                                      "DATATEMPLATE": pOptions.datatemplateET,
+                                      "PLACEHOLDER":  item.apex.placeholder?'placeholder="'+item.apex.placeholder+'"':'',
+                                      "FORMAT":       item.apex.format||'',
+                                      "EXAMPLE":      ([C_JSON_FORMAT_DATE, C_JSON_FORMAT_DATETIME, C_JSON_FORMAT_TIME].includes(item.format)?jsonValue2Item(item, new Date().toISOString(), newItem):''), 
+                                      "MINLENGTH":    item.minLength?'minlength=' + item.minLength:'',
+                                      "MAXLENGTH":    item.maxLength?'maxlength=' + item.maxLength:'',
+                                      "TOPLABEL":     (item.type== C_JSON_BOOLEAN && !([C_APEX_SELECT, C_APEX_RADIO, C_APEX_SWITCH].includes(item.apex[C_APEX_ITEMTYPE])))?"":item.apex[C_APEX_LABEL],
+                                      "CHECKED":      item.type== C_JSON_BOOLEAN && (l_value=='Y')?"checked":"",
+                                      "BOOLVALUE":    l_value=='Y'?'Y':'N',
+                                      "PATTERN":      item.pattern?'pattern="'+item.pattern+'"':"",  
+                                      "REQUIRED":     item.isRequired?'required=""':"",
+                                      "ISREQUIRED":   item.isRequired?'is-required':"",
+                                  //    "REQUIRED":     item.isRequired,
+                                      "MIN":          ("minimum" in item)?([C_JSON_FORMAT_DATE, C_JSON_FORMAT_DATETIME, C_JSON_FORMAT_TIME].includes(item.format)?'min':'data-min')+'="'+item.minimum+'"':"",
+                                      "MAX":          ("maximum" in item)?([C_JSON_FORMAT_DATE, C_JSON_FORMAT_DATETIME, C_JSON_FORMAT_TIME].includes(item.format)?'max':'data-max')+ '="'+item.maximum+'"':"",
+                                      "VALUE":        l_value,
+                                      "QUOTEVALUE":   (item.type== C_JSON_STRING)?apex.util.escapeHTML(''+l_value):l_value,
+                                      "COLORMODE":    item.apex[C_APEX_COLORMODE]||'HEX',
+                                      "IMAGE":        item.apex.image||"",
+                                      "JSONPROPERTY": item.name,
+                                      "INLINEHELP":   pOptions.showhelp?item.apex[C_APEX_INLINEHELP]||'':'',
+                                      "HELP":         pOptions.showhelp?item.apex[C_APEX_HELP]||'':''
+                                    }
                                     })
         }
-        if([C_APEX_FILEUPLOAD, C_APEX_IMAGEUPLOAD].includes(item.apex.itemtype)){
-        console.log('UPLOAD_TEMPLATE:', id, l_value);
-        console.dir(l_generated);
+        if(item.type == C_APEX_UPLOAD){
+        //console.log('UPLOAD_TEMPLATE:', id, l_value);
+        //console.dir(l_generated);
           l_generated.html = apex.util.applyTemplate( l_generated.html, {
             placeholders: {
-                "UPLOADTYPE":   item.apex.itemtype==C_APEX_FILEUPLOAD?'FILE':'IMAGE',
+                "UPLOADTYPE":   item.apex[C_APEX_ITEMTYPE]==C_APEX_FILEUPLOAD?'FILE':'IMAGE',
                 "DISPLAYSTYLE": 'DROPZONE_INLINE',
-                "CLEARBUTTON":  (item.readOnly || item.isRequired)?"false":"true",
+                "CLEARBUTTON":  (item[C_APEX_READONLY] || item.isRequired)?"false":"true",
                 "DOWNLOAD":     (l_value && item.apex.download)?"true":"false",
                 "MAXFILESIZE":  item.apex.maxFilesize||C_MAX_UPLOADSIZE,
                 "MIMETYPES":    item.apex.mimetypes,
-                "URL":          l_value?URL.createObjectURL(base64ToBlob(l_value.content, l_value.type)):'',
+                "URL":          l_value?URL.createObjectURL(base64ToBlob(l_value.content||``, l_value.type)):'',
                 "FILENAME":     l_value.name||'',
                 "MIMETYPE":     l_value.type||'',
                 "FILESIZE":     l_value.size||0
@@ -3285,8 +3370,8 @@ console.error('propagateShow if: not implemented', schema.if)
     }
 
     if(withHeader){  // add optional headers before
-      if(item.apex.textBefore || item.apex.newRow) {
-        const l_html = generateSeparator(item, item.apex.textBefore, id, false, 0);
+      if(item.apex[C_APEX_TEXTBEFORE] || item.apex[C_APEX_NEWROW]) {
+        const l_html = generateSeparator(item, item.apex[C_APEX_TEXTBEFORE], id, false, 0);
         l_generated.html = l_html + l_generated.html;
       }
     }
@@ -3305,9 +3390,10 @@ console.error('propagateShow if: not implemented', schema.if)
     schema.apex = schema.apex || {};
     apex.debug.trace(">>jsonRegion.generateForItems", schema, data, id, startend, newItem);
     let l_generated = {items: 0, wrappertype: null, html: ''};
-    if([C_APEX_FILEUPLOAD, C_APEX_IMAGEUPLOAD].includes(schema.apex.itemtype)){ // file/image upload are special objects
-      l_generated.html += generateForItem(schema, data, genItemname(id, l_name), startend, newItem, 0, true);
+    if([C_APEX_FILEUPLOAD, C_APEX_IMAGEUPLOAD].includes(schema.apex[C_APEX_ITEMTYPE])){ // file-/image-upload are special objects
+      l_generated.html += generateForItem(schema, data, genItemname(id, schema.name), startend, newItem, 0, true);
       l_generated.items = 1;
+      console.warn('could be removed');
     } else {
       const items = schema.properties ||{};
       let itemNr = 0;
@@ -3351,6 +3437,25 @@ console.error('propagateShow if: not implemented', schema.if)
   }
 
  
+  /* generate the HTML for a column */
+  function generateForColumn(schema, data, prefix, name, startend, newItem){
+    let l_generated = {items: 0, wrappertype: null, html: ''};
+    apex.debug.trace(">>jsonRegion.generateForColumn", schema, data, prefix, name, startend, newItem);
+
+    apex.debug.trace("<<jsonRegion.generateForColumn", l_generated);
+    return(l_generated);
+  }
+
+ 
+  /* generate the HTML for a row */
+  function generateForRow(schema, data, prefix, name, startend, newItem){
+    let l_generated = {items: 0, wrappertype: null, html: ''};
+    apex.debug.trace(">>jsonRegion.generateForRow", schema, data, prefix, name, startend, newItem);
+
+    apex.debug.trace("<<jsonRegion.generateForRow", l_generated);
+    return(l_generated);
+  }
+
   /*
    * generate UI for a schema with type "object", follow nested schemas 
    * returns {items:0, wrappertype: "xxx", html: "xxx"}
@@ -3376,7 +3481,7 @@ console.error('propagateShow if: not implemented', schema.if)
         case C_JSON_OBJECT: // an object, so generate all of its properties
 
           data = data ||'{}';
-          l_generated.html = generateSeparator(schema, generateLabel(schema.name, schema), name, true);
+          l_generated.html = generateSeparator(schema, schema.apex[C_APEX_LABEL], name, true);
           let l_gen = generateForItems(schema, data, name, startend, newItem);
           l_generated.html += l_gen.html;
           l_generated.items += l_gen.items;
@@ -3492,28 +3597,28 @@ console.error('propagateShow if: not implemented', schema.if)
     let l_scripts = [];
 
     if(pOptions.apex_version >=C_APEX_VERSION_2301){  // new Features for 23.1 
-      if(!customElements.get('a-color-picker')  && itemtypes.itemtype.color){ // colorpicker is used, so load files for colorpicker
+      if(!customElements.get('a-color-picker')  && itemtypes[C_APEX_ITEMTYPE].color){ // colorpicker is used, so load files for colorpicker
         l_scripts.push('libraries/apex/minified/item.Colorpicker.min.js');
       }
-      if(!apex.widget.shuttle  && itemtypes.itemtype.shuttle){ // shuttle is used, so load files for shuttle
+      if(!apex.widget.shuttle  && itemtypes[C_APEX_ITEMTYPE].shuttle){ // shuttle is used, so load files for shuttle
         l_scripts.push('libraries/apex/minified/widget.shuttle.min.js');
       }
     }
 
 
     if(pOptions.apex_version >=C_APEX_VERSION_2302){  // new Features for 23.2
-      if(!customElements.get('a-combobox')  && itemtypes.itemtype.combobox){ // combobox is used, so load files for new combobox
+      if(!customElements.get('a-combobox')  && itemtypes[C_APEX_ITEMTYPE].combobox){ // combobox is used, so load files for new combobox
         l_scripts.push('libraries/apex/minified/item.Combobox.min.js');
       }
-      if(!customElements.get('a-qrcode')  && itemtypes.itemtype.qrcode){ // combobox is used, so load files for new combobox
+      if(!customElements.get('a-qrcode')  && itemtypes[C_APEX_ITEMTYPE].qrcode){ // combobox is used, so load files for new combobox
         l_scripts.push('libraries/apex/minified/item.QRcode.min.js');
       }
 
-      if(!customElements.get('a-file-upload')  && itemtypes.itemtype.fileupload){ // fileupload is used, so load files for fileupload
+      if(!customElements.get('a-file-upload')  && (itemtypes[C_APEX_ITEMTYPE].fileupload || itemtypes[C_APEX_ITEMTYPE].imageupload)){ // file-/image-upload is used, so load files for fileupload
         l_scripts.push('libraries/apex/minified/item.FileUpload.min.js');
       }
 
-      if(itemtypes.itemtype.richtext){  // richtext is used, so load files for rich-text-editor
+      if(itemtypes[C_APEX_ITEMTYPE].richtext){  // richtext is used, so load files for rich-text-editor
         if(!customElements.get('a-rich-text-editor')){  // Custom Element is not in use, load it
 
           l_scripts.push('libraries/purify/'  + apex.libVersions.domPurify + '/purify.min.js');
@@ -3568,7 +3673,7 @@ console.error('propagateShow if: not implemented', schema.if)
     await richtextHack(l_itemtypes);
 
         // attach the fields to the generated UI
-    attachObject(pOptions.dataitem, null, pOptions.schema, pOptions.readonly, gData, newItem, pOptions.schema, pOptions.dataitem);
+    attachObject(pOptions.dataitem, null, pOptions.schema, pOptions[C_APEX_READONLY], gData, newItem, pOptions.schema, pOptions.dataitem);
     addArrayDeleteEvent();
     apexHacks();
     apex.debug.trace("<<jsonRegion.refresh");
@@ -3658,7 +3763,7 @@ console.error('propagateShow if: not implemented', schema.if)
  //   options.schema.type = options.schema.type || options.schema.properties?C_JSON_OBJECT:null;
     options.schema.properties = options.schema.properties || {};
     options.schema.apex =       options.schema.apex || {};
-    options.schema.apex.label = options.schema.apex.label || null;
+    options.schema.apex[C_APEX_LABEL] = options.schema.apex[C_APEX_LABEL] || null;
     apex.debug.trace("<<adjustOptions", options); 
     return options;
   }
@@ -3689,6 +3794,17 @@ console.error('propagateShow if: not implemented', schema.if)
     apex.debug.trace("<<mergeSchema", l_schema); 
     return(l_schema);
   }
+
+  function attachPopupHelp(id){
+    $(id + ' button.t-Form-helpButton').on('click', function(){
+      apex.debug.trace('CLICK HELP', $(this)[0].attributes.helpId);
+      const l_helpId = $(this)[0].attributes.helpId.nodeValue;
+      let l_help = gHelpMessages[l_helpId];
+      apex.theme.popupFieldHelp( l_help||{title: l_helpId, helpText: "Helptext is missing"});
+      return false;   
+    });
+  }
+
 
   /* -----------------------------------------------------------------
    * here the function code starts
@@ -3741,13 +3857,12 @@ console.error('propagateShow if: not implemented', schema.if)
     pOptions.schema = mergeSchema(pOptions.additionalschema, pOptions.schema);
   }
 
-
+  gHelpMessages = {};
   pOptions = adjustOptions(pOptions);
 
     // resolve all $refs
   pOptions.schema = await propagateRefs(pOptions.schema);
-  propagateProperties(pOptions.schema, 0, pOptions.readonly, false, pOptions.keepAttributes, false, null, pOptions.dataitem);
-
+  propagateProperties(pOptions.schema, 0, pOptions[C_APEX_READONLY], false, pOptions.keepAttributes, false, null, pOptions.dataitem, true);
     // adjust differences in 
   gData = reformatValues(pOptions.schema, gData, true);
 
@@ -3762,31 +3877,30 @@ console.error('propagateShow if: not implemented', schema.if)
   (async function(){
      // do the refresh
     async function doRefresh(){
-    apex.debug.trace(">>mergeSchema"); 
-    const l_newitem =!(gData && (Object.keys(gData).length>0));
+      apex.debug.trace(">>mergeSchema"); 
+      const l_newitem =!(gData && (Object.keys(gData).length>0));
 
-                pOptions = adjustOptions(pOptions);
+      gHelpMessages = {};
+      pOptions = adjustOptions(pOptions);
 
-                pOptions.schema = await propagateRefs(pOptions.schema);
-                propagateProperties(pOptions.schema, 0, pOptions.readonly, false, pOptions.keepAttributes, false, null, pOptions.dataitem);
-                let l_itemtypes = null;
-                l_itemtypes = getItemtypes(pOptions.schema, l_itemtypes);
-                apex.debug.trace('pOptions:', pOptions);
-                showFields(l_itemtypes, true);
-                await loadRequiredFiles(l_itemtypes);
-                await richtextHack(l_itemtypes);
-                gData = null;
-//                gData = defaultValues(pOptions.schema);
-//                removeNulls(gData);
-                attachObject(pOptions.dataitem, null, pOptions.schema, pOptions.readonly, gData, l_newitem, pOptions.schema, pOptions.dataitem);
-                await richtextOrtlHack(l_itemtypes);
-                addArrayDeleteEvent();
-                setObjectValues(pOptions.dataitem, '', pOptions.schema, pOptions.readonly, gData);
-                apexHacks();
-                createRegion();
+      pOptions.schema = await propagateRefs(pOptions.schema);
+      propagateProperties(pOptions.schema, 0, pOptions[C_APEX_READONLY], false, pOptions.keepAttributes, false, null, pOptions.dataitem, true);
+      let l_itemtypes = null;
+      l_itemtypes = getItemtypes(pOptions.schema, l_itemtypes);
+      apex.debug.trace('pOptions:', pOptions);
+      showFields(l_itemtypes, true);
+      await loadRequiredFiles(l_itemtypes);
+      await richtextHack(l_itemtypes);
+      gData = null;
+      attachObject(pOptions.dataitem, null, pOptions.schema, pOptions[C_APEX_READONLY], gData, l_newitem, pOptions.schema, pOptions.dataitem);
+      await richtextOrtlHack(l_itemtypes);
+      addArrayDeleteEvent();
+      setObjectValues(pOptions.dataitem, '', pOptions.schema, pOptions[C_APEX_READONLY], gData);
+      apexHacks();
+      createRegion();
       apex.debug.trace("<<mergeSchema"); 
     }
-  
+
   /*
    * create the region and attach default handlers
   */
@@ -3799,6 +3913,8 @@ console.error('propagateShow if: not implemented', schema.if)
       }
       apex.region.create( pRegionId, callbacks);
       apex.item.attach($('#' + pRegionId));
+
+      attachPopupHelp('#' + pRegionId);
       apex.debug.trace("<<createRegion");   
     }
 
@@ -3848,7 +3964,7 @@ console.error('propagateShow if: not implemented', schema.if)
         // Callback called by event "apexbeforepagesubmit"
       beforeSubmit: function (){
         apex.debug.trace(">>jsonRegion.beforeSubmit", pRegionId, pOptions.dataitem, pOptions.schema);
-        if(!pOptions.readonly){  // do nothing for readonly json-region
+        if(!pOptions[C_APEX_READONLY]){  // do nothing for readonly json-region
           apex.debug.trace('jsonRegion', pOptions);
           let l_json=getObjectValues(pOptions.dataitem, '', pOptions.schema, null, gData);
           if(pOptions.removeNulls){ 
@@ -3895,7 +4011,7 @@ console.error('propagateShow if: not implemented', schema.if)
 
     $('#' + pRegionId).ready(function() {
       apex.debug.trace('EVENT:', 'JQuery ready');
-      setObjectValues(pOptions.dataitem, '', pOptions.schema, pOptions.readonly, gData);
+      setObjectValues(pOptions.dataitem, '', pOptions.schema, pOptions[C_APEX_READONLY], gData);
       apexHacks();
     });
     createRegion();

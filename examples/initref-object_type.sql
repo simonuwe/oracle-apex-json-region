@@ -1938,5 +1938,49 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT
    },
   "required": ["txt"]
 }', EMPTY_CLOB());
+Insert into UWE.OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('test-help-1',TO_CLOB(q'[{
+  "type": "object",
+  "properties": {
+    "inline": {
+      "type": "string",
+      "apex": {"inlinehelp": "Inline Help"}
+    },
+    "popup": {
+      "type": "string",
+      "apex": {"help": "Popup Help"}
+    },
+    "obj": {
+      "type": "object",
+      "properties": {
+        "inline": {
+          "type": "string",
+          "apex": {"inlinehelp": "Obj Inline Help"}
+        },
+        "popup": {
+          "type": "string",
+          "apex": {"help": "Obj Popup Help"}
+   ]')
+|| TO_CLOB(q'[     }
+      }
+    },
+    "arr": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "inline": {
+            "type": "string",
+            "apex": {"inlinehelp": "Arr Inline Help"}
+          },
+          "popup": {
+            "type": "string",
+            "apex": {"help": "Arr Popup Help"}
+          }
+        }
+      }
+    }
+  }
+}]'), EMPTY_CLOB());
+
 
 COMMIT;
