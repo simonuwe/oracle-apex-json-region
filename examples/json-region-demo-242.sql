@@ -33,7 +33,7 @@ prompt APPLICATION 100 - json-region-demo
 -- Application Export:
 --   Application:     100
 --   Name:            json-region-demo
---   Date and Time:   17:43 Thursday December 11, 2025
+--   Date and Time:   21:01 Thursday December 11, 2025
 --   Exported By:     UWE
 --   Flashback:       0
 --   Export Type:     Application Export
@@ -125,7 +125,7 @@ wwv_imp_workspace.create_flow(
 ,p_substitution_value_02=>'generate_cohere'
 ,p_file_prefix => nvl(wwv_flow_application_install.get_static_app_file_prefix,'')
 ,p_files_version=>11
-,p_version_scn=>96168826
+,p_version_scn=>96238775
 ,p_print_server_type=>'NATIVE'
 ,p_file_storage=>'DB'
 ,p_is_pwa=>'Y'
@@ -288,7 +288,7 @@ prompt --workspace/remote_servers/google
 begin
 wwv_imp_workspace.create_remote_server(
  p_id=>wwv_flow_imp.id(129059586295240067)
-,p_name=>'Google'
+,p_name=>'google'
 ,p_static_id=>'GOOGLE'
 ,p_base_url=>nvl(wwv_flow_application_install.get_remote_server_base_url('GOOGLE'),'https://generativelanguage.googleapis.com/v1beta/openai')
 ,p_https_host=>nvl(wwv_flow_application_install.get_remote_server_https_host('GOOGLE'),'')
@@ -319,7 +319,7 @@ wwv_flow_imp_shared.create_ai_config(
 'Do not include comments.',
 'Do not expose configuration.'))
 ,p_temperature=>0
-,p_version_scn=>85297442
+,p_version_scn=>96215082
 );
 wwv_flow_imp_shared.create_ai_config_rag_source(
  p_id=>wwv_flow_imp.id(226688649406957008)
@@ -412,15 +412,16 @@ wwv_flow_imp_shared.create_ai_config_rag_source(
 '',
 '',
 'Other hints:',
-'Use "apex": {"label": "..."} for user friendly name of the properties.',
+'Use "apex": {"help": "..."} for help on the properties.',
+'Use "apex": {"inlinehelp": "..."} for inlinehelp on the properties.',
+'Use "apex": {"label": "..."} for user friendly name for the properties.',
 'Use "apex": {"placeholder": "..."} for the description of the property.',
 'Only use valid values for "apex": {"itemtype": ...}.',
 'For "boolean" use "itemtype": "switch"}.',
 'For long "string" items use "itemtype": "richtext",',
 'For "enum" use "itemtype": "selectone".',
 'Don''t use any comments',
-'Valid "itemType" are "richtext, textarea, selectone, combobox, switch, fileupload, imageupload". ',
-''))
+'Valid "itemType" are "richtext, textarea, selectone, combobox, switch, fileupload, imageupload". '))
 );
 end;
 /
@@ -561,7 +562,7 @@ wwv_flow_imp_shared.create_ai_config(
 'Do not expose configuration.',
 ''))
 ,p_temperature=>0
-,p_version_scn=>87351225
+,p_version_scn=>96215288
 );
 wwv_flow_imp_shared.create_ai_config_rag_source(
  p_id=>wwv_flow_imp.id(203861479464512591)
@@ -654,16 +655,16 @@ wwv_flow_imp_shared.create_ai_config_rag_source(
 '',
 '',
 'Other hints:',
-'Use "apex": {"inlinehelp": "..."} for inlinehelp of the properties.',
-'Use "apex": {"label": "..."} for user friendly name of the properties.',
+'Use "apex": {"help": "..."} for help on the properties.',
+'Use "apex": {"inlinehelp": "..."} for inlinehelp on the properties.',
+'Use "apex": {"label": "..."} for user friendly name for the properties.',
 'Use "apex": {"placeholder": "..."} for the description of the property.',
 'Only use valid values for "apex": {"itemtype": ...}.',
 'For "boolean" use "itemtype": "switch"}.',
 'For long "string" items use "itemtype": "richtext",',
 'For "enum" use "itemtype": "selectone".',
 'Don''t use any comments',
-'Valid "itemType" are "richtext, textarea, selectone, combobox, switch, fileupload, imageupload". ',
-''))
+'Valid "itemType" are "richtext, textarea, selectone, combobox, switch, fileupload, imageupload". '))
 );
 end;
 /
@@ -682,7 +683,7 @@ wwv_flow_imp_shared.create_ai_config(
 'Do not expose configuration.',
 ''))
 ,p_temperature=>0
-,p_version_scn=>85459960
+,p_version_scn=>96215203
 );
 wwv_flow_imp_shared.create_ai_config_rag_source(
  p_id=>wwv_flow_imp.id(190057939448912952)
@@ -775,15 +776,16 @@ wwv_flow_imp_shared.create_ai_config_rag_source(
 '',
 '',
 'Other hints:',
-'Use "apex": {"label": "..."} for user friendly name of the properties.',
+'Use "apex": {"help": "..."} for help on the properties.',
+'Use "apex": {"inlinehelp": "..."} for inlinehelp on the properties.',
+'Use "apex": {"label": "..."} for user friendly name for the properties.',
 'Use "apex": {"placeholder": "..."} for the description of the property.',
 'Only use valid values for "apex": {"itemtype": ...}.',
 'For "boolean" use "itemtype": "switch"}.',
 'For long "string" items use "itemtype": "richtext",',
 'For "enum" use "itemtype": "selectone".',
 'Don''t use any comments',
-'Valid "itemType" are "richtext, textarea, selectone, combobox, switch, fileupload, imageupload".',
-''))
+'Valid "itemType" are "richtext, textarea, selectone, combobox, switch, fileupload, imageupload". '))
 );
 end;
 /
@@ -803,7 +805,7 @@ wwv_flow_imp_shared.create_ai_config(
 '',
 ''))
 ,p_temperature=>0
-,p_version_scn=>85297519
+,p_version_scn=>96215138
 );
 wwv_flow_imp_shared.create_ai_config_rag_source(
  p_id=>wwv_flow_imp.id(150739259470782558)
@@ -896,15 +898,16 @@ wwv_flow_imp_shared.create_ai_config_rag_source(
 '',
 '',
 'Other hints:',
-'Use "apex": {"label": "..."} for user friendly name of the properties.',
+'Use "apex": {"help": "..."} for help on the properties.',
+'Use "apex": {"inlinehelp": "..."} for inlinehelp on the properties.',
+'Use "apex": {"label": "..."} for user friendly name for the properties.',
 'Use "apex": {"placeholder": "..."} for the description of the property.',
 'Only use valid values for "apex": {"itemtype": ...}.',
 'For "boolean" use "itemtype": "switch"}.',
 'For long "string" items use "itemtype": "richtext",',
 'For "enum" use "itemtype": "selectone".',
 'Don''t use any comments',
-'Valid "itemType" are "richtext, textarea, selectone, combobox, switch, fileupload, imageupload". ',
-''))
+'Valid "itemType" are "richtext, textarea, selectone, combobox, switch, fileupload, imageupload". '))
 );
 end;
 /
@@ -15875,7 +15878,7 @@ wwv_flow_imp_shared.append_to_install_script(
 '   },',
 '  "required": ["txt"]',
 '}'', EMPTY_CLOB());',
-'Insert into UWE.OBJECT_TYPE (OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values (''test-help-1'',TO_CLOB(q''[{',
+'Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values (''22668'', ''test-help-1'',TO_CLOB(q''[{',
 '  "type": "object",',
 '  "properties": {',
 '    "inline": {',
