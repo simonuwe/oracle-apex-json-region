@@ -1,6 +1,17 @@
-# 0.9.8
+# 0.9.8.1
 
-## Fixed Isses
+## New Features
+ - #226 APEX-24.2: Show-Password button configurable
+ - #228 Generate Help for Items
+ - #229 Support "New Column"
+
+## Fixed Issues
+ - #224 Simple array of file/image-upload causes Javascript-Error
+ - #225 Demo: object_type: "AI Generate form doesn't work anymore
+
+# 0.9.8.0
+
+## Fixed Issues
  - #218 enum with numbers: value and displayvalue swapped
  - #221 Empty JSON-schema causes javascript-error in JSON.parse
 
@@ -10,7 +21,7 @@
 
 # 0.9.7.5
 
-## Fixed Isses
+## Fixed Issues
 
  - #213 demo application: JSON CLOBs truncated
  - #212 "readonly": true broken in some cases with 0.9.7.4
@@ -31,7 +42,7 @@
 
 # 0.9.7.4a
 
-## Fixed Isses
+## Fixed Issues
 
   - #195 Import pre APEX-24.2 application into APEX 242 with plugin-0.9.7.4 causes PL/SQL-errors at runtime
 
@@ -39,7 +50,7 @@
 
 # 0.9.7.4
 
-## Fixed Isses
+## Fixed Issues
 
   - #192 "type": "null" and "const": "...." causes a console error output
 
@@ -50,7 +61,7 @@
 
 # 0.9.7.3a 2024-03-31
 
-## Fixed Isses
+## Fixed Issues
 
   - #188 Generate JSON-schema from data is broken with 0.9.7.3
 
@@ -60,7 +71,7 @@
   - #184 Support of 23ai COLLECTION TABLE/VIEW
   - #185 Support of universal-scheme style **Redwood-light**
 
-## Fixed Isses
+## Fixed Issues
 
   - #158 "additionalProperties": true does not remove data of conditional-schema expressions
   - #186 Oracle 23.7: JSON-schema of Duality-view with "optional" items now uses "oneOf" 
@@ -71,7 +82,7 @@
 
 - #177 Support of APEX-24.2
 
-## Fixed Isses
+## Fixed Issues
  - #179 Demo broken with APEX-24.2
  - #176 When "Headers" is off in JSON-region-configuration, arrays are saved with property name "undefined"
  - #175 Example for "Cascading Select-lists"
@@ -84,7 +95,7 @@
 
 - #161 Tutorial
  
-## Fixed Isses
+## Fixed Issues
 
 - #171 rel-0.9.7 returns error when example table doesn't exist
 - #170 Change of SQL-query for schema references in region-attributes shows warning

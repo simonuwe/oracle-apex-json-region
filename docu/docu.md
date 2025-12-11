@@ -302,9 +302,12 @@ With APEX >=24.1 it supports the **selectOne** and **selectMany**.
 Optional configurations for the UI could be done with the **"apex": {...}**. The supported  properties are
 - **label** could be used in any **type**, it is used to set a specific label for the input-item.
 - **placeholder** the text shown when the inputfield is empty (iggnored for checkboxes, switches and radiobuttons).
+- **help** The text is shown as ininehelp, if help is switched on by plugin-configuration **Show Help**
+- **inlinehelp** The text is shown as ininehelp, if help is switched on by plugin-configuration **Show Help**
 - **align** positions integer/number **left**, **center**, **right** in the input-item.
 - **textcase** for converting strings into **lower** or **upper**
-- **newRow** starts a new row, so the current field will be the first in this row.
+- **newRow** starts a new row, so the current field will be the first in this row (default is **false**).
+- **newColumn** item starts a new column (default is **true**).
 - **textBefore** defines text with is shown in a row above the current field. This can be used for logically grouping properties. This will always start a **newRow** 
 - **lines** defines for long strings the rows used for the textarea.
 - **colSpan** defines the width of the item, values are 1 (small)  to 12 (full width)
@@ -384,7 +387,7 @@ The supported Identification types
 | List Manager | --- |
 | Markdown Editor | --- |
 | Number Field | {"field1": {"type": "number"}} |
-| Password | {"field1": { "type": "string", "writeOnly": true", "apex": {"itemtype": "password"}}} | "writeOnly": true forces new password input when mandatory |
+| Password | {"field1": { "type": "string", "writeOnly": true", "apex": {"itemtype": "password", "showPassword": true}}} | "writeOnly": true forces new password input when mandatory, showPassword displays a showPassword-Button for APEX>=24.2 |
 | Percent Graph | {"field1": {"type": "number", "apex": {"itemtype": "pctgraph"}}} | Supported types "number" and integer" |
 | Popop LOV | --- |
 | QR-code: Data Type: Plain Text, Size: Default| {"field1": {"type": "string", "apex": {"itemtype": "qrcode"}}} | Support for types "string", "integer", "number" |
@@ -417,14 +420,17 @@ Other supported configurations.
 | APEX-item-config  | JSON-Schema | Comment |
 |-------------------|-------------|---------|
 | Name              | {"field1": {"type": "...", "apex": {"label": "Label1"}}} | use "Label1" instead of default (separate words, 1st case upper case rest lower) |
-| Subtype           | {"field1": {"type": "string", "format": "uri"}} | supported formats for **string** are **uri**, **email** | 
+| Subtype           | {"field1": {"type": "string", "format": "uri"}} | supported formats for **string** are **uri**, **email** |
+| Help          | {"field1: {"type": "...", "apex": {"help": "text"}}} | Text is shown as popup help text, when plugin-configuration "Show Help" is switched on | 
+| Inlinehelp          | {"field1: {"type": "...", "apex": {"inlinehelp": "text"}}} | Text is shown as inline help text, when plugin-configuration "Show Help" is switched on | 
 | Textcase          | {"field1": {"type": "string", ..., "apex": {"textcase": "lower", ...}}} | supported values **lower**, **upper** |
 | Value Required    | {"type": "object", "required": ["field1", ...]} |
 | Maximum Length    | {"field1": {"type": "...", "maxLength": "---"}} |
 | CSS Classes       | {"field1": {"type": "...", "apex": {"css": "class1 class2"}}} | |
 | Format Mask       | {"field1": {"type": "...", "format": "format1"}}   |
 | Value Placeholder | {"field1": {"type": "...", "apex": {"placeholder": "placeholder"}}} |
-| Start New Row     | {"field1": {"type": "...", "apex": {"newRow": true}}} |
+| Start New Row     | {"field1": {"type": "...", "apex": {"newRow": true}}} | Default "false" |
+| Start New Column     | {"field1": {"type": "...", "apex": {"newRow": true}}} | Default "true" |
 | Column            | {"field1": {"type": "...", "apex": {"colSpan": "3"}}} | spans 1 .. 12 |
 | New Column        | --- | always true |
 | Default: Type: Static | {"field1": {²type": "...", "default": "value1"}} | For "type": date, date-time, time: "now" is current date, current timstamp or current time |
