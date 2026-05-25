@@ -1,15 +1,14 @@
 "use strict"
 
 /*
- * JSON-region 0.9.8.1
- * Supports Oracle-APEX >=20.2 <=24.2
+ * JSON-region 0.9.8.2
+ * Supports Oracle-APEX >=21.2 <=26.1
  * 
  * APEX JSON-region plugin
- * (c) Uwe Simon 2023, 2024, 2025
+ * (c) Uwe Simon 2023, 2024, 2025, 2026
  * Apache License Version 2.0
 */
 
-const ORTL_VERSION = '2.0.1';
 
 // for Oracle < 21.1
 apex.libVersions = apex.libVersions || {oraclejet: "11.0.0"};
@@ -67,6 +66,7 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
   const C_APEX_VERSION_2302 = "23.2"
   const C_APEX_VERSION_2401 = "24.1"
   const C_APEX_VERSION_2402 = "24.2"
+  const C_APEX_VERSION_2601 = "26.1"
 
                                               // JSON "type": "..."
   const C_JSON_TYPE             = 'type';
@@ -176,6 +176,7 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
   const C_APEX_DIRECTION    = 'direction';
   const C_APEX_SHOWPASSWORD = 'showPassword';
   const C_APEX_DISPLAY      = 'display';
+  const C_APEX_VALIDATE     = 'validate';
 
   const C_AJAX_GETSCHEMA    = 'getSchema';
   const C_AJAX_GETSUBSCHEMA = 'getSubschema';
@@ -204,7 +205,7 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
       "properties":  [C_APEX_ALIGN, C_APEX_COLORMODE, C_APEX_COLSPAN, C_APEX_CSS, C_APEX_DEFAULT, C_APEX_DOWNLOAD, 
                       C_APEX_ENUM, C_APEX_FORMAT, C_APEX_HASINSERT, C_APEX_ITEMTYPE, C_APEX_LABEL,
                       C_APEX_DIRECTION, C_APEX_SHOWPASSWORD, C_APEX_DISPLAY, C_APEX_HELP, C_APEX_INLINEHELP,
-                      C_APEX_LINES, C_APEX_MAXFILESIZE, C_APEX_MAXIMUM, C_APEX_MIMETYPES, C_APEX_MINIMUM,
+                      C_APEX_LINES, C_APEX_MAXFILESIZE, C_APEX_MAXIMUM, C_APEX_MIMETYPES, C_APEX_MINIMUM, C_APEX_VALIDATE,
                       C_APEX_NEXTNEWCOLUMN, C_APEX_NEWCOLUMN, C_APEX_NEWROW, C_APEX_PLACEHOLDER, C_APEX_QUICKPICKS, C_APEX_READONLY, C_APEX_WRITEONLY, C_APEX_TEXTBEFORE, C_APEX_TEXTCASE],
       "template": [C_APEX_TEMPLATE_LABEL_ABOVE, C_APEX_TEMPLATE_LABEL_FLOATING, C_APEX_TEMPLATE_LABEL_HIDDEN, C_APEX_TEMPLATE_LABEL_LEFT]
     }
@@ -3623,14 +3624,22 @@ console.error('propagateShow if: not implemented', schema.if)
 
           l_scripts.push('libraries/purify/'  + apex.libVersions.domPurify + '/purify.min.js');
           l_scripts.push('libraries/prismjs/' + apex.libVersions.prismJs + '/prism.js');
-          l_scripts.push('libraries/markedjs/' + apex.libVersions.markedJs + '/marked.min.js');
+          if( pOptions.apex_version >= C_APEX_VERSION_2601){
+            l_scripts.push('libraries/markedjs/' + apex.libVersions.markedJs + '/marked.umd.js');
+          } else {
+            l_scripts.push('libraries/markedjs/' + apex.libVersions.markedJs + '/marked.min.js');
+          }
           l_scripts.push('libraries/turndown/' + apex.libVersions.turndown + '/turndown.js');
-          if(pOptions.apex_version >=C_APEX_VERSION_2402){  // richtext deitor with widget.rte for 24.2
-    //        l_scripts.push('libraries/apex/minified/widget.toolbar.min.js');
-    //        l_scripts.push('libraries/apex/minified/widget.markdownEditor.min.js');
-            l_scripts.push('libraries/ortl/' + ORTL_VERSION + '/ckeditor5.umd.js');
-            l_scripts.push('libraries/ortl/' + ORTL_VERSION + '/ckeditor5-editor.css');
-            l_scripts.push('libraries/ortl/' + ORTL_VERSION + '/ckeditor5-content.css');
+          if(pOptions.apex_version ==C_APEX_VERSION_2402){  // richtext deitor with widget.rte for 24.2
+            l_scripts.push('libraries/ortl/2.0.1/ckeditor5.umd.js');
+            l_scripts.push('libraries/ortl/2.0.1/ckeditor5-editor.css');
+            l_scripts.push('libraries/ortl/2.0.1/ckeditor5-content.css');
+            l_scripts.push('libraries/apex/minified/widget.rte.min.js');
+          } else if(pOptions.apex_version >=C_APEX_VERSION_2601){  // richtext deitor with widget.rte for 26.1
+            l_scripts.push('libraries/ortl/2607.0.2/ortl.umd.js');
+            l_scripts.push('libraries/ortl/2607.0.2/translations/' + apex.locale.getLanguage() + '.umd.js');
+            l_scripts.push('libraries/ortl/2607.0.2/ortl-editor.css');
+            l_scripts.push('libraries/ortl/2607.0.2/ortl-content.css');
             l_scripts.push('libraries/apex/minified/widget.rte.min.js');
           }else {
             l_scripts.push('libraries/tinymce/' + apex.libVersions.tinymce + '/skins/ui/oxide/skin.css');
