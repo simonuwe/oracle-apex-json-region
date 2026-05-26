@@ -1,6 +1,6 @@
 /*
- * JSON-region-plugin 0.9.8-1
- * (c) Uwe Simon 2023, 2025
+ * JSON-region-plugin 0.9.8.2
+ * (c) Uwe Simon 2023, 2025, 2026
  * Apache License Version 2.0
  *
  * TODO: Remove conditional compile when min supported version is APEX >=24.2
