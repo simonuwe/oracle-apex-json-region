@@ -1514,7 +1514,7 @@ console.error('propagateShow if: not implemented', schema.if)
           let l_data = apex.item(dataitem).getValue();
           l_json = itemValue2Json(schema, l_data);
           if([C_JSON_INTEGER, C_JSON_NUMBER].includes(schema.items.type)) { // when numeric, convert string to numeric
-            l_json = l_json.map( x=> Number(x));
+            l_json = (l_json||[]).map( x=> Number(x));
           }
         } else {
           l_json = [];
