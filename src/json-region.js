@@ -3166,7 +3166,7 @@ console.error('propagateShow if: not implemented', schema.if)
   <a href="#action$a-set-value?itemName=#ID#&amp;value=#VALUE#&amp;displayValue=#DISPLAYVALUE#" aria-roledescription="action link" aria-controls="#ID#">#DISPLAYVALUE#</a>`, 
               { placeholders: {  
                   "VALUE": apex.util.escapeHTML(''+l_value), 
-                  "DISPLAYVALUE": jsonValue2Display(schema, l_value, newItem),
+                  "DISPLAYVALUE": jsonValue2Display(schema, l_display, newItem),
                   "DELIMITER": l_delimiter
                 }
               });

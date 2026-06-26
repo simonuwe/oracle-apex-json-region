@@ -146,17 +146,32 @@ Currently supported are
         "itemtype": "switch"
       }
     },
-    "prop2": {
+    "prop21": {
       "type": "integer", 
       "maximum": 5,
       "apex": {
-        "itemtype": "starrating", 
-        "align": "right"
+        "align": "right",
+        "quickpicks": {"display1":"1", "display2": "2"}
       }
     },
-    "prop3": {
+    "prop22": {
       "type": "number", 
+      "maximum": 9.9,
+      "apex": {
+        "align": "right",
+        "quickpicks": {"display1":"1.5", "display2": "2.0"}
+      }
+    },
+    "prop31": {
+      "type": "integer", 
       "maximum": 5,
+      "apex": {
+        "itemtype": "starrating"
+        }
+    },
+    "prop32": {
+      "type": "number", 
+      "maximum": 10,
       "apex": {
         "itemtype": "starrating"
         }
@@ -167,7 +182,8 @@ Currently supported are
       "apex": {
         "newRow": true, 
         "colSpan": 3, 
-        "lines": 5
+        "lines": 5,
+        "quickpicks": {"display1":"value1", "display2": "values2"}
       }
     },
     "image": {
@@ -318,6 +334,8 @@ Also the unsupported JSON-schema-formats like **ipv4**,**uuid**, **email, .. can
 - **placeholder** defines the placeholder shown wwhilehen field is empty.
 - **template** used for the input item values are **floating** (default), **left**, **above** and **hidden**
 - **css** defines the CSS-classes added to the form-field of the UI-item
+- **quickpicks** displays quickpicks below numeric and string pageitems. **"quickpicks": {"display1":"value1", "display2": "values2"}** displays **display...** and when clicked writed **value...** into the page item.
+
 - **itemtype** defines which UI-item is used in the APEX-UI
   - **password** the text is not shown but a * for each character.  
   - **switch** changes the display for a **boolean** to a switch, the default is a single checkbox.
@@ -330,7 +348,7 @@ Also the unsupported JSON-schema-formats like **ipv4**,**uuid**, **email, .. can
   - **selectone** to support the select dropdown of APEX>=24.1
   - **selectmany** to support the multi select dropdown of APEX>=24.1. Here the option **"asChips"=true** will display the items as chips, otherwise as separated list 
   - **richtext** to support a textarea with a richtext-editor (for APEX >=23.2). Use **collspan the use expand the columns, so that the iconbar of the richtext-editor fits  
-  - **qrcode** will display (the item will be readonly) a **string** as qrcode (for APEX >= 23.2). 
+  - **qrcode** displays (the item will be readonly) a **string** as qrcode (for APEX >= 23.2). 
 
 - The itemtypes **fileupload**, **imageupload** are used for uploading files or images and store them as **base64** strings. The **apex**-property **maxFilesize** defines the filesizelimit in KB, **download** enables/disables the download link and **mimetypes** is a comma-separated list of mimetypes (image/png) or file-extensions (.png).
  are special, because they use a JSON type **object** with properties
