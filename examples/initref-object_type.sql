@@ -2037,7 +2037,8 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT
   }
 }]', EMPTY_CLOB());
 
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('22708','test-popuplov-1',q'[{
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('22708','test-popuplov-1',q'[
+{
   "type": "object",
   "properties":{
     "popuplov": {
@@ -2048,6 +2049,35 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT
         "incrementalSearch": true,
         "ref":               "/lov/object_types"
       }
+    }    
+  }
+}]', EMPTY_CLOB());
+
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('22729','test-hidden-1',q'[
+{
+  "type": "object",
+  "properties":{
+    "input": {
+      "type": "string"
+    },
+    "hidden_bool": {
+      "type": "boolean",
+      "apex": {"itemtype": "hidden"}
+    },
+    "hidden_int": {
+      "type": "integer",
+      "apex": {"itemtype": "hidden"}
+    },
+    "hidden_num": {
+      "type": "number",
+      "apex": {"itemtype": "hidden"}
+    },
+    "hidden_str": {
+      "type": "string",
+      "apex": {"itemtype": "hidden"}
+    },
+    "input2": {
+      "type": "string"
     }    
   }
 }]', EMPTY_CLOB());

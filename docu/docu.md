@@ -186,6 +186,10 @@ Currently supported are
         "quickpicks": {"display1":"value1", "display2": "values2"}
       }
     },
+    "hidden": {
+      "type":   "string",
+      "apex": {"itemtype": "hidden"}
+    },
     "image": {
       "type":   "string",
       "format": "uri", 
@@ -337,6 +341,7 @@ Also the unsupported JSON-schema-formats like **ipv4**,**uuid**, **email, .. can
 - **quickpicks** displays quickpicks below numeric and string pageitems. **"quickpicks": {"display1":"value1", "display2": "values2"}** displays **display...** and when clicked writed **value...** into the page item.
 
 - **itemtype** defines which UI-item is used in the APEX-UI
+  - **hidden** the data is not shown on the page. This works for types **integer, **number**,  **boolean** and **string**
   - **password** the text is not shown but a * for each character.  
   - **switch** changes the display for a **boolean** to a switch, the default is a single checkbox.
   - **starrating** uses for the numeric types **integer** and **number** stars to enter the value. The property **maximum** (which also defines in JSON-schema the max value for the item) is used for the number of displayed stars.

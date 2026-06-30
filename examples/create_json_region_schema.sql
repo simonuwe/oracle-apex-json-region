@@ -19,7 +19,7 @@ from (
   fetch first 100 rows only
 ))');
 
-COMMIT
+COMMIT;
 
 /*
  * JSON_REGION_GENERATE_ENUM
