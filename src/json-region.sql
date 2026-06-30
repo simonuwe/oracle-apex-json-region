@@ -8,16 +8,21 @@
 */
 
 /* 
- * READ a schema from ref-schema-query with column path, schema, sqlquery 
+ * READ a schema from ref-schema-query with column path, schema, sqlquery, when the entry contains a sqlquery, this query is executed with optional parameter 
 */
-FUNCTION generate_schema(p_refquery IN VARCHAR2 , p_path IN VARCHAR2) RETURN CLOB IS
+FUNCTION generate_schema(p_refquery IN VARCHAR2 , p_path IN VARCHAR2, p_parameter VARCHAR2 DEFAULT NULL, p_offset INTEGER DEFAULT 1) RETURN CLOB IS
     l_json     CLOB;
     l_sqlquery VARCHAR2(4000);
 BEGIN
     APEX_DEBUG.INFO('generate_schema %s: "%s"', p_path, p_refquery);
     EXECUTE IMMEDIATE p_refquery INTO l_json, l_sqlquery USING p_path;
-    IF l_json IS NULL THEN
-      EXECUTE IMMEDIATE l_sqlquery INTO l_json;
+    IF l_json IS NULL THEN -- Found a query which will retrieve the data
+      APEX_DEBUG.INFO('generate_schema with query %s: "%s"', l_sqlquery, p_parameter);    
+      IF(p_parameter IS NULL) THEN
+        EXECUTE IMMEDIATE l_sqlquery INTO l_json;
+      ELSE
+        EXECUTE IMMEDIATE l_sqlquery INTO l_json USING '%'||p_parameter||'%', p_offset;
+      END IF;
     END IF;
 
     RETURN(l_json);
@@ -42,6 +47,7 @@ BEGIN
   END IF;
   RETURN l_json;
 END readschema;
+
 
 /*
  * Read the JSON-schema from database dictionary. 
@@ -239,13 +245,15 @@ END render_json_region;
  * Must return a JSON
  */
 FUNCTION ajax_json_region(p_region IN apex_plugin.t_region,
-                     p_plugin IN apex_plugin.t_plugin)
+                          p_plugin IN apex_plugin.t_plugin)
   RETURN apex_plugin.t_region_ajax_result 
 IS
   l_sqlquery  VARCHAR2(32767);             -- the SQL-query entered in page designer is passed in attribute_04;
   l_refquery  VARCHAR2(32767);             -- The query to retreive the schema reference column, If set on region level use it, els from Component level
   l_function  APEX_APPLICATION.g_x04%TYPE; -- function executed by AJAX-callback
   l_param1    APEX_APPLICATION.g_x05%TYPE; -- 1st parameter for function
+  l_param2    APEX_APPLICATION.g_x06%TYPE; -- 2nd parameter for function
+  l_offset    APEX_APPLICATION.g_x07%TYPE; -- offset for getLov-query
   l_result    apex_plugin.t_region_ajax_result;
   l_json      VARCHAR2(32767);
   l_j         APEX_JSON.T_VALUES;
@@ -263,9 +271,11 @@ $END
 
   l_function  := APEX_APPLICATION.g_x04;
   l_param1    := APEX_APPLICATION.g_x05;
+  l_param2    := APEX_APPLICATION.g_x06;
+  l_offset    := APEX_APPLICATION.g_x07;
   BEGIN
         -- x01-x03 used by QRCode callback
-    APEX_DEBUG.TRACE('ajax_json_region pplugin %s', p_plugin.attribute_01);
+    APEX_DEBUG.TRACE('ajax_json_region plugin %s', p_plugin.attribute_01);
     APEX_DEBUG.TRACE('ajax_json_region source %s', p_region.source);
     APEX_DEBUG.TRACE('ajax_json_region items %s', p_region.ajax_items_to_submit);
     APEX_DEBUG.TRACE('ajax_json_region g_x01 %s', APEX_APPLICATION.g_x01);
@@ -282,8 +292,12 @@ $ELSE
       apex_json.write('{}');
 $END
     ELSE
-      APEX_DEBUG.TRACE('ajax_json_region g_x04 %s', l_function);
+      APEX_DEBUG.TRACE('ajax_json_region g_x02 %s', APEX_APPLICATION.g_x02);
+      APEX_DEBUG.TRACE('ajax_json_region g_x03 %s', APEX_APPLICATION.g_x03);
+      APEX_DEBUG.TRACE('ajax_json_region g_x04 %s', APEX_APPLICATION.g_x04);
       APEX_DEBUG.TRACE('ajax_json_region g_x05 %s', l_param1);
+      APEX_DEBUG.TRACE('ajax_json_region g_x06 %s', l_param2);
+      APEX_DEBUG.TRACE('ajax_json_region g_x07 %s', TO_NUMBER(l_offset));
       CASE APEX_APPLICATION.g_x04
         WHEN 'getSubschema' THEN  -- x05 contains the JSON-schema requested schema path
           l_json := generate_schema(l_refquery, l_param1);
@@ -294,12 +308,27 @@ $END
           l_json := readschema(l_sqlquery);
           apex_json.parse(l_j , l_json);
           apex_json.write(l_j);
-        ELSE 
+        WHEN 'getLov' THEN  -- get a LOV with a search parameter
+          apex_json.open_object();
+          apex_json.open_object('fetchedData');
+          apex_json.write('firstRow', 1);
+          apex_json.write('moreData', false);
+          -- apex_json.open_array('values');
+            --l_json := generate_schema(l_refquery, '/lov/object_types', 'all');
+            l_json := generate_schema(l_refquery, l_param1, l_param2, l_offset);
+            apex_json.parse(l_j , l_json);            
+            apex_json.write('values', l_j);
+
+            -- apex_json.close_array();
+            apex_json.close_object();
+            apex_json.close_object();
+        ELSE
           apex_json.open_object;
-      END CASE;
+        END CASE;
     END IF;
-  apex_json.close_all();
+    --apex_json.close_all();
   EXCEPTION WHEN NO_DATA_FOUND THEN
+    APEX_DEBUG.ERROR('AJAX-callback: '||SQLCODE||' '||SQLERRM);
     apex_json.open_object();
     apex_json.close_all(); 
     RAISE; 

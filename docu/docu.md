@@ -346,9 +346,12 @@ Also the unsupported JSON-schema-formats like **ipv4**,**uuid**, **email, .. can
   - **image** use the string as an URL for an image (**format** must be **uri** too).
   - **combobox** to support a combobox with **chips** for an **array** of **string** with an **enum** (for APEX >=23.2)
   - **selectone** to support the select dropdown of APEX>=24.1
-  - **selectmany** to support the multi select dropdown of APEX>=24.1. Here the option **"asChips"=true** will display the items as chips, otherwise as separated list 
+  - **selectmany** to support the multi select dropdown of APEX>=24.1. Here the option **"asChips": true** will display the items as chips, otherwise as separated list 
   - **richtext** to support a textarea with a richtext-editor (for APEX >=23.2). Use **collspan the use expand the columns, so that the iconbar of the richtext-editor fits  
   - **qrcode** displays (the item will be readonly) a **string** as qrcode (for APEX >= 23.2). 
+  - **popuplov** to support a dynamic popupLOV, which can read the list ov values from the database.  **"minSearchChars": 3** defines the minimu chars tio enter befor a search can start, **"incrementalSearch": true** will automatically search while entering the searchstring, **"ref": "/lov/object_types"** is the reference to the "SQL-query", reading the data, it returns 1 row with ony JSON-column. The valuelist is an array of arrays. the inner array are the rows. The query needs 2 parameters :1 the searchstring, :2 the limit clause for the select.
+      }
+    } 
 
 - The itemtypes **fileupload**, **imageupload** are used for uploading files or images and store them as **base64** strings. The **apex**-property **maxFilesize** defines the filesizelimit in KB, **download** enables/disables the download link and **mimetypes** is a comma-separated list of mimetypes (image/png) or file-extensions (.png).
  are special, because they use a JSON type **object** with properties
@@ -386,7 +389,7 @@ The table shows the mapping of the configuration of an item **field1** to the **
 
 The supported Identification types
 
-| APEX-Item Identification Type | JSON-Schema | Comment |
+i APEX-Item Identification Type | JSON-Schema | Comment |
 |-------------------------------|-------------|---------|
 | Checkbox | {"field1": {"type": "boolean"} }| |
 | Checkbox Group | {"field1": "type": "array", "items": {"type": "string", "enum": ["val1", "val2", ...]}} |
@@ -397,18 +400,17 @@ The supported Identification types
 | Display Image | {"field1": { "type": "string", "contentEncoding": "base64", "contentMediaType": "imagetype"}} | imagetypes: jpg, png, gif |
 | Display Map | --- |
 | Display Only: Format Pain text | {"field1": "type": "...", "readOnly": true} |
-| Hidden | --- |
 | File Upload | "field1": {"type": "object", "apex": { "itemtype": "fileupload", "maxFilesize": 128, "download": true, "mimetypes": "pdf,.png,.jpg,.gif,.csv" }} |
 | Geocoded Address | --- |
-| Hidden | --- |
+| Hidden | --- | On global level via plugin-attribute "Keep additional attributes"
 | Image Upload | "field1": {"type": "object", "apex": { "itemtype": "imageupload", "maxFilesize": 128, "download": true, "mimetypes": ".png,.jpg,.gif" }} |
 | List Manager | --- |
 | Markdown Editor | --- |
 | Number Field | {"field1": {"type": "number"}} |
 | Password | {"field1": { "type": "string", "writeOnly": true", "apex": {"itemtype": "password", "showPassword": true}}} | "writeOnly": true forces new password input when mandatory, showPassword displays a showPassword-Button for APEX>=24.2 |
 | Percent Graph | {"field1": {"type": "number", "apex": {"itemtype": "pctgraph"}}} | Supported types "number" and integer" |
-| Popop LOV | --- |
-| QR-code: Data Type: Plain Text, Size: Default| {"field1": {"type": "string", "apex": {"itemtype": "qrcode"}}} | Support for types "string", "integer", "number" |
+| Popop LOV |  {"field1": { "type": "string", "apex": { "itemtype": "popuplov", "minSearchChars": 3, "incrementalSearch": true, "ref": "/lov/object_types" } } } |
+ | QR-code: Data Type: Plain Text, Size: Default| {"field1": {"type": "string", "apex": {"itemtype": "qrcode"}}} | Support for types "string", "integer", "number" |
 | Radio Group | {"field1": {"type" "string", "enum": ["val1", "val2"], "apex": {"itemtype": "radio"}} |
 | Rich Text Editor | {"field1": {"type": "string", "apex": {"itemtype": "richtext"}}} | Format Markdown only |
 | Select List: List of Values: Type: Static Values | {"field1": {"type": "string", "enum": ["val1", "val2", ...]}} | Support for types "string", "integer", "number" |
@@ -610,7 +612,7 @@ The JSON-schema for the above hierarchie is
   }]
 }
 ```
-
+xxxxxxxxxxxxxxxxxxxxxxx
 ## Schema references with $ref
 
 The plugin implements 2 kinds of references.

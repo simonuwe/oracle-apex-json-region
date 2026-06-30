@@ -2036,4 +2036,21 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT
     }
   }
 }]', EMPTY_CLOB());
+
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('22708','test-popuplov-1',q'[{
+  "type": "object",
+  "properties":{
+    "popuplov": {
+      "type": "string", 
+      "apex": {
+        "itemtype":          "popuplov",
+        "minSearchChars":    3,
+        "incrementalSearch": true,
+        "ref":               "/lov/object_types"
+      }
+    }    
+  }
+}]', EMPTY_CLOB());
+
+
 COMMIT;
