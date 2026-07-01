@@ -33,7 +33,7 @@ prompt APPLICATION 100 - json-region-demo
 -- Application Export:
 --   Application:     100
 --   Name:            json-region-demo
---   Date and Time:   16:20 Wednesday July 1, 2026
+--   Date and Time:   17:14 Wednesday July 1, 2026
 --   Exported By:     UWE
 --   Flashback:       0
 --   Export Type:     Application Export
@@ -125,7 +125,7 @@ wwv_imp_workspace.create_flow(
 ,p_substitution_value_02=>'generate_cohere'
 ,p_file_prefix => nvl(wwv_flow_application_install.get_static_app_file_prefix,'')
 ,p_files_version=>11
-,p_version_scn=>162495503
+,p_version_scn=>162555806
 ,p_print_server_type=>'NATIVE'
 ,p_file_storage=>'DB'
 ,p_is_pwa=>'Y'
@@ -16828,6 +16828,11 @@ wwv_flow_imp_shared.create_install_script(
 '',
 'commit;',
 '',
+'Insert into json_region_schema (path,schema,sqlquery) values (''/enums/hierarchie'',  null, q''[SELECT json_region_generate_cascade_enums(''select id, text FROM json_region_hierarchie WHERE parent_id=:1 OR (:1<0 and parent_id IS NULL) ORDER BY text'', -1,'
+||' 1, ''sel1,sel2,sel3,sel4'') from dual]'');',
+'COMMIT;',
+'',
+'',
 '/*',
 'select Lpad('' '',2*level)||t.text,  t.*, level from json_region_hierarchie t',
 'connect by (prior id = parent_id)',
@@ -16930,10 +16935,8 @@ wwv_flow_imp_shared.create_install_script(
 'END json_region_generate_cascade_enums;',
 '/',
 '',
-'/*',
-'select json_region_generate_enum(''select id, text from json_region_hierarchie where parent_id=:1 OR (:1<0 and parent_id IS NULL) ORDER BY text'', 5) from dual;',
-'select json_region_generate_cascade_enums(''select id, text from json_region_hierarchie where parent_id=:1 OR (:1<0 and parent_id IS NULL) ORDER BY text'', -1, 1, ''sel,sel1,sel2,sel3'') from dual;',
-'*/'))
+'--select json_region_generate_enum(''select id, text from json_region_hierarchie where parent_id=:1 OR (:1<0 and parent_id IS NULL) ORDER BY text'', 5) from dual;',
+'--select json_region_generate_cascade_enums(''select id, text from json_region_hierarchie where parent_id=:1 OR (:1<0 and parent_id IS NULL) ORDER BY text'', -1, 1, ''sel,sel1,sel2,sel3'') from dual;'))
 );
 end;
 /
