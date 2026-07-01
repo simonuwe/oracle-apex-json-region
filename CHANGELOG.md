@@ -3,6 +3,7 @@
  - #239 Support APEX Popup LOV
  - #240 Support APEX Hidden
  - #238 Support APEX Quick Picks
+ - #241 Errormessage in Browserlog: Uncaught Error: Redefined data reference type: model
 
 ## Fixed Issues
 
