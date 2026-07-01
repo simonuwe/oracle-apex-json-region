@@ -1,7 +1,7 @@
 "use strict"
 
 /*
- * JSON-region 0.9.8.2
+ * JSON-region 0.9.8.3
  * Supports Oracle-APEX >=21.2 <=26.1
  * 
  * APEX JSON-region plugin
@@ -48,8 +48,9 @@ apex.date = apex.date||{
   }
 };
 
-"use strict";
+var gLOVs = gLOVs || {}; // global mappings of LOV to ajaxIdentifier and ref, so the plsql-callback read the correct data
 
+"use strict";
 
 /*
  * initialize the JSON-region plugin, call form inside PL/SQL when plugin ist initialized
@@ -130,6 +131,7 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
   const C_APEX_IMAGEDISPLAY = 'image';
   const C_APEX_IMAGEUPLOAD  = 'imageupload';
   const C_APEX_UPLOAD       = 'upload';
+  const C_APEX_HIDDEN       = 'hidden';
 
   const C_APEX_HELP         = 'help';
   const C_APEX_INLINEHELP   = 'inlinehelp';
@@ -177,9 +179,14 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
   const C_APEX_SHOWPASSWORD = 'showPassword';
   const C_APEX_DISPLAY      = 'display';
   const C_APEX_VALIDATE     = 'validate';
+  const C_APEX_MINSEARCHCHARS    = 'minSearchChars';
+  const C_APEX_INCREMENTALSEARCH = 'incrementalSearch';
+  const C_APEX_REF               = 'ref';
 
-  const C_AJAX_GETSCHEMA    = 'getSchema';
-  const C_AJAX_GETSUBSCHEMA = 'getSubschema';
+  const C_APEX_DECODELOV         = 'decodeLov';
+  const C_APEX_GETLOV            = 'getLov';
+  const C_AJAX_GETSCHEMA         = 'getSchema';
+  const C_AJAX_GETSUBSCHEMA      = 'getSubschema';
 
   // Extended Oracle types
   const C_ORACLE_DATE       = 'date';
@@ -201,12 +208,13 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
       "itemtype": [C_APEX_COMBO, C_APEX_CHECKBOX, C_APEX_COLOR, C_APEX_CURRENCY, C_APEX_QRCODE, C_APEX_PASSWORD, 
         C_APEX_PCTGRAPH, C_APEX_STARRATING, C_APEX_RADIO, C_APEX_TEXTAREA, C_APEX_RICHTEXT, 
         C_APEX_SELECT, C_APEX_SELECTMANY, C_APEX_SELECTONE, C_APEX_SHUTTLE, C_APEX_POPUPLOV, C_APEX_SWITCH, 
-        C_APEX_FILEUPLOAD, C_APEX_IMAGEDISPLAY, C_APEX_IMAGEUPLOAD],
+        C_APEX_FILEUPLOAD, C_APEX_IMAGEDISPLAY, C_APEX_IMAGEUPLOAD, C_APEX_HIDDEN],
       "properties":  [C_APEX_ALIGN, C_APEX_COLORMODE, C_APEX_COLSPAN, C_APEX_CSS, C_APEX_DEFAULT, C_APEX_DOWNLOAD, 
                       C_APEX_ENUM, C_APEX_FORMAT, C_APEX_HASINSERT, C_APEX_ITEMTYPE, C_APEX_LABEL,
                       C_APEX_DIRECTION, C_APEX_SHOWPASSWORD, C_APEX_DISPLAY, C_APEX_HELP, C_APEX_INLINEHELP,
                       C_APEX_LINES, C_APEX_MAXFILESIZE, C_APEX_MAXIMUM, C_APEX_MIMETYPES, C_APEX_MINIMUM, C_APEX_VALIDATE,
-                      C_APEX_NEXTNEWCOLUMN, C_APEX_NEWCOLUMN, C_APEX_NEWROW, C_APEX_PLACEHOLDER, C_APEX_QUICKPICKS, C_APEX_READONLY, C_APEX_WRITEONLY, C_APEX_TEXTBEFORE, C_APEX_TEXTCASE],
+                      C_APEX_NEXTNEWCOLUMN, C_APEX_NEWCOLUMN, C_APEX_NEWROW, C_APEX_PLACEHOLDER, C_APEX_QUICKPICKS, C_APEX_READONLY, C_APEX_WRITEONLY, 
+                      C_APEX_TEXTBEFORE, C_APEX_TEXTCASE, C_APEX_MINSEARCHCHARS, C_APEX_INCREMENTALSEARCH, C_APEX_REF],
       "template": [C_APEX_TEMPLATE_LABEL_ABOVE, C_APEX_TEMPLATE_LABEL_FLOATING, C_APEX_TEMPLATE_LABEL_HIDDEN, C_APEX_TEMPLATE_LABEL_LEFT]
     }
   }
@@ -677,16 +685,16 @@ function base64ToBlob(base64, type) {
     }
 
     if(schema.allOf){
-console.error('propagateShow allOf: not implemented', schema.allOf)
+      console.error('propagateShow allOf: not implemented', schema.allOf)
     }
     if(schema.anyOf){
-console.error('propagateShow anyOf: not implemented', schema.anyOf)
+      console.error('propagateShow anyOf: not implemented', schema.anyOf)
     }
     if(schema.oneOf){
-console.error('propagateShow oneOf: not implemented', schema.oneOf)
+      console.error('propagateShow oneOf: not implemented', schema.oneOf)
     }
     if(schema.if){
-console.error('propagateShow if: not implemented', schema.if)
+      console.error('propagateShow if: not implemented', schema.if)
     }
 
     if(mode==false){
@@ -1310,6 +1318,80 @@ console.error('propagateShow if: not implemented', schema.if)
         case C_APEX_IMAGEDISPLAY:  // display only
         case C_APEX_QRCODE: // display only
         break;
+        case C_APEX_POPUPLOV:
+          const l_lovId='JSON-REGION-LOV:' + Object.keys(gLOVs).length;
+          gLOVs[l_lovId]={ajaxIdentifier: pAjaxIdentifier, ref: schema.apex.ref};
+          apex.widget.popupLov({
+            itemId: dataitem, 
+            columns:{
+              "DISPLAY":{index: 0, alignment: "start", heading: "Display", headingAlignment: "start"}, 
+              "VALUE":{index: 1, alignment: "start", heading: "Display", headingAlignment: "start"}
+            }, 
+            displayColumn: "DISPLAY",
+            valueColumn: "VALUE", 
+            useIconList: false, 
+            dynamicDefault: false,
+            ajaxIdentifier: l_lovId, 
+            minSearchChars: schema.apex[C_APEX_MINSEARCHCHARS], 
+            incrementalSearch: schema.apex[C_APEX_INCREMENTALSEARCH],
+            isPopup: true, 
+            optimizeRefresh: true,
+            persistState: true
+          });
+          $.ajaxPrefilter('json', function(options, originalOptions, jqXHR) {
+            const isPayloadMethod = /POST|PUT|PATCH/i.test(options.type);
+            //console.log('AJAX-Filter: '||isPayloadMethod);
+            //console.log(originalOptions);
+            if (options.data && isPayloadMethod) {
+              if (typeof options.data === "string") {
+                const urlParams = new URLSearchParams(options.data);
+                var dataObj = Object.fromEntries(urlParams.entries());
+                const l_json = JSON.parse(dataObj.p_json|| '{}');
+                const l_ref = gLOVs[(dataObj.p_request||'').substr(7)]  // get the name of the query from LOVs
+                if(typeof l_ref && dataObj.p_widget_action === 'get-row-values') {
+                  dataObj.p_request = 'PLUGIN=' + l_ref.ajaxIdentifier;
+                  dataObj.x04=C_APEX_DECODELOV;                
+                  dataObj.x05= l_ref.ref;
+                  dataObj.x06=dataObj.f01;
+                  dataObj.x08=dataObj.f01;
+                  options.data = $.param(dataObj);                
+                  //console.log('patch AJAX-Request get.-row-values:' + JSON.stringify(dataObj));
+                }
+                
+                //console.log('patch AJAX-Request p_json:' + JSON.stringify(l_json));
+                //console.log('id: ' + l_json.regions?.[0]?.id);
+
+                if(l_json.regions?.[0]?.id === dataitem){
+                  const l_ref = gLOVs[l_json.regions[0].ajaxIdentifier]  // get the name of the query from LOVs
+                  if(l_ref) { //we must patch this request}
+                    //console.log("PATCH AJAX: " + JSON.stringify(dataObj));  
+                    l_json.regions[0].ajaxIdentifier = l_ref.ajaxIdentifier;  // set the correctidentifier, otherwise a checksum-error 
+                    dataObj.p_json = JSON.stringify(l_json);             
+                    dataObj.x04=C_APEX_GETLOV;
+                    dataObj.x05=l_ref.ref;
+                    dataObj.x06=l_json.regions[0].fetchData.search;
+                    dataObj.x07=l_json.regions[0].fetchData.firstRow;
+                    console.log("PATCHED AJAX: " + JSON.stringify(dataObj));                
+                    options.data = $.param(dataObj);
+                    options.dataFilter = function(rawResponse, dataType) {
+                      console.log("Raw response from server:", rawResponse);
+                      if(rawResponse.includes('"id":"' + dataitem + '"')){
+                        let validJson = rawResponse.replace(',{', ',');
+                        validJson = validJson.replace(/"fetchedData":([^}]+)}/s, '"fetchedData":$1');
+                        console.log("valid response:", validJson);
+                        console.log("Expected data type:", dataType);
+                        return validJson;
+                      } else {
+                        return rawResponse;
+                      } 
+                    }
+                  }
+                }
+                //console.log("Request Payload: " + options.data);
+              }
+            }
+          });
+        break;
         case C_APEX_RICHTEXT:
           if(pOptions.apex_version >= C_APEX_VERSION_2402) {
             apex.widget.rte('#' + dataitem, {
@@ -1540,18 +1622,24 @@ console.error('propagateShow if: not implemented', schema.if)
       case C_JSON_INTEGER:
       case C_JSON_NUMBER:
       case C_JSON_BOOLEAN:{
-        let l_data = null;
-        let l_value = null;
-        l_data = apex.item(dataitem).getValue();
-        l_value = itemValue2Json(schema, l_data);
-        if(l_value!=null){
+        if(schema.apex[C_APEX_ITEMTYPE] === C_APEX_HIDDEN){
+          const l_data = $("#" + dataitem).html();
+          const l_value = itemValue2Json(schema, l_data);
           l_json = l_value;
         } else {
-          l_json = null;
-        }
+          let l_data = null;
+          let l_value = null;
+          l_data = apex.item(dataitem).getValue();
+          l_value = itemValue2Json(schema, l_data);
+          if(l_value!=null){
+            l_json = l_value;
+          } else {
+            l_json = null;
+          }
 // ---- HACK  -------
-        if((''+name).startsWith('_')){
-          l_json = oldJson; 
+          if((''+name).startsWith('_')){
+            l_json = oldJson; 
+          }
         }
       }
       break;
@@ -1727,6 +1815,7 @@ console.error('propagateShow if: not implemented', schema.if)
     if(schema.apex.minimum!=null) { schema.minimum = schema.apex.minimum}
     if(schema.apex.maximum!=null) { schema.maximum = schema.apex.maximum}
     if(schema.apex.default!=null) { schema.default = schema.apex.default}
+    if(schema.apex.itemtype==='popuplov') { schema.enum = schema.enum||[]}
 
     if(!schema.apex[C_APEX_LABEL] && schema.title) {schema.apex[C_APEX_LABEL] = schema.title}
     if(!schema.apex.placeholder && schema.description) {schema.apex.placeholder = schema.description}
@@ -2231,6 +2320,37 @@ console.error('propagateShow if: not implemented', schema.if)
   }
 
 
+
+  function generateForPopuplov(schema, data, schemaApex){
+    apex.debug.trace(">>jsonRegion.generateForPopuplov", schema, data, schemaApex);
+    let l_generated = {
+        items:       1,
+        wrappertype: 'apex-item-wrapper--popup-lov',
+        html:        apex.util.applyTemplate(`
+<input type="hidden" name="#ID#" id="#ID#_HIDDENVALUE" value="">        
+<div class="apex-item-group apex-item-group--popup-lov">
+  <input type="text" id="#ID#" class="popup_lov apex-item-text apex-item-popup-lov" size="30" maxlength="" value="" readonly="" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-haspopup="dialog">
+  <button aria-hidden="true" type="button" class="a-Button a-Button--popupLOV" id="#ID#_lov_btn" tabindex="-1">
+    <span class="a-Icon icon-popup-lov-under"></span>
+  </button>
+</div>
+`,
+                                                {
+                                                    placeholders: {
+                                                      "VALUESEPARATOR": 'multi-value-storage="separated" multi-value-separator="'+ C_VALUESEPARATOR+'"',
+                                                      "MULTIVALUE":  'false',
+                                                      "MULTISELECT": 'false',
+                                                      "DISPLAYAS":   schemaApex.asChips?'chips':'separated',
+                                                      "VALUES":      "a,c,b,d"
+                                                   }
+                                                })
+    };
+
+    apex.debug.trace("<<jsonRegion.generateForPopuplov", l_generated);
+    return(l_generated);
+  }
+
+
   /*
    * generate the UI-item for selectOne/selectMany items depending on itemtype
    * returns {items: 0, wrappertype: "apex-item-wrapper--select-one or -many", html: "xxx"}
@@ -2442,6 +2562,9 @@ console.error('propagateShow if: not implemented', schema.if)
         case C_APEX_SELECT:
         case C_APEX_RADIO:
           l_generated = generateForSelect(schema, data, schema.apex[C_APEX_ITEMTYPE], schema.apex);
+        break;
+        case C_APEX_POPUPLOV:
+          l_generated = generateForPopuplov(schema, data, schema.apex);
         break;
         default:
           logSchemaError('enum not supported for', schema.apex[C_APEX_ITEMTYPE]);  
@@ -3166,7 +3289,7 @@ console.error('propagateShow if: not implemented', schema.if)
   <a href="#action$a-set-value?itemName=#ID#&amp;value=#VALUE#&amp;displayValue=#DISPLAYVALUE#" aria-roledescription="action link" aria-controls="#ID#">#DISPLAYVALUE#</a>`, 
               { placeholders: {  
                   "VALUE": apex.util.escapeHTML(''+l_value), 
-                  "DISPLAYVALUE": jsonValue2Display(schema, l_value, newItem),
+                  "DISPLAYVALUE": jsonValue2Display(schema, l_display, newItem),
                   "DELIMITER": l_delimiter
                 }
               });
@@ -3200,6 +3323,20 @@ console.error('propagateShow if: not implemented', schema.if)
       return l_generated;
     }
 
+    const l_value = jsonValue2Item(item, data, newItem)||'';
+
+    if(item.apex[C_APEX_ITEMTYPE]==C_APEX_HIDDEN){
+        l_generated = {
+              items: 1,
+              wrappertype: 'hidden',
+              html:'<div id="#ID#" style="display: none;">#VALUE#</div>'};
+        l_generated.html = apex.util.applyTemplate( l_generated.html, 
+                             { placeholders: {
+                                 "ID":    id, 
+                                 "VALUE": l_value
+                               }
+                             });
+    } else {
     switch(item.type){
     case C_JSON_ARRAY:
       if( item.items && Array.isArray(item.items.enum)){  // when there is an enum, this array is for multiselection
@@ -3264,7 +3401,6 @@ console.error('propagateShow if: not implemented', schema.if)
 `;
       }
 
-      const l_value = jsonValue2Item(item, data, newItem)||'';
       const l_template = genTemplate(pOptions.template, pOptions.colwidth, item);
       const l_quickpick = generateQuickpicks(item);
         // console.log(data, schema)
@@ -3376,7 +3512,7 @@ console.error('propagateShow if: not implemented', schema.if)
         l_generated.html = l_html + l_generated.html;
       }
     }
-
+    }
 
     apex.debug.trace("<<jsonRegion.generateForItem", l_generated);
     return(l_generated);
@@ -3617,6 +3753,14 @@ console.error('propagateShow if: not implemented', schema.if)
 
       if(!customElements.get('a-file-upload')  && (itemtypes[C_APEX_ITEMTYPE].fileupload || itemtypes[C_APEX_ITEMTYPE].imageupload)){ // file-/image-upload is used, so load files for fileupload
         l_scripts.push('libraries/apex/minified/item.FileUpload.min.js');
+      }
+
+
+      if(itemtypes[C_APEX_ITEMTYPE].popuplov){  // a popupLov is used, so load files for the popupLov
+            l_scripts.push('libraries/apex/model.js');
+            l_scripts.push('libraries/apex/widget.tableModelViewBase.js');
+            l_scripts.push('libraries/apex/widget.tableModelView.js');
+            l_scripts.push('libraries/apex/widget.iconList.js');
       }
 
       if(itemtypes[C_APEX_ITEMTYPE].richtext){  // richtext is used, so load files for rich-text-editor

@@ -1930,14 +1930,16 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT
 || TO_CLOB(q'[    }
   }
 }]'), EMPTY_CLOB());
-Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('22221','xx','{
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('22221','xx',q'[{
   "type": "object",
   "properties": {
     "txt": {"type": "string"},
     "int": {"type": "integer"}
    },
   "required": ["txt"]
-}', EMPTY_CLOB());
+}
+]', EMPTY_CLOB());
+
 Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('22668', 'test-help-1',TO_CLOB(q'[{
   "type": "object",
   "properties": {
@@ -1981,6 +1983,104 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT
     }
   }
 }]'), EMPTY_CLOB());
+
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('22669', 'test-quickpick-1',q'[
+{
+  "type": "object",
+  "properties": {
+    "str": {
+      "type": "string",
+      "apex": {"quickpicks": {"a": "A", "b": "B", "c":"C"}}
+    },
+    "str_enum": {
+      "type": "string",
+      "enum": ["A", "B", "C"],
+      "apex": {
+        "enum": {"A": "a", "B": "b", "C":"c"}, 
+        "quickpicks": {"a": "A", "b": "B", "c":"C"}
+      }
+    },
+    "str_enum_radio": {
+      "type": "string",
+      "enum": ["A", "B", "C"],
+      "apex": {"itemtype": "radio", 
+        "enum": {"A": "a", "B": "b", "C":"c"}, 
+        "quickpicks": {"a": "A", "b": "B", "c":"C"}
+      }
+    },
+    "num": {
+      "type": "number",
+      "apex": {"quickpicks": {"1.5":1.5, "2.5":2.5, "3.5":3.5}}
+    },
+    "num_enum": {
+      "type": "number",
+      "enum": [1.5,2.5,3.5,4.5],
+      "apex": {"quickpicks": {"1.5":1.5, "2.5":2.5, "3.5":3.5}}
+    },
+    "int": {
+      "type": "integer",
+      "apex": {"quickpicks": {"1":1, "2":2, "3":3}}
+    },
+    "int_enum": {
+      "type": "integer",
+      "enum": [1,2,3,4],
+      "apex": {"quickpicks": {"1":1, "2":2, "3":3}}
+    },
+    "num_selectone": {
+      "type": "number",
+      "enum": [1.5,2.5,3.5,4.5],
+      "apex": {
+        "itemtype": "selectone", 
+        "quickpicks": {"1.5":1.5, "2.5":2.5, "3.5":3.5}
+      }
+    }
+  }
+}]', EMPTY_CLOB());
+
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('22708','test-popuplov-1',q'[
+{
+  "type": "object",
+  "properties":{
+    "popuplov": {
+      "type": "string", 
+      "apex": {
+        "itemtype":          "popuplov",
+        "minSearchChars":    3,
+        "incrementalSearch": true,
+        "ref":               "/lov/object_types"
+      }
+    }    
+  }
+}]', EMPTY_CLOB());
+
+Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT) values ('22729','test-hidden-1',q'[
+{
+  "type": "object",
+  "properties":{
+    "input": {
+      "type": "string"
+    },
+    "hidden_bool": {
+      "type": "boolean",
+      "apex": {"itemtype": "hidden"}
+    },
+    "hidden_int": {
+      "type": "integer",
+      "apex": {"itemtype": "hidden"}
+    },
+    "hidden_num": {
+      "type": "number",
+      "apex": {"itemtype": "hidden"}
+    },
+    "hidden_str": {
+      "type": "string",
+      "apex": {"itemtype": "hidden"}
+    },
+    "input2": {
+      "type": "string"
+    }    
+  }
+}]', EMPTY_CLOB());
 
 
 COMMIT;

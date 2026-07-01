@@ -1,13 +1,25 @@
 CREATE TABLE json_region_schema(
-  path     VARCHAR2(100) NOT NULL, 
-  schema   CLOB, 
-  sqlquery VARCHAR2(4000),
+  path         VARCHAR2(100) NOT NULL, 
+  schema       CLOB, 
+  sqlquery     VARCHAR2(4000),
+  mappingquery VARCHAR2(4000),
   CONSTRAINT json_region_schema_pk PRIMARY KEY (path) 
 );
 
-Insert into json_region_schema (path,schema,sqlquery) values ('/defs/address',     '{"type": "object", "properties": {"zip": {"type": "string"}, "city": {"type": "string"}, "street": {"type": "string"}}}',null);
+Insert into json_region_schema (path,schema,sqlquery) values ('/defs/address',     q'[{"type": "object", "properties": {"zip": {"type": "string"}, "city": {"type": "string"}, "street": {"type": "string"}}}]',null);
 Insert into json_region_schema (path,schema,sqlquery) values ('/enums/object_type', null, q'[SELECT json_region_generate_enum('select object_type_id, object_type_name FROM object_type ORDER BY object_type_name', null) FROM DUAL]');
 Insert into json_region_schema (path,schema,sqlquery) values ('/defs/boolean',      null, q'[SELECT object_schema FROM object_type WHERE object_type_name='test-boolean-1']');
+Insert into json_region_schema (path,schema,sqlquery, mappingquery) values ('/lov/object_types',  null, q'(
+select '['||(LISTAGG('["'||objecT_type_name||'", "'||objecT_type_id||'"] ',',') within group (order by object_type_name)) ||']' as lst
+from (
+  select *
+  from object_type 
+  where lower(object_type_name) like lower(:1)
+  order by object_type_name
+  offset :2-1 rows
+  fetch first 100 rows only
+))', q'[select '{"'||object_type_id||'": {"display":"'||object_type_name||'"}}' as json from object_type where object_type_id=:1 and rownum<=1]');
+
 COMMIT;
 
 /*

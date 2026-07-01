@@ -1,3 +1,22 @@
+# 0.9.8.3
+## New Features
+ - #239 Support APEX Popup LOV
+ - #240 Support APEX Hidden
+ - #238 Support APEX Quick Picks
+ - #241 Errormessage in Browserlog: Uncaught Error: Redefined data reference type: model
+
+## Fixed Issues
+
+# 0.9.8.2
+
+## New Features
+
+## Fixed Issues
+ - #232 APEX-26.1: richtext editor not working
+ - #233 APEX-26.1: Demo-program doesn't start at all, blank page, ORA-21780 in debuglog
+ - #234 JSON-schema invalid: null invalid apex property validate
+ - #236 Empty one column array with numerics causes log in browser-console
+
 # 0.9.8.1
 
 ## New Features
