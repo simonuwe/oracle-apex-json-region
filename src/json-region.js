@@ -1,7 +1,7 @@
 "use strict"
 
 /*
- * JSON-region 0.9.8.2
+ * JSON-region 0.9.8.3
  * Supports Oracle-APEX >=21.2 <=26.1
  * 
  * APEX JSON-region plugin
@@ -48,8 +48,9 @@ apex.date = apex.date||{
   }
 };
 
-"use strict";
+var gLOVs = gLOVs || {}; // global mappings of LOV to ajaxIdentifier and ref, so the plsql-callback read the correct data
 
+"use strict";
 
 /*
  * initialize the JSON-region plugin, call form inside PL/SQL when plugin ist initialized
@@ -130,6 +131,7 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
   const C_APEX_IMAGEDISPLAY = 'image';
   const C_APEX_IMAGEUPLOAD  = 'imageupload';
   const C_APEX_UPLOAD       = 'upload';
+  const C_APEX_HIDDEN       = 'hidden';
 
   const C_APEX_HELP         = 'help';
   const C_APEX_INLINEHELP   = 'inlinehelp';
@@ -181,6 +183,7 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
   const C_APEX_INCREMENTALSEARCH = 'incrementalSearch';
   const C_APEX_REF               = 'ref';
 
+  const C_APEX_DECODELOV         = 'decodeLov';
   const C_APEX_GETLOV            = 'getLov';
   const C_AJAX_GETSCHEMA         = 'getSchema';
   const C_AJAX_GETSUBSCHEMA      = 'getSubschema';
@@ -205,7 +208,7 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
       "itemtype": [C_APEX_COMBO, C_APEX_CHECKBOX, C_APEX_COLOR, C_APEX_CURRENCY, C_APEX_QRCODE, C_APEX_PASSWORD, 
         C_APEX_PCTGRAPH, C_APEX_STARRATING, C_APEX_RADIO, C_APEX_TEXTAREA, C_APEX_RICHTEXT, 
         C_APEX_SELECT, C_APEX_SELECTMANY, C_APEX_SELECTONE, C_APEX_SHUTTLE, C_APEX_POPUPLOV, C_APEX_SWITCH, 
-        C_APEX_FILEUPLOAD, C_APEX_IMAGEDISPLAY, C_APEX_IMAGEUPLOAD],
+        C_APEX_FILEUPLOAD, C_APEX_IMAGEDISPLAY, C_APEX_IMAGEUPLOAD, C_APEX_HIDDEN],
       "properties":  [C_APEX_ALIGN, C_APEX_COLORMODE, C_APEX_COLSPAN, C_APEX_CSS, C_APEX_DEFAULT, C_APEX_DOWNLOAD, 
                       C_APEX_ENUM, C_APEX_FORMAT, C_APEX_HASINSERT, C_APEX_ITEMTYPE, C_APEX_LABEL,
                       C_APEX_DIRECTION, C_APEX_SHOWPASSWORD, C_APEX_DISPLAY, C_APEX_HELP, C_APEX_INLINEHELP,
@@ -682,16 +685,16 @@ function base64ToBlob(base64, type) {
     }
 
     if(schema.allOf){
-console.error('propagateShow allOf: not implemented', schema.allOf)
+      console.error('propagateShow allOf: not implemented', schema.allOf)
     }
     if(schema.anyOf){
-console.error('propagateShow anyOf: not implemented', schema.anyOf)
+      console.error('propagateShow anyOf: not implemented', schema.anyOf)
     }
     if(schema.oneOf){
-console.error('propagateShow oneOf: not implemented', schema.oneOf)
+      console.error('propagateShow oneOf: not implemented', schema.oneOf)
     }
     if(schema.if){
-console.error('propagateShow if: not implemented', schema.if)
+      console.error('propagateShow if: not implemented', schema.if)
     }
 
     if(mode==false){
@@ -1316,17 +1319,19 @@ console.error('propagateShow if: not implemented', schema.if)
         case C_APEX_QRCODE: // display only
         break;
         case C_APEX_POPUPLOV:
+          const l_lovId='JSON-REGION-LOV:' + Object.keys(gLOVs).length;
+          gLOVs[l_lovId]={ajaxIdentifier: pAjaxIdentifier, ref: schema.apex.ref};
           apex.widget.popupLov({
             itemId: dataitem, 
             columns:{
-//              "DISPLAY":{index: 1, alignment: "start", heading: "Display", headingAlignment: "start"}, 
-              "VALUE":{index: 0, alignment: "start", heading: "Display", headingAlignment: "start"}
+              "DISPLAY":{index: 0, alignment: "start", heading: "Display", headingAlignment: "start"}, 
+              "VALUE":{index: 1, alignment: "start", heading: "Display", headingAlignment: "start"}
             }, 
-//          displayColumn: "DISPLAY",
+            displayColumn: "DISPLAY",
             valueColumn: "VALUE", 
             useIconList: false, 
             dynamicDefault: false,
-            ajaxIdentifier: pAjaxIdentifier, 
+            ajaxIdentifier: l_lovId, 
             minSearchChars: schema.apex[C_APEX_MINSEARCHCHARS], 
             incrementalSearch: schema.apex[C_APEX_INCREMENTALSEARCH],
             isPopup: true, 
@@ -1335,47 +1340,54 @@ console.error('propagateShow if: not implemented', schema.if)
           });
           $.ajaxPrefilter('json', function(options, originalOptions, jqXHR) {
             const isPayloadMethod = /POST|PUT|PATCH/i.test(options.type);
-            console.log('AJAX-Filter: '||isPayloadMethod);
-            console.log(originalOptions);
+            //console.log('AJAX-Filter: '||isPayloadMethod);
+            //console.log(originalOptions);
             if (options.data && isPayloadMethod) {
               if (typeof options.data === "string") {
                 const urlParams = new URLSearchParams(options.data);
                 var dataObj = Object.fromEntries(urlParams.entries());
                 const l_json = JSON.parse(dataObj.p_json|| '{}');
-/*                
-                if(dataObj.p_widget_action === 'get-row-values') {
-                  dataObj.x04=C_APEX_GETLOV;                
-                  dataObj.x05=schema.apex.ref;
+                const l_ref = gLOVs[(dataObj.p_request||'').substr(7)]  // get the name of the query from LOVs
+                if(typeof l_ref && dataObj.p_widget_action === 'get-row-values') {
+                  dataObj.p_request = 'PLUGIN=' + l_ref.ajaxIdentifier;
+                  dataObj.x04=C_APEX_DECODELOV;                
+                  dataObj.x05= l_ref.ref;
                   dataObj.x06=dataObj.f01;
                   dataObj.x08=dataObj.f01;
                   options.data = $.param(dataObj);                
-                  console.log('patch AJAX-Request get.-row-values:' + JSON.stringify(dataObj));
+                  //console.log('patch AJAX-Request get.-row-values:' + JSON.stringify(dataObj));
                 }
-*/                
-                console.log('patch AJAX-Request p_json:' + JSON.stringify(l_json));
-                console.log('id: ' + l_json.regions?.[0]?.id);
+                
+                //console.log('patch AJAX-Request p_json:' + JSON.stringify(l_json));
+                //console.log('id: ' + l_json.regions?.[0]?.id);
+
                 if(l_json.regions?.[0]?.id === dataitem){
-                  console.log("PATCH AJAX: " + JSON.stringify(dataObj));                
-                  dataObj.x04=C_APEX_GETLOV;
-                  dataObj.x05=schema.apex.ref;
-                  dataObj.x06=l_json.regions[0].fetchData.search;
-                  dataObj.x07=l_json.regions[0].fetchData.firstRow;
-                  console.log("PATCHED AJAX: " + JSON.stringify(dataObj));                
-                  options.data = $.param(dataObj);
-                  options.dataFilter = function(rawResponse, dataType) {
-                    console.log("Raw response from server:", rawResponse);
-                    if(rawResponse.includes('"id":"' + dataitem + '"')){
-                      let validJson = rawResponse.replace(',{', ',');
-                      validJson = validJson.replace(/"fetchedData":([^}]+)}/s, '"fetchedData":$1');
-                      console.log("valid response:", validJson);
-                      console.log("Expected data type:", dataType);
-                      return validJson;
-                    } else {
-                      return rawResponse;
-                    } 
+                  const l_ref = gLOVs[l_json.regions[0].ajaxIdentifier]  // get the name of the query from LOVs
+                  if(l_ref) { //we must patch this request}
+                    //console.log("PATCH AJAX: " + JSON.stringify(dataObj));  
+                    l_json.regions[0].ajaxIdentifier = l_ref.ajaxIdentifier;  // set the correctidentifier, otherwise a checksum-error 
+                    dataObj.p_json = JSON.stringify(l_json);             
+                    dataObj.x04=C_APEX_GETLOV;
+                    dataObj.x05=l_ref.ref;
+                    dataObj.x06=l_json.regions[0].fetchData.search;
+                    dataObj.x07=l_json.regions[0].fetchData.firstRow;
+                    console.log("PATCHED AJAX: " + JSON.stringify(dataObj));                
+                    options.data = $.param(dataObj);
+                    options.dataFilter = function(rawResponse, dataType) {
+                      console.log("Raw response from server:", rawResponse);
+                      if(rawResponse.includes('"id":"' + dataitem + '"')){
+                        let validJson = rawResponse.replace(',{', ',');
+                        validJson = validJson.replace(/"fetchedData":([^}]+)}/s, '"fetchedData":$1');
+                        console.log("valid response:", validJson);
+                        console.log("Expected data type:", dataType);
+                        return validJson;
+                      } else {
+                        return rawResponse;
+                      } 
+                    }
                   }
                 }
-                console.log("Request Payload: " + options.data);
+                //console.log("Request Payload: " + options.data);
               }
             }
           });
@@ -1610,18 +1622,24 @@ console.error('propagateShow if: not implemented', schema.if)
       case C_JSON_INTEGER:
       case C_JSON_NUMBER:
       case C_JSON_BOOLEAN:{
-        let l_data = null;
-        let l_value = null;
-        l_data = apex.item(dataitem).getValue();
-        l_value = itemValue2Json(schema, l_data);
-        if(l_value!=null){
+        if(schema.apex[C_APEX_ITEMTYPE] === C_APEX_HIDDEN){
+          const l_data = $("#" + dataitem).html();
+          const l_value = itemValue2Json(schema, l_data);
           l_json = l_value;
         } else {
-          l_json = null;
-        }
+          let l_data = null;
+          let l_value = null;
+          l_data = apex.item(dataitem).getValue();
+          l_value = itemValue2Json(schema, l_data);
+          if(l_value!=null){
+            l_json = l_value;
+          } else {
+            l_json = null;
+          }
 // ---- HACK  -------
-        if((''+name).startsWith('_')){
-          l_json = oldJson; 
+          if((''+name).startsWith('_')){
+            l_json = oldJson; 
+          }
         }
       }
       break;
@@ -3305,6 +3323,20 @@ console.error('propagateShow if: not implemented', schema.if)
       return l_generated;
     }
 
+    const l_value = jsonValue2Item(item, data, newItem)||'';
+
+    if(item.apex[C_APEX_ITEMTYPE]==C_APEX_HIDDEN){
+        l_generated = {
+              items: 1,
+              wrappertype: 'hidden',
+              html:'<div id="#ID#" style="display: none;">#VALUE#</div>'};
+        l_generated.html = apex.util.applyTemplate( l_generated.html, 
+                             { placeholders: {
+                                 "ID":    id, 
+                                 "VALUE": l_value
+                               }
+                             });
+    } else {
     switch(item.type){
     case C_JSON_ARRAY:
       if( item.items && Array.isArray(item.items.enum)){  // when there is an enum, this array is for multiselection
@@ -3369,7 +3401,6 @@ console.error('propagateShow if: not implemented', schema.if)
 `;
       }
 
-      const l_value = jsonValue2Item(item, data, newItem)||'';
       const l_template = genTemplate(pOptions.template, pOptions.colwidth, item);
       const l_quickpick = generateQuickpicks(item);
         // console.log(data, schema)
@@ -3481,7 +3512,7 @@ console.error('propagateShow if: not implemented', schema.if)
         l_generated.html = l_html + l_generated.html;
       }
     }
-
+    }
 
     apex.debug.trace("<<jsonRegion.generateForItem", l_generated);
     return(l_generated);

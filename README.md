@@ -119,3 +119,18 @@ In Oracle 23ai JSON-collection-views are always readonly, so only SELECT is supp
 - support of arrays (for multiple-choice checkboces)
 - support of arrays (single property and object)
 - support of file-/image-upload
+
+## CAUTION: Adopt configuration when upgrading to JSON-Region >= 0.9.8.3
+When using schema references, the table with the mapping path -> schema and the query retrieving the mapping has to be adopted.
+Add a new column mappingquery VARCHAR2(4000) to your table (JSON_REGION_SCHEMA when using the one from the example).
+In APEX-page-designer goto *"Shared Components->"Component Setting"->"Json-Region[Plug-in]"**, here change the SQL-query to
+'''
+SELECT schema, sqlquery, mappingquery
+FROM json_region_schema
+WHERE path=:p1
+'''
+When using another tablename and/or columnnames adopt.
+
+If there is a configuratuion for this query in a used plugin, change this table and the query too.
+"Page"->"ItemWithPlugin"->"Attributes"->"SQL-Query for referenced JSON-schem"
+If there is a missmatch, APEX will show a PL/SQL error.

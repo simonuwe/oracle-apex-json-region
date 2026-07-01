@@ -493,7 +493,7 @@ The following attributes defined in JSON-schema are not supported by the APEX-fi
 | integer, number | the attributes **multiplyOf**, **excludeMinimum**, **excludeMaximum** are not supported |
 | object  | attributes **minProperties**, **maxProperties** are not supported |
 | array   | attributes **minItems**, **maxItems**, **uniqueItems** are not supported |
-| $ref | only simple reference, but no recursive schema - like trees |
+| $ref | partial: only simple reference, but no recursive schema - like trees |
 
 
 ## Configuration in the APEX-page-designer

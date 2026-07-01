@@ -1,5 +1,5 @@
 /*
- * JSON-region-plugin 0.9.8.2
+ * JSON-region-plugin 0.9.8.3
  * (c) Uwe Simon 2023, 2025, 2026
  * Apache License Version 2.0
  *
@@ -10,21 +10,28 @@
 /* 
  * READ a schema from ref-schema-query with column path, schema, sqlquery, when the entry contains a sqlquery, this query is executed with optional parameter 
 */
-FUNCTION generate_schema(p_refquery IN VARCHAR2 , p_path IN VARCHAR2, p_parameter VARCHAR2 DEFAULT NULL, p_offset INTEGER DEFAULT 1) RETURN CLOB IS
-    l_json     CLOB;
-    l_sqlquery VARCHAR2(4000);
+FUNCTION generate_schema(p_refquery IN VARCHAR2 , p_mapping IN BOOLEAN, p_path IN VARCHAR2, p_parameter VARCHAR2 DEFAULT NULL, p_offset INTEGER DEFAULT 1) RETURN CLOB IS
+    l_json         CLOB;
+    l_sqlquery     VARCHAR2(4000);
+    l_mappingquery VARCHAR2(4000);
 BEGIN
     APEX_DEBUG.INFO('generate_schema %s: "%s"', p_path, p_refquery);
-    EXECUTE IMMEDIATE p_refquery INTO l_json, l_sqlquery USING p_path;
+    EXECUTE IMMEDIATE p_refquery INTO l_json, l_sqlquery, l_mappingquery USING p_path;
     IF l_json IS NULL THEN -- Found a query which will retrieve the data
-      APEX_DEBUG.INFO('generate_schema with query %s: "%s"', l_sqlquery, p_parameter);    
       IF(p_parameter IS NULL) THEN
+        APEX_DEBUG.INFO('generate_schema with query %s: "%s"', l_sqlquery, p_parameter);    
         EXECUTE IMMEDIATE l_sqlquery INTO l_json;
       ELSE
-        EXECUTE IMMEDIATE l_sqlquery INTO l_json USING '%'||p_parameter||'%', p_offset;
+        IF(p_mapping) THEN
+          APEX_DEBUG.INFO('generate_schema with query %s: "%s"', l_mappingquery, p_parameter);    
+          EXECUTE IMMEDIATE l_mappingquery INTO l_json USING p_parameter;
+        ELSE
+          APEX_DEBUG.INFO('generate_schema with query %s: "%s"', l_sqlquery, p_parameter);    
+          EXECUTE IMMEDIATE l_sqlquery INTO l_json USING '%'||p_parameter||'%', p_offset;
+        END IF;
       END IF;
     END IF;
-
+    APEX_DEBUG.INFO('generate_schema %s', l_json);
     RETURN(l_json);
  END;
 
@@ -300,22 +307,27 @@ $END
       APEX_DEBUG.TRACE('ajax_json_region g_x07 %s', TO_NUMBER(l_offset));
       CASE APEX_APPLICATION.g_x04
         WHEN 'getSubschema' THEN  -- x05 contains the JSON-schema requested schema path
-          l_json := generate_schema(l_refquery, l_param1);
+          APEX_DEBUG.TRACE('ajax_json_region getSubschema');
+          l_json := generate_schema(l_refquery, false, l_param1);
           apex_json.parse(l_j , l_json);
           apex_json.write(l_j);
         WHEN 'getSchema' THEN  -- the names of the search items for requested JSON-schema is in pageItems
-          APEX_DEBUG.TRACE('ajax_json_region others');
+          APEX_DEBUG.TRACE('ajax_json_region getSchema');
           l_json := readschema(l_sqlquery);
           apex_json.parse(l_j , l_json);
           apex_json.write(l_j);
+        WHEN 'decodeLov' THEN
+          APEX_DEBUG.TRACE('ajax_json_region decodeLov');
+            l_json := generate_schema(l_refquery, true, l_param1, l_param2);
+            apex_json.parse(l_j , l_json);            
+            apex_json.write(l_j);
         WHEN 'getLov' THEN  -- get a LOV with a search parameter
+          APEX_DEBUG.TRACE('ajax_json_region getLov');
           apex_json.open_object();
           apex_json.open_object('fetchedData');
           apex_json.write('firstRow', 1);
           apex_json.write('moreData', false);
-          -- apex_json.open_array('values');
-            --l_json := generate_schema(l_refquery, '/lov/object_types', 'all');
-            l_json := generate_schema(l_refquery, l_param1, l_param2, l_offset);
+            l_json := generate_schema(l_refquery, false, l_param1, l_param2, l_offset);
             apex_json.parse(l_j , l_json);            
             apex_json.write('values', l_j);
 
