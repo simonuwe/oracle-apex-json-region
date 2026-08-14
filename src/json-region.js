@@ -1,7 +1,7 @@
 "use strict"
 
 /*
- * JSON-region 0.9.8.3
+ * JSON-region 0.9.8.4
  * Supports Oracle-APEX >=21.2 <=26.1
  * 
  * APEX JSON-region plugin
@@ -182,6 +182,7 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
   const C_APEX_MINSEARCHCHARS    = 'minSearchChars';
   const C_APEX_INCREMENTALSEARCH = 'incrementalSearch';
   const C_APEX_REF               = 'ref';
+  const C_APEX_TEMPLATE          = 'template';
 
   const C_APEX_DECODELOV         = 'decodeLov';
   const C_APEX_GETLOV            = 'getLov';
@@ -214,7 +215,7 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
                       C_APEX_DIRECTION, C_APEX_SHOWPASSWORD, C_APEX_DISPLAY, C_APEX_HELP, C_APEX_INLINEHELP,
                       C_APEX_LINES, C_APEX_MAXFILESIZE, C_APEX_MAXIMUM, C_APEX_MIMETYPES, C_APEX_MINIMUM, C_APEX_VALIDATE,
                       C_APEX_NEXTNEWCOLUMN, C_APEX_NEWCOLUMN, C_APEX_NEWROW, C_APEX_PLACEHOLDER, C_APEX_QUICKPICKS, C_APEX_READONLY, C_APEX_WRITEONLY, 
-                      C_APEX_TEXTBEFORE, C_APEX_TEXTCASE, C_APEX_MINSEARCHCHARS, C_APEX_INCREMENTALSEARCH, C_APEX_REF],
+                      C_APEX_TEXTBEFORE, C_APEX_TEXTCASE, C_APEX_TEMPLATE, C_APEX_MINSEARCHCHARS, C_APEX_INCREMENTALSEARCH, C_APEX_REF],
       "template": [C_APEX_TEMPLATE_LABEL_ABOVE, C_APEX_TEMPLATE_LABEL_FLOATING, C_APEX_TEMPLATE_LABEL_HIDDEN, C_APEX_TEMPLATE_LABEL_LEFT]
     }
   }
@@ -422,7 +423,7 @@ function base64ToBlob(base64, type) {
 
       // $('#' + pRegionId + ' .t-Form-fieldContainer--floatingLabel input, ' + '#' + pRegionId + ' .t-Form-fieldContainer--floatingLabel select').each(function(id, elem){
       const l_elems = ['input', 'select', 'textarea'].map( x=>{return '#' + pRegionId + ' .t-Form-fieldContainer--floatingLabel ' + x}).join(', ');
-      apex.debug.trace('PATCH ', l_elems);
+      //apex.debug.trace('PATCH ', l_elems);
       $(l_elems).each(function(id, elem){
         const closest = elem.closest('.t-Form-fieldContainer');
         // console.log('PATCH ITEM:', id, elem.id, closest.id, $(elem).val());
@@ -3757,10 +3758,12 @@ function base64ToBlob(base64, type) {
 
 
       if(itemtypes[C_APEX_ITEMTYPE].popuplov){  // a popupLov is used, so load files for the popupLov
-            l_scripts.push('libraries/apex/model.js');
-            l_scripts.push('libraries/apex/widget.tableModelViewBase.js');
-            l_scripts.push('libraries/apex/widget.tableModelView.js');
-            l_scripts.push('libraries/apex/widget.iconList.js');
+        if(!apex.model){
+          l_scripts.push('libraries/apex/model.js');
+        }
+        l_scripts.push('libraries/apex/widget.tableModelViewBase.js');
+        l_scripts.push('libraries/apex/widget.tableModelView.js');
+        l_scripts.push('libraries/apex/widget.iconList.js');
       }
 
       if(itemtypes[C_APEX_ITEMTYPE].richtext){  // richtext is used, so load files for rich-text-editor

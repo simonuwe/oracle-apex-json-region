@@ -1,4 +1,11 @@
+
+# 0.9.8.4
+
+## Fixed Issues
+ - #244 "apex": {"template": ...} errorentry in browser log
+
 # 0.9.8.3
+
 ## New Features
  - #239 Support APEX Popup LOV
  - #240 Support APEX Hidden
