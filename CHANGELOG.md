@@ -1,8 +1,12 @@
 
 # 0.9.8.4
 
+## New Features
+ - #245 Support of multiple json-region-plugin per page
+
 ## Fixed Issues
  - #244 "apex": {"template": ...} errorentry in browser log
+ - #246 Refresh of json-region with static JSON-schema sets JSON-items to empty
 
 # 0.9.8.3
 

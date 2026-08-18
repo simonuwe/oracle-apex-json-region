@@ -31,7 +31,7 @@ prompt APPLICATION 100 - json-region-demo
 -- Application Export:
 --   Application:     100
 --   Name:            json-region-demo
---   Date and Time:   13:26 Friday August 14, 2026
+--   Date and Time:   17:05 Friday August 14, 2026
 --   Exported By:     UWE
 --   Flashback:       0
 --   Export Type:     Component Export
@@ -62,7 +62,7 @@ wwv_flow_api.create_plugin(
 ,p_css_file_urls=>'#PLUGIN_FILES#json-region.css'
 ,p_plsql_code=>wwv_flow_string.join(wwv_flow_t_varchar2(
 '/*',
-' * JSON-region-plugin 0.9.8.3',
+' * JSON-region-plugin 0.9.8.4',
 ' * (c) Uwe Simon 2023, 2025, 2026',
 ' * Apache License Version 2.0',
 ' *',
@@ -278,7 +278,7 @@ wwv_flow_api.create_plugin(
 '--  APEX_JAVASCRIPT.ADD_ONLOAD_CODE(',
 '    -- execute the code directly not via add_onload_code. Hack to enable the handlers for text-/number-items',
 '  APEX_JAVASCRIPT.ADD_INLINE_CODE (',
-'       p_key=> ''json-region'', ',
+'       p_key=> ''json-region-''||p_region.static_id, ',
 '       p_code => ''initJsonRegion('' ||',
 '       apex_javascript.add_value(p_region.static_id) || ',
 '       apex_javascript.add_value(p_region.name) ||        ',
