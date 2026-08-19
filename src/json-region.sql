@@ -1,5 +1,5 @@
 /*
- * JSON-region-plugin 0.9.8.3
+ * JSON-region-plugin 0.9.8.4
  * (c) Uwe Simon 2023, 2025, 2026
  * Apache License Version 2.0
  *
@@ -215,7 +215,7 @@ $END
 --  APEX_JAVASCRIPT.ADD_ONLOAD_CODE(
     -- execute the code directly not via add_onload_code. Hack to enable the handlers for text-/number-items
   APEX_JAVASCRIPT.ADD_INLINE_CODE (
-       p_key=> 'json-region', 
+       p_key=> 'json-region-'||p_region.static_id, 
        p_code => 'initJsonRegion(' ||
        apex_javascript.add_value(p_region.static_id) || 
        apex_javascript.add_value(p_region.name) ||        

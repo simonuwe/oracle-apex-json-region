@@ -1,7 +1,7 @@
 "use strict"
 
 /*
- * JSON-region 0.9.8.3
+ * JSON-region 0.9.8.4
  * Supports Oracle-APEX >=21.2 <=26.1
  * 
  * APEX JSON-region plugin
@@ -182,6 +182,7 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
   const C_APEX_MINSEARCHCHARS    = 'minSearchChars';
   const C_APEX_INCREMENTALSEARCH = 'incrementalSearch';
   const C_APEX_REF               = 'ref';
+  const C_APEX_TEMPLATE          = 'template';
 
   const C_APEX_DECODELOV         = 'decodeLov';
   const C_APEX_GETLOV            = 'getLov';
@@ -214,7 +215,7 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
                       C_APEX_DIRECTION, C_APEX_SHOWPASSWORD, C_APEX_DISPLAY, C_APEX_HELP, C_APEX_INLINEHELP,
                       C_APEX_LINES, C_APEX_MAXFILESIZE, C_APEX_MAXIMUM, C_APEX_MIMETYPES, C_APEX_MINIMUM, C_APEX_VALIDATE,
                       C_APEX_NEXTNEWCOLUMN, C_APEX_NEWCOLUMN, C_APEX_NEWROW, C_APEX_PLACEHOLDER, C_APEX_QUICKPICKS, C_APEX_READONLY, C_APEX_WRITEONLY, 
-                      C_APEX_TEXTBEFORE, C_APEX_TEXTCASE, C_APEX_MINSEARCHCHARS, C_APEX_INCREMENTALSEARCH, C_APEX_REF],
+                      C_APEX_TEXTBEFORE, C_APEX_TEXTCASE, C_APEX_TEMPLATE, C_APEX_MINSEARCHCHARS, C_APEX_INCREMENTALSEARCH, C_APEX_REF],
       "template": [C_APEX_TEMPLATE_LABEL_ABOVE, C_APEX_TEMPLATE_LABEL_FLOATING, C_APEX_TEMPLATE_LABEL_HIDDEN, C_APEX_TEMPLATE_LABEL_LEFT]
     }
   }
@@ -422,7 +423,7 @@ function base64ToBlob(base64, type) {
 
       // $('#' + pRegionId + ' .t-Form-fieldContainer--floatingLabel input, ' + '#' + pRegionId + ' .t-Form-fieldContainer--floatingLabel select').each(function(id, elem){
       const l_elems = ['input', 'select', 'textarea'].map( x=>{return '#' + pRegionId + ' .t-Form-fieldContainer--floatingLabel ' + x}).join(', ');
-      apex.debug.trace('PATCH ', l_elems);
+      //apex.debug.trace('PATCH ', l_elems);
       $(l_elems).each(function(id, elem){
         const closest = elem.closest('.t-Form-fieldContainer');
         // console.log('PATCH ITEM:', id, elem.id, closest.id, $(elem).val());
@@ -3757,10 +3758,12 @@ function base64ToBlob(base64, type) {
 
 
       if(itemtypes[C_APEX_ITEMTYPE].popuplov){  // a popupLov is used, so load files for the popupLov
-            l_scripts.push('libraries/apex/model.js');
-            l_scripts.push('libraries/apex/widget.tableModelViewBase.js');
-            l_scripts.push('libraries/apex/widget.tableModelView.js');
-            l_scripts.push('libraries/apex/widget.iconList.js');
+        if(!apex.model){
+          l_scripts.push('libraries/apex/model.js');
+        }
+        l_scripts.push('libraries/apex/widget.tableModelViewBase.js');
+        l_scripts.push('libraries/apex/widget.tableModelView.js');
+        l_scripts.push('libraries/apex/widget.iconList.js');
       }
 
       if(itemtypes[C_APEX_ITEMTYPE].richtext){  // richtext is used, so load files for rich-text-editor
@@ -3801,9 +3804,9 @@ function base64ToBlob(base64, type) {
   /*
    * show all in-/output-items for the JSON-region
   */
-  function showFields(itemtypes, newItem){
+  function showFields(itemtypes, pData, newItem){
     apex.debug.trace(">>jsonRegion.showFields");
-    let l_generated = generateForRegion(pOptions.schema, gData, null, pOptions.dataitem, 0,  newItem);
+    let l_generated = generateForRegion(pOptions.schema, pData, null, pOptions.dataitem, 0,  newItem);
     let l_html = l_generated.html;
     if(pOptions.apex_version <C_APEX_VERSION_2202){
       l_html += loadRequiredFiles221(itemtypes);
@@ -3818,9 +3821,9 @@ function base64ToBlob(base64, type) {
   /*
    * refresh the JSON-region
   */
-  async function refresh(newItem) {
+  async function refresh(pData, newItem) {
     apex.debug.trace(">>jsonRegion.refresh");
-    apex.debug.trace('jsonRegion.refresh', 'data', newItem, gData);
+    apex.debug.trace('jsonRegion.refresh', pData, newItem);
     let l_itemtypes = null;
     l_itemtypes = getItemtypes(pOptions.schema, l_itemtypes);
     await richtextHack(l_itemtypes);
@@ -3958,6 +3961,20 @@ function base64ToBlob(base64, type) {
     });
   }
 
+  function getDataFromItem(pDataitem){
+    // generate the JSON from dataitem-field
+    let l_json = null;
+    try {
+      const l_data = apex.item(pDataitem).getValue();
+      l_json = l_data?JSON.parse(l_data):null;
+    } catch(e) {
+      apex.debug.error('json-region: dataitem', pOptions.dataitem, e, pOptions.schema);
+      l_json = null;
+    }
+    apex.debug.trace("getDataFromItem", pDataitem, l_json); 
+    return l_json;
+  }
+
 
   /* -----------------------------------------------------------------
    * here the function code starts
@@ -3988,14 +4005,7 @@ function base64ToBlob(base64, type) {
     }
   }
 
-    // generate the JSON from dataitem-field
-  try {
-    const l_data = apex.item(pOptions.dataitem).getValue();
-    gData = l_data?JSON.parse(l_data):null;
-  } catch(e) {
-    apex.debug.error('json-region: dataitem', pOptions.dataitem, e, pOptions.schema);
-    gData = null;
-  }
+  gData = getDataFromItem(pOptions.dataitem);
 
   apex.debug.trace('initJsonRegion: data', gData);
   let newItem = !(gData && Object.keys(gData).length);
@@ -4024,14 +4034,14 @@ function base64ToBlob(base64, type) {
   let l_itemtypes = null;
   l_itemtypes = getItemtypes(pOptions.schema, l_itemtypes);
 
-  showFields(l_itemtypes, false); 
+  showFields(l_itemtypes, gData, false); 
   
     // start here all stuff which runs async
   (async function(){
      // do the refresh
-    async function doRefresh(){
-      apex.debug.trace(">>mergeSchema"); 
-      const l_newitem =!(gData && (Object.keys(gData).length>0));
+    async function doRefresh(pData){	// Refresh region with current data
+      apex.debug.trace(">>doRefresh: ", pData); 
+      const l_newitem =!(pData && (Object.keys(pData).length>0));
 
       gHelpMessages = {};
       pOptions = adjustOptions(pOptions);
@@ -4041,17 +4051,16 @@ function base64ToBlob(base64, type) {
       let l_itemtypes = null;
       l_itemtypes = getItemtypes(pOptions.schema, l_itemtypes);
       apex.debug.trace('pOptions:', pOptions);
-      showFields(l_itemtypes, true);
+      showFields(l_itemtypes, pData, true);
       await loadRequiredFiles(l_itemtypes);
       await richtextHack(l_itemtypes);
-      gData = null;
-      attachObject(pOptions.dataitem, null, pOptions.schema, pOptions[C_APEX_READONLY], gData, l_newitem, pOptions.schema, pOptions.dataitem);
+      attachObject(pOptions.dataitem, null, pOptions.schema, pOptions[C_APEX_READONLY], pData, l_newitem, pOptions.schema, pOptions.dataitem);
       await richtextOrtlHack(l_itemtypes);
       addArrayDeleteEvent();
-      setObjectValues(pOptions.dataitem, '', pOptions.schema, pOptions[C_APEX_READONLY], gData);
+      setObjectValues(pOptions.dataitem, '', pOptions.schema, pOptions[C_APEX_READONLY], pData);
       apexHacks();
       createRegion();
-      apex.debug.trace("<<mergeSchema"); 
+      apex.debug.trace("<<doRefresh"); 
     }
 
   /*
@@ -4074,37 +4083,40 @@ function base64ToBlob(base64, type) {
     apex.debug.trace('required files loading...');
     await loadRequiredFiles(l_itemtypes);
     apex.debug.trace('required files loaded');
-    await refresh(newItem);
-
+    await refresh(gData, newItem);
+ 
     const callbacks = {
         // Callback for refreshing the JSON-region, is called by APEX-refresh
       refresh: function() {
         apex.debug.trace('>>jsonRegion.refresh callback: ', pRegionId, pAjaxIdentifier, pOptions, gData);
-        if(pOptions.schemaitem){  // get current JSON-schema
+        if(pOptions.schemaitem){  // get current staic JSON-schema
           try {
             apex.debug.trace('Refresh JSON-schema from', pOptions.schemaitem);
             let l_schema = $v(pOptions.schemaitem);
             pOptions.schema = JSON.parse(l_schema.length?l_schema:null);
-            doRefresh();
+            gData = getDataFromItem(pOptions.dataitem);
+            // refresh data from pageItem
+
+            doRefresh(gData);
             apex.debug.trace('new schema', pOptions.schema);
           } catch(err){
             apex.debug.error('refresh JSON-schema from', pOptions.schemaitem, 'ERROR', err);
           }
         }
         if(pOptions.isDynamic){
-           apex.debug.trace('Refresh from AJAX-Callback', pOptions.queryitems);
-           apex.server.plugin ( 
-            pAjaxIdentifier, 
+          apex.debug.trace('Refresh from AJAX-Callback', pOptions.queryitems);
+          gData = null;   // dynamic schema, so the current data will not fix to the new schema
+          apex.server.plugin ( 
+          pAjaxIdentifier, 
             { x04: C_AJAX_GETSCHEMA,
               pageItems: pOptions.queryitems
             }
-        ) 
-        .then(async (schema)=> {  // the callback returns a new JSON-schema
+          ).then(async (schema)=> {  // the callback returns a new JSON-schema
                 apex.debug.trace('Refresh from AJAX-Callback OK', schema);
                 schema["$defs"]=schema['"$defs"']; // for some reason the $defs property is returned as "$defs"
                 pOptions.schema = schema;
                 
-                doRefresh();
+                doRefresh(gData);
               }  
           )
           .catch((err) =>{
