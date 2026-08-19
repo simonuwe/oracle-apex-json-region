@@ -33,7 +33,7 @@ prompt APPLICATION 100 - json-region-demo
 -- Application Export:
 --   Application:     100
 --   Name:            json-region-demo
---   Date and Time:   19:26 Tuesday August 18, 2026
+--   Date and Time:   06:50 Wednesday August 19, 2026
 --   Exported By:     UWE
 --   Flashback:       0
 --   Export Type:     Application Export
@@ -42,7 +42,7 @@ prompt APPLICATION 100 - json-region-demo
 --       Processes:               19
 --       Regions:                 56
 --       Buttons:                 71
---       Dynamic Actions:         39
+--       Dynamic Actions:         40
 --     Shared Components:
 --       Logic:
 --         Build Options:          2
@@ -125,7 +125,7 @@ wwv_imp_workspace.create_flow(
 ,p_substitution_value_02=>'generate_cohere'
 ,p_file_prefix => nvl(wwv_flow_application_install.get_static_app_file_prefix,'')
 ,p_files_version=>11
-,p_version_scn=>178017632
+,p_version_scn=>178055225
 ,p_print_server_type=>'NATIVE'
 ,p_file_storage=>'DB'
 ,p_is_pwa=>'Y'
@@ -13000,7 +13000,7 @@ wwv_flow_imp_page.create_page_item(
 '  "lastname": "Simon",',
 '  "firstname": "Uwe",  ',
 '  "birthday": "1980-01-03",',
-'  "email": "xx.xx@xx.xx"',
+'  "email": "xx.xx@xx.de"',
 '}'))
 ,p_prompt=>'Data 1'
 ,p_display_as=>'NATIVE_TEXTAREA'
@@ -13120,6 +13120,27 @@ wwv_flow_imp_page.create_page_da_action(
 ,p_action=>'NATIVE_REFRESH'
 ,p_affected_elements_type=>'REGION'
 ,p_affected_region_id=>wwv_flow_imp.id(165463155975075432)
+,p_attribute_01=>'N'
+);
+wwv_flow_imp_page.create_page_da_event(
+ p_id=>wwv_flow_imp.id(165464134626075442)
+,p_name=>'CLOSE'
+,p_event_sequence=>20
+,p_triggering_element_type=>'BUTTON'
+,p_triggering_button_id=>wwv_flow_imp.id(165463391529075434)
+,p_bind_type=>'bind'
+,p_execution_type=>'IMMEDIATE'
+,p_bind_event_type=>'apexafterclosedialog'
+);
+wwv_flow_imp_page.create_page_da_action(
+ p_id=>wwv_flow_imp.id(165464249081075443)
+,p_event_id=>wwv_flow_imp.id(165464134626075442)
+,p_event_result=>'TRUE'
+,p_action_sequence=>10
+,p_execute_on_page_init=>'N'
+,p_action=>'NATIVE_REFRESH'
+,p_affected_elements_type=>'REGION'
+,p_affected_region_id=>wwv_flow_imp.id(165463688523075437)
 ,p_attribute_01=>'N'
 );
 end;
