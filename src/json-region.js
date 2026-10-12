@@ -1,7 +1,7 @@
 "use strict"
 
 /*
- * JSON-region 0.9.8.4
+ * JSON-region 0.9.8.5
  * Supports Oracle-APEX >=21.2 <=26.1
  * 
  * APEX JSON-region plugin
@@ -68,6 +68,7 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
   const C_APEX_VERSION_2401 = "24.1"
   const C_APEX_VERSION_2402 = "24.2"
   const C_APEX_VERSION_2601 = "26.1"
+  const C_APEX_VERSION_2602 = "26.2"
 
                                               // JSON "type": "..."
   const C_JSON_TYPE             = 'type';
@@ -2278,7 +2279,7 @@ function base64ToBlob(base64, type) {
         items:       1,
         wrappertype: 'apex-item-wrapper--combobox apex-item-wrapper--combobox-many',
         html:        apex.util.applyTemplate(`
-<a-combobox id="#ID#" name="#ID#" #REQUIRED# #PLACEHOLDER# value="#VALUES#" multi-value="true" return-display="false" value-separators="#VALUESEPARATOR#" max-results="7" min-characters-search="0" match-type="contains" maxlength="100" multi-select="true" parents-required="true">
+<a-combobox id="#ID#" name="#ID#" #REQUIRED# #PLACEHOLDER# value="#VALUES#" multi-value value-separators="#VALUESEPARATOR#" max-results="7" min-characters-search="0" match-type="contains" maxlength="100" multi-select="true" parents-required="true">
   <div class="apex-item-comboselect">
     <ul class="a-Chips a-Chips--applied a-Chips--wrap" role="presentation">
 `,
@@ -2366,13 +2367,13 @@ function base64ToBlob(base64, type) {
         items:       1,
         wrappertype: (itemtype==C_APEX_SELECTMANY)?'apex-item-wrapper--select-many':'apex-item-wrapper--select-one',
         html:        apex.util.applyTemplate(`
-<a-select id="#ID#" name="#ID#" #REQUIRED# #PLACEHOLDER# value="#VALUE#"return-display="true" multi-select="#MULTISELECT#" multi-value="#MULTIVALUE#" #VALUESEPARATOR#  max-results="250" min-characters-search="0" match-type="contains" parents-required="true" display-values-as="#DISPLAYAS#">
+<a-select id="#ID#" name="#ID#" #REQUIRED# #PLACEHOLDER# value="#VALUE#" return-display="true" #MULTISELECT# #MULTIVALUE# #VALUESEPARATOR#  max-results="250" min-characters-search="0" match-type="contains" parents-required="true" display-values-as="#DISPLAYAS#">
 `,
                                                 {
                                                     placeholders: {
                                                       "VALUESEPARATOR": 'multi-value-storage="separated" multi-value-separator="'+ C_VALUESEPARATOR+'"',
-                                                      "MULTIVALUE":  (itemtype==C_APEX_SELECTMANY)?'true':'false',
-                                                      "MULTISELECT": (itemtype==C_APEX_SELECTMANY)?'true':'false',
+                                                      "MULTIVALUE":  (itemtype==C_APEX_SELECTMANY)?'multi-value':'',
+                                                      "MULTISELECT": (itemtype==C_APEX_SELECTMANY)?'multi-select':'',
                                                       "DISPLAYAS":   schemaApex.asChips?'chips':'separated',
                                                       "VALUES":      l_values
                                                    }
@@ -3782,12 +3783,18 @@ function base64ToBlob(base64, type) {
             l_scripts.push('libraries/ortl/2.0.1/ckeditor5-editor.css');
             l_scripts.push('libraries/ortl/2.0.1/ckeditor5-content.css');
             l_scripts.push('libraries/apex/minified/widget.rte.min.js');
-          } else if(pOptions.apex_version >=C_APEX_VERSION_2601){  // richtext deitor with widget.rte for 26.1
+          } else if(pOptions.apex_version ==C_APEX_VERSION_2601){  // richtext deitor with widget.rte for 26.1
             l_scripts.push('libraries/ortl/2607.0.2/ortl.umd.js');
             l_scripts.push('libraries/ortl/2607.0.2/translations/' + apex.locale.getLanguage() + '.umd.js');
             l_scripts.push('libraries/ortl/2607.0.2/ortl-editor.css');
             l_scripts.push('libraries/ortl/2607.0.2/ortl-content.css');
             l_scripts.push('libraries/apex/minified/widget.rte.min.js');
+          } else if(pOptions.apex_version >=C_APEX_VERSION_2602){  // richtext deitor with widget.rte for 26.2
+            l_scripts.push('libraries/ortl/2701.0.0/browser/ortl.umd.js');
+            l_scripts.push('libraries/ortl/2701.0.0/translations/' + apex.locale.getLanguage() + '.umd.js');
+            l_scripts.push('libraries/ortl/2701.0.0/browser/ortl-editor.css');
+            l_scripts.push('libraries/ortl/2701.0.0/browser/ortl-content.css');
+            l_scripts.push('libraries/apex/minified/widget.rte.min.js');            
           }else {
             l_scripts.push('libraries/tinymce/' + apex.libVersions.tinymce + '/skins/ui/oxide/skin.css');
             l_scripts.push('libraries/tinymce/' + apex.libVersions.tinymce + '/tinymce.min.js');

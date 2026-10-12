@@ -285,7 +285,7 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT
                   "apex": {"itemtype": "password"}},
     "office_address":  ]')
 || TO_CLOB(q'[   {"$ref": "#/$defs/address"},
-    "deliverytohome":     { "type": "boolean", "apex": {"type": "switch", "label": "Delivery to homeoffice"}}
+    "deliverytohome":     { "type": "boolean", "apex": {"itemtype": "switch", "label": "Delivery to homeoffice"}}
   },
   "if": {
       "properties": {
