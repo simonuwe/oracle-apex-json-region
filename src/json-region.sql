@@ -1,5 +1,5 @@
 /*
- * JSON-region-plugin 0.9.8.4
+ * JSON-region-plugin 0.9.8.6
  * (c) Uwe Simon 2023, 2025, 2026
  * Apache License Version 2.0
  *
@@ -16,18 +16,38 @@ FUNCTION generate_schema(p_refquery IN VARCHAR2 , p_mapping IN BOOLEAN, p_path I
     l_mappingquery VARCHAR2(4000);
 BEGIN
     APEX_DEBUG.INFO('generate_schema %s: "%s"', p_path, p_refquery);
-    EXECUTE IMMEDIATE p_refquery INTO l_json, l_sqlquery, l_mappingquery USING p_path;
+    BEGIN
+      EXECUTE IMMEDIATE p_refquery INTO l_json, l_sqlquery, l_mappingquery USING p_path;
+    EXCEPTION WHEN OTHERS THEN
+      APEX_DEBUG.ERROR('ERROR WITH QUERY (1 row, 3 return columns): %s - "%s"', SQLERRM,  p_refquery);
+      RAISE;
+    END;
     IF l_json IS NULL THEN -- Found a query which will retrieve the data
       IF(p_parameter IS NULL) THEN
         APEX_DEBUG.INFO('generate_schema with query %s: "%s"', l_sqlquery, p_parameter);    
-        EXECUTE IMMEDIATE l_sqlquery INTO l_json;
+        BEGIN
+          EXECUTE IMMEDIATE l_sqlquery INTO l_json;
+        EXCEPTION WHEN OTHERS THEN
+          APEX_DEBUG.ERROR('ERROR WITH QUERY (1 row, 1 JSON columns): %s - "%s"', SQLERRM, l_sqlquery);
+          RAISE;
+        END;
       ELSE
         IF(p_mapping) THEN
           APEX_DEBUG.INFO('generate_schema with query %s: "%s"', l_mappingquery, p_parameter);    
-          EXECUTE IMMEDIATE l_mappingquery INTO l_json USING p_parameter;
+          BEGIN
+            EXECUTE IMMEDIATE l_mappingquery INTO l_json USING p_parameter;
+          EXCEPTION WHEN OTHERS THEN
+            APEX_DEBUG.ERROR('ERROR WITH QUERY (1 row, 1 JSON columns,): %s - "%s" parameter: "%s"', SQLERRM, l_mappingquery, p_parameter);
+            RAISE;
+          END;          
         ELSE
           APEX_DEBUG.INFO('generate_schema with query %s: "%s"', l_sqlquery, p_parameter);    
-          EXECUTE IMMEDIATE l_sqlquery INTO l_json USING '%'||p_parameter||'%', p_offset;
+          BEGIN
+            EXECUTE IMMEDIATE l_sqlquery INTO l_json USING '%'||p_parameter||'%', p_offset;
+          EXCEPTION WHEN OTHERS THEN
+            APEX_DEBUG.ERROR('ERROR WITH QUERY (1 row, 1 JSON columns, 1 parameter): %s - "%s" parameter: "%s": Offset: %d', SQLERRM, l_sqlquery, p_parameter, p_offset);
+            RAISE;
+          END;          
         END IF;
       END IF;
     END IF;
@@ -123,7 +143,7 @@ IS
   l_query               VARCHAR(32767);       -- The SQL-query to retrieve the JSON-schema
   l_colwidth            NUMBER;               -- The column width for the field items in universal theme 1,2,3,4,6,12
   l_template            VARCHAR(32767);       -- Template used for input items        
-  l_textareawidth       NUMBER;               -- The limit when textarea is used for long tex inputs
+  l_textareawidth       NUMBER;               -- The limit when textarea is used for long text inputs
   l_keepattributes      BOOLEAN;              -- keep additional attributes not mentioned in JSON-schema
   l_additionalschema    VARCHAR(32767);       -- an additional schema merged with the "original" JSON-schema
   l_headers             BOOLEAN;              -- Show headers when sub-objects are in the JSON-schema
@@ -262,7 +282,7 @@ IS
   l_param2    APEX_APPLICATION.g_x06%TYPE; -- 2nd parameter for function
   l_offset    APEX_APPLICATION.g_x07%TYPE; -- offset for getLov-query
   l_result    apex_plugin.t_region_ajax_result;
-  l_json      VARCHAR2(32767);
+  l_json      CLOB; --VARCHAR2(32767);
   l_j         APEX_JSON.T_VALUES;
   l_svg       CLOB;
 BEGIN
@@ -286,14 +306,16 @@ $END
     APEX_DEBUG.TRACE('ajax_json_region source %s', p_region.source);
     APEX_DEBUG.TRACE('ajax_json_region items %s', p_region.ajax_items_to_submit);
     APEX_DEBUG.TRACE('ajax_json_region g_x01 %s', APEX_APPLICATION.g_x01);
+
     IF(APEX_APPLICATION.g_x01 IS NOT NULL AND LENGTH(APEX_APPLICATION.g_x01)>0) THEN  
         -- generate a QR-code  QC-code callback uses x01-x03
 $IF wwv_flow_api.c_current>=20231031 
 $THEN
-        -- apex_qrcode is only available in APEX >=23.2 (20231031), so conditional compile
-      l_svg := apex_barcode.get_qrcode_svg(p_value => APEX_APPLICATION.g_x01); 
       apex_json.open_object;
+              -- apex_qrcode is only available in APEX >=23.2 (20231031), so conditional compile
+      l_svg := apex_barcode.get_qrcode_svg(p_value => APEX_APPLICATION.g_x01); 
       apex_json.write('QR', l_svg);
+      apex_json.close_all();    -- QR-Code needs the here
 $ELSE
       apex_json.open_object;
       apex_json.write('{}');
@@ -305,7 +327,7 @@ $END
       APEX_DEBUG.TRACE('ajax_json_region g_x05 %s', l_param1);
       APEX_DEBUG.TRACE('ajax_json_region g_x06 %s', l_param2);
       APEX_DEBUG.TRACE('ajax_json_region g_x07 %s', TO_NUMBER(l_offset));
-      CASE APEX_APPLICATION.g_x04
+      CASE l_function
         WHEN 'getSubschema' THEN  -- x05 contains the JSON-schema requested schema path
           APEX_DEBUG.TRACE('ajax_json_region getSubschema');
           l_json := generate_schema(l_refquery, false, l_param1);
@@ -333,17 +355,24 @@ $END
 
             -- apex_json.close_array();
             apex_json.close_object();
-            apex_json.close_object();
-        ELSE
+        ELSE  -- then it is QR-code for a NULL value 
           apex_json.open_object;
+          apex_json.write('QR','<svg></svg>');
+          apex_json.close_all(); 
         END CASE;
     END IF;
     --apex_json.close_all();
-  EXCEPTION WHEN NO_DATA_FOUND THEN
-    APEX_DEBUG.ERROR('AJAX-callback: '||SQLCODE||' '||SQLERRM);
+    APEX_DEBUG.TRACE('ajax_json_region: result OK');
+  EXCEPTION 
+  WHEN NO_DATA_FOUND THEN
+    APEX_DEBUG.WARN('AJAX-callback "'||l_function||'": '||SQLCODE||' '||SQLERRM);
     apex_json.open_object();
     apex_json.close_all(); 
-    RAISE; 
+  WHEN OTHERS THEN
+    APEX_DEBUG.WARN('AJAX-callback "'||l_function||'": '||SQLCODE||' '||SQLERRM);
+    apex_json.open_object();
+    apex_json.close_all(); 
+    RAISE;   
   END;
   --
   RETURN l_result;

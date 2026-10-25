@@ -927,6 +927,80 @@ RESULT
   ]
 }
 ```
+### LOV-items
+
+LOV-items require one queiries to retieve the shwown entries and a 2nd query to get an entry for a given key.
+
+**JSON-Schema required to fill the LOV list**:
+The query has to return a JSON-array of entries for the values starting with the input in the LOV-inputfield (autocomplete)
+
+```json
+[
+  ["displayvalue1", "key1"],
+  ["displayvalue2", "key2"],
+  ...
+  ["displayvalueN", "keyN"]
+]:
+```
+
+**JSON-schema for displaying the current selected value**:
+The query returns a JSON-object for a given key
+```json
+{
+  "key": {"display": "displayvalue"}
+}:
+```
+
+**Example-Queries**:
+
+JSON-schema query:
+
+```sql
+SELECT schema, sqlquery, mappingquery
+FROM json_region_schema
+WHERE path=:p1
+```
+
+Displaying the list (column SQLQUERY)
+
+```sql
+SELECT
+  '['||(LISTAGG('["'||objecT_type_name||'", "'||objecT_type_id||'"] ',',') WITHIN GROUP (ORDER BY object_type_name)) ||']' AS lst
+FROM (
+  SELECT *
+  FROM object_type
+  WHERE LOWER(object_type_name) like LOWER(:1)
+  ORDER BY object_type_name
+  OFFSET :2-1 rows
+  FETCH FIRST 100 ROWS ONLY
+)
+```
+Result for input "test-if" (% is appended in UI) and (start offset for lists) 1:
+
+```json
+[
+  ["test-if-1", "15"] ,
+  ["test-if-2", "16"] ,
+  ["test-if-3", "2310"] ,
+  ["test-if-4", "2325"] 
+]
+```
+
+Displaying the current value (column MAPPINGQUERY)
+
+```sql
+SELECT '{"'||object_type_id||'": {"display":"'||object_type_name||'"}}' AS json 
+FROM object_type 
+WHERE object_type_id=:1 AND rownum<=1;
+
+```
+Result for id=i1:
+
+```json
+{"1": {"display":"Server"}}
+```
+
+
 
 ### JSON-schema attributes limitations in Oracle23ai JSON-validate
 
@@ -973,7 +1047,7 @@ Cascading selects could be implemented using **if**, **then** ald **allOf**. Thi
 - In APEX 20.2 the validation for **integer**/**number** doesn't show any errormessages - invalid entries are converted to **null**.
 - With Oracle <23.7 an INSERT/UPDATE of a JSON string into a JSON-collection-table returns ORA-00932.
 - With Oracle >=23.7 an UPDATE of a JSON-collection-table with VALIDATE-JSON-constraint returns an ORA-00932.
-
+- When updating from <=0.9.8.2 to >=0.8.3 the query in the component-settings requires a 3rd column to support LOVs.
 
 ## Next steps
 
