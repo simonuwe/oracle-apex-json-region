@@ -1,8 +1,23 @@
+# 0.9.8.6
+
+## New Features
+ - #255 Better Prompt for "Application parameter"
+
+## Fixed Issues
+ - #251 APEX-26.2: PLSQL-Error with huge JSONs
+ - #252 APEX>=21.2: PL-SQL-Error when a dynamic schema-reference (lookup) for a pull-down/list returns no data
+ - #253 APEX>=26.2: File-/Image-Uplaod doesn't work anymore
+ - #254 APEX-26.2: display of a QR-Code returns with a JSON-Error
+ - #256 Display of QR-code where code is NULL creates JSON-error
+
+# 0.9.8.5
+ - #249 APEX-26.2: Check compatibility
 
 # 0.9.8.4
 
 ## New Features
  - #245 Support of multiple json-region-plugin per page
+ - #246 Display of QR-code where code is NULL creates JSON-error
 
 ## Fixed Issues
  - #244 "apex": {"template": ...} errorentry in browser log

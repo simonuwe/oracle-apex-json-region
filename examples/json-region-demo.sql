@@ -24458,7 +24458,7 @@ unistr('        "unit":           {"type": "string", "enum": ["hour", "day", "pc
 '      "readOnly": true,',
 '      "apex": {',
 '        "hasInsert": "end",',
-'        "xhasDelete": false',
+'        "hasDelete": false',
 '      }',
 '    } ',
 '  },',

@@ -134,3 +134,24 @@ When using another tablename and/or columnnames adopt.
 If there is a configuratuion for this query in a used plugin, change this table and the query too.
 "Page"->"ItemWithPlugin"->"Attributes"->"SQL-Query for referenced JSON-schem"
 If there is a missmatch, APEX will show a PL/SQL error.
+
+## Known Issues ##
+
+When Upgrading von <= 0.9.8.2 to a higher version the Query for the dynamic schema references is has changed.
+You will get an error in the last step of the upgrade when pressing "Apply Changes" on the last page "Component Settings".
+
+```
+Error Message
+1 error has occurred
+Wrong number of columns selected in the SQL query. See Help of attribute for details.
+```
+
+This query now has to return 3 columns. When using the table from the example it has to look like
+
+```
+SELECT schema, sqlquery, mappingquery
+FROM json_region_schema
+WHERE path=:p1 
+```
+
+The 3rd column is required for dynamic LOVs, which require a query for retrieving the displayname for a given key.

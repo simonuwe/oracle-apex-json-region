@@ -954,7 +954,7 @@ Insert into UWE.OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA) valu
       "readOnly": true,
       "apex": {
         "hasInsert": "begin",
-        "xhasDelete": false
+        "hasDelete": false
       }
     } 
   },

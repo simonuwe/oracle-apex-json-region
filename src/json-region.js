@@ -1,8 +1,8 @@
 "use strict"
 
 /*
- * JSON-region 0.9.8.5
- * Supports Oracle-APEX >=21.2 <=26.1
+ * JSON-region 0.9.8.6
+ * Supports Oracle-APEX >=21.2 <=26.2
  * 
  * APEX JSON-region plugin
  * (c) Uwe Simon 2023, 2024, 2025, 2026
@@ -160,6 +160,7 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
   const C_APEX_ENUM         = 'enum';
   const C_APEX_FORMAT       = 'format';
   const C_APEX_HASINSERT    = 'hasInsert';
+  const C_APEX_HASDELETE    = 'hasDelete';
   const C_APEX_ITEMTYPE     = 'itemtype';
   const C_APEX_LABEL        = 'label';
   const C_APEX_LINES        = 'lines';
@@ -212,7 +213,7 @@ async function initJsonRegion( pRegionId, pName, pAjaxIdentifier, pOptions) {
         C_APEX_SELECT, C_APEX_SELECTMANY, C_APEX_SELECTONE, C_APEX_SHUTTLE, C_APEX_POPUPLOV, C_APEX_SWITCH, 
         C_APEX_FILEUPLOAD, C_APEX_IMAGEDISPLAY, C_APEX_IMAGEUPLOAD, C_APEX_HIDDEN],
       "properties":  [C_APEX_ALIGN, C_APEX_COLORMODE, C_APEX_COLSPAN, C_APEX_CSS, C_APEX_DEFAULT, C_APEX_DOWNLOAD, 
-                      C_APEX_ENUM, C_APEX_FORMAT, C_APEX_HASINSERT, C_APEX_ITEMTYPE, C_APEX_LABEL,
+                      C_APEX_ENUM, C_APEX_FORMAT, C_APEX_HASDELETE, C_APEX_HASINSERT, C_APEX_ITEMTYPE, C_APEX_LABEL,
                       C_APEX_DIRECTION, C_APEX_SHOWPASSWORD, C_APEX_DISPLAY, C_APEX_HELP, C_APEX_INLINEHELP,
                       C_APEX_LINES, C_APEX_MAXFILESIZE, C_APEX_MAXIMUM, C_APEX_MIMETYPES, C_APEX_MINIMUM, C_APEX_VALIDATE,
                       C_APEX_NEXTNEWCOLUMN, C_APEX_NEWCOLUMN, C_APEX_NEWROW, C_APEX_PLACEHOLDER, C_APEX_QUICKPICKS, C_APEX_READONLY, C_APEX_WRITEONLY, 
@@ -2718,7 +2719,7 @@ function base64ToBlob(base64, type) {
                 items: 1,
                 wrappertype: 'apex-item-wrapper--rich-text-editor',
                 html: `
-<a-rich-text-editor id="#ID#" name="#ID#" mode="markdown" #REQUIRED# read-only="#READONLY#" display-value-mode="plain-text" visual-mode="inline" value="#QUOTEVALUE#">
+<a-rich-text-editor id="#ID#" name="#ID#" mode="markdown" #REQUIRED# #READONLY# display-value-mode="plain-text" visual-mode="inline" value="#QUOTEVALUE#">
 </a-rich-text-editor>
 `};
             } 
@@ -2810,8 +2811,9 @@ function base64ToBlob(base64, type) {
       items: 1,
       wrappertype: schema.apex[C_APEX_ITEMTYPE]==C_APEX_IMAGEUPLOAD?'apex-item-wrapper--image-upload':'apex-item-wrapper--file',
       html: `
-<a-file-upload id="#ID#" #REQUIRED# upload-type="#UPLOADTYPE#" display-style="#DISPLAYSTYLE#" accept="#MIMETYPES#" size="30" label="Drop file" description="Select a file or drop one here." max-file-size="#MAXFILESIZE#" filename="#FILENAME#" file-size="#FILESIZE#" mimetype="#MIMETYPE#" show-clear-button="#CLEARBUTTON#" link="#URL#" download-link="#DOWNLOAD#" readonly="#READONLY#">
+<a-file-upload id="#ID#" #REQUIRED# upload-type="#UPLOADTYPE#" display-style="#DISPLAYSTYLE#" accept="#MIMETYPES#" size="30" label="Drop file" description="Select a file or drop one here." max-file-size="#MAXFILESIZE#" filename="#FILENAME#" file-size="#FILESIZE#" mimetype="#MIMETYPE#" #CLEARBUTTON# link="#URL#" download-link="#DOWNLOAD#" #READONLY#>
   <input id="#ID#_input"/>
+  <a class="a-FileDrop-download"> </a>
 </a-file-upload>
 `};        
     apex.debug.trace("<<jsonRegion.generateForUpload", l_generated);
@@ -3461,7 +3463,7 @@ function base64ToBlob(base64, type) {
                                       "INPUTTEMPLATE": l_template.input,
                                       "CSS":           item.apex.css||'',
                                       "ALIGN":         cAlign[item.apex.align]||'',
-                                      "READONLY":      item[C_APEX_READONLY]?"true":"false",
+                                      "READONLY":      item[C_APEX_READONLY]?"readonly":"",
                                       "TRIMSPACES":    'BOTH',
                                       "AJAXIDENTIFIER": pAjaxIdentifier,
                                       "DATATEMPLATE": pOptions.datatemplateET,
@@ -3496,7 +3498,7 @@ function base64ToBlob(base64, type) {
             placeholders: {
                 "UPLOADTYPE":   item.apex[C_APEX_ITEMTYPE]==C_APEX_FILEUPLOAD?'FILE':'IMAGE',
                 "DISPLAYSTYLE": 'DROPZONE_INLINE',
-                "CLEARBUTTON":  (item[C_APEX_READONLY] || item.isRequired)?"false":"true",
+                "CLEARBUTTON":  (item[C_APEX_READONLY] || item.isRequired)?"":"show-clear-button",
                 "DOWNLOAD":     (l_value && item.apex.download)?"true":"false",
                 "MAXFILESIZE":  item.apex.maxFilesize||C_MAX_UPLOADSIZE,
                 "MIMETYPES":    item.apex.mimetypes,
@@ -3754,10 +3756,11 @@ function base64ToBlob(base64, type) {
       }
 
       if(!customElements.get('a-file-upload')  && (itemtypes[C_APEX_ITEMTYPE].fileupload || itemtypes[C_APEX_ITEMTYPE].imageupload)){ // file-/image-upload is used, so load files for fileupload
+        l_scripts.push('libraries/purify/'  + apex.libVersions.domPurify + '/purify.min.js');
         l_scripts.push('libraries/apex/minified/item.FileUpload.min.js');
       }
 
-
+      
       if(itemtypes[C_APEX_ITEMTYPE].popuplov){  // a popupLov is used, so load files for the popupLov
         if(!apex.model){
           l_scripts.push('libraries/apex/model.js');
@@ -3778,18 +3781,18 @@ function base64ToBlob(base64, type) {
             l_scripts.push('libraries/markedjs/' + apex.libVersions.markedJs + '/marked.min.js');
           }
           l_scripts.push('libraries/turndown/' + apex.libVersions.turndown + '/turndown.js');
-          if(pOptions.apex_version ==C_APEX_VERSION_2402){  // richtext deitor with widget.rte for 24.2
+          if(pOptions.apex_version ==C_APEX_VERSION_2402){  // richtext editor with widget.rte for 24.2
             l_scripts.push('libraries/ortl/2.0.1/ckeditor5.umd.js');
             l_scripts.push('libraries/ortl/2.0.1/ckeditor5-editor.css');
             l_scripts.push('libraries/ortl/2.0.1/ckeditor5-content.css');
             l_scripts.push('libraries/apex/minified/widget.rte.min.js');
-          } else if(pOptions.apex_version ==C_APEX_VERSION_2601){  // richtext deitor with widget.rte for 26.1
+          } else if(pOptions.apex_version ==C_APEX_VERSION_2601){  // richtext editor with widget.rte for 26.1
             l_scripts.push('libraries/ortl/2607.0.2/ortl.umd.js');
             l_scripts.push('libraries/ortl/2607.0.2/translations/' + apex.locale.getLanguage() + '.umd.js');
             l_scripts.push('libraries/ortl/2607.0.2/ortl-editor.css');
             l_scripts.push('libraries/ortl/2607.0.2/ortl-content.css');
             l_scripts.push('libraries/apex/minified/widget.rte.min.js');
-          } else if(pOptions.apex_version >=C_APEX_VERSION_2602){  // richtext deitor with widget.rte for 26.2
+          } else if(pOptions.apex_version >=C_APEX_VERSION_2602){  // richtext editor with widget.rte for 26.2
             l_scripts.push('libraries/ortl/2701.0.0/browser/ortl.umd.js');
             l_scripts.push('libraries/ortl/2701.0.0/translations/' + apex.locale.getLanguage() + '.umd.js');
             l_scripts.push('libraries/ortl/2701.0.0/browser/ortl-editor.css');

@@ -591,7 +591,7 @@ Insert into OBJECT_TYPE (OBJECT_TYPE_ID,OBJECT_TYPE_NAME,OBJECT_SCHEMA,AI_PROMPT
       "readOnly": true,
       "apex": {
         "hasInsert": "end",
-        "xhasDelete": false
+        "hasDelete": false
       }
     } 
   },
